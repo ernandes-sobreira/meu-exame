@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Leitor de Exames (PDF) — Gráfico + Referência + Histórico</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.12);
+      --txt:#eaf2ff; --muted:rgba(234,242,255,.72); --ok:#2dd4bf; --bad:#fb7185; --warn:#fbbf24;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; background:linear-gradient(180deg,#0b1220,#050814); color:var(--txt);}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px;}
+    h1{margin:0 0 6px;font-size:20px}
+    p{margin:6px 0;color:var(--muted);line-height:1.35}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:14px}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select,button,textarea{
+      width:100%; box-sizing:border-box; border-radius:12px; border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05); color:var(--txt); padding:10px 12px; outline:none;
+    }
+    input::file-selector-button{border:1px solid var(--stroke); background:rgba(255,255,255,.07); color:var(--txt);
+      padding:8px 10px;border-radius:10px;margin-right:10px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{cursor:pointer;font-weight:700}
+    button.primary{background:rgba(45,212,191,.14);border-color:rgba(45,212,191,.35)}
+    button.danger{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.35)}
+    button.ghost{background:transparent}
+    .small{font-size:12px;color:var(--muted)}
+    .pill{display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid var(--stroke);font-size:12px;color:var(--muted)}
+    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    @media (max-width: 600px){.kpi{grid-template-columns:1fr}}
+    .k{padding:10px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.04)}
+    .k b{display:block;font-size:14px}
+    .k span{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:var(--stroke);margin:12px 0}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .warnbox{border:1px dashed rgba(251,191,36,.5); background:rgba(251,191,36,.08); padding:10px;border-radius:12px}
+    canvas{background:rgba(255,255,255,.02);border:1px solid var(--stroke);border-radius:12px;padding:8px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--stroke);padding:8px;text-align:left;font-size:13px}
+    th{color:var(--muted);font-weight:600}
+    .tag-ok{color:var(--ok)}
+    .tag-bad{color:var(--bad)}
+    .tag-warn{color:var(--warn)}
+  </style>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Leitor de Exames (PDF) — valor x referência (por sexo/idade) + histórico</h1>
+    <p class="small">Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor. Isto é uma ferramenta de visualização, não diagnóstico.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Nome</label>
+            <input id="nome" placeholder="Ex: Ernandes" />
+          </div>
+          <div>
+            <label>Idade (anos)</label>
+            <input id="idade" type="number" min="0" max="120" placeholder="Ex: 39" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Sexo</label>
+            <select id="sexo">
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+          <div>
+            <label>PDF do exame</label>
+            <input id="pdf" type="file" accept="application/pdf" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnLer">Ler PDF e gerar gráficos</button>
+          <button class="ghost" id="btnExport">Exportar histórico (JSON)</button>
+          <button class="danger" id="btnClear">Apagar histórico</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="warnbox small">
+          <b>Nota prática:</b> PDFs podem variar. Se algum exame não aparecer, é só ajustar o “padrão de captura”
+          (regex) para o texto do seu laboratório. Eu faço isso rapidinho quando você me mandar um exemplo do texto extraído (o app mostra).
+        </div>
+
+        <div class="hr"></div>
+
+        <label>Texto extraído do PDF (para ajuste fino)</label>
+        <textarea id="raw" rows="10" class="mono" placeholder="Aqui vai aparecer o texto extraído..."></textarea>
+      </div>
+
+      <div class="card">
+        <span class="pill" id="status">Aguardando PDF…</span>
+
+        <div class="kpi">
+          <div class="k"><b id="k_exames">—</b><span>Exames detectados</span></div>
+          <div class="k"><b id="k_ok">—</b><span>Dentro da referência</span></div>
+          <div class="k"><b id="k_out">—</b><span>Fora da referência</span></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <canvas id="chart" height="280"></canvas>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 8px;font-size:16px">Tabela</h3>
+        <div style="overflow:auto;max-height:280px;border:1px solid var(--stroke);border-radius:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Exame</th>
+                <th>Valor</th>
+                <th>Referência</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="4" class="small">Nenhum dado ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 8px;font-size:16px">Histórico (localStorage)</h3>
+        <div id="hist" class="small">—</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/** =========================
+ *  Referências (exemplo)
+ *  Ajuste/expanda como quiser.
+ *  Cada exame: { unit, ref: (ctx)=>({min,max,text}) }
+ *  ctx = {sexo, idade}
+ *  ========================= */
+const REF = {
+  "Colesterol Total": {
+    unit: "mg/dL",
+    ref: ({idade}) => ({ min: 0, max: 190, text: "Desejável < 190" }) // exemplo simplificado
+  },
+  "HDL": {
+    unit: "mg/dL",
+    ref: ({sexo}) => sexo === "M"
+      ? ({ min: 40, max: 200, text: "Homens: ≥ 40" })
+      : ({ min: 50, max: 200, text: "Mulheres: ≥ 50" })
+  },
+  "LDL": {
+    unit: "mg/dL",
+    ref: () => ({ min: 0, max: 115, text: "Meta típica baixo risco < 115 (depende do risco)" })
+  },
+  "VLDL": {
+    unit: "mg/dL",
+    ref: () => ({ min: 0, max: 30, text: "Geral: 0–30" })
+  },
+  "Triglicerídeos": {
+    unit: "mg/dL",
+    ref: () => ({ min: 0, max: 150, text: "Desejável < 150" })
+  },
+  "TGO (AST)": {
+    unit: "U/L",
+    ref: () => ({ min: 0, max: 40, text: "Até 40" })
+  },
+  "TGP (ALT)": {
+    unit: "U/L",
+    ref: ({sexo}) => sexo === "M"
+      ? ({ min: 0, max: 50, text: "Homens: até 50" })
+      : ({ min: 0, max: 40, text: "Mulheres: até 40" })
+  }
+};
+
+/** =========================
+ *  Captura do PDF (regex)
+ *  Ajuste aqui para bater 100% com seu laboratório.
+ *  ========================= */
+const PATTERNS = [
+  { key:"Colesterol Total",   re:/Colesterol\s*Total[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+  { key:"HDL",               re:/Colesterol\s*H\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+  { key:"LDL",               re:/Colesterol\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+  { key:"VLDL",              re:/Colesterol\s*V\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+  { key:"Triglicerídeos",    re:/Triglicer[ií]deos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+
+  { key:"TGO (AST)",         re:/TGO[^0-9]*Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i },
+  { key:"TGP (ALT)",         re:/TGP[^0-9]*Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i }
+];
+
+function toNumber(x){
+  if (x == null) return null;
+  return Number(String(x).replace(",", "."));
+}
+
+async function extractTextFromPdf(file){
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  let full = "";
+  for (let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map(it => it.str);
+    full += strings.join(" ") + "\n";
+  }
+  return full;
+}
+
+function detectExams(text){
+  const out = [];
+  for (const p of PATTERNS){
+    const m = text.match(p.re);
+    if (m && m[1] != null){
+      out.push({ name: p.key, value: toNumber(m[1]), unit: REF[p.key]?.unit || "" });
+    }
+  }
+  // remove duplicados pelo nome (pega o primeiro)
+  const seen = new Set();
+  return out.filter(e => (seen.has(e.name) ? false : (seen.add(e.name), true)));
+}
+
+function statusFor(exam, ctx){
+  const ref = REF[exam.name]?.ref?.(ctx);
+  if (!ref) return {label:"Sem referência", cls:"tag-warn", refText:"—"};
+  const v = exam.value;
+  const ok = (v >= ref.min && v <= ref.max);
+  return {
+    label: ok ? "Dentro" : "Fora",
+    cls: ok ? "tag-ok" : "tag-bad",
+    refText: ref.text ?? `${ref.min}–${ref.max}`
+  };
+}
+
+function buildChartData(exams, ctx){
+  const labels = [];
+  const values = [];
+  const minRef = [];
+  const maxRef = [];
+
+  for (const e of exams){
+    labels.push(e.name);
+    values.push(e.value);
+
+    const ref = REF[e.name]?.ref?.(ctx);
+    minRef.push(ref?.min ?? null);
+    maxRef.push(ref?.max ?? null);
+  }
+  return {labels, values, minRef, maxRef};
+}
+
+let chart = null;
+function renderChart(exams, ctx){
+  const {labels, values, minRef, maxRef} = buildChartData(exams, ctx);
+  const c = document.getElementById("chart").getContext("2d");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(c, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Valor", data: values },
+        { label: "Ref. mínima", data: minRef, type:"line", tension:.2 },
+        { label: "Ref. máxima", data: maxRef, type:"line", tension:.2 }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{ position:"bottom" },
+        tooltip:{ callbacks:{
+          label:(ctx2)=> `${ctx2.dataset.label}: ${ctx2.raw ?? "—"}`
+        }}
+      },
+      scales:{
+        y:{ beginAtZero:true }
+      }
+    }
+  });
+}
+
+function renderTable(exams, ctx){
+  const tb = document.getElementById("tbody");
+  tb.innerHTML = "";
+  let ok=0, out=0;
+  for (const e of exams){
+    const st = statusFor(e, ctx);
+    if (st.label === "Dentro") ok++;
+    if (st.label === "Fora") out++;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${e.name}</td>
+      <td>${e.value} ${e.unit || ""}</td>
+      <td>${st.refText}</td>
+      <td class="${st.cls}"><b>${st.label}</b></td>
+    `;
+    tb.appendChild(tr);
+  }
+  if (!exams.length){
+    tb.innerHTML = `<tr><td colspan="4" class="small">Nenhum exame detectado. Veja o texto extraído e ajuste os padrões.</td></tr>`;
+  }
+  document.getElementById("k_exames").textContent = exams.length;
+  document.getElementById("k_ok").textContent = ok;
+  document.getElementById("k_out").textContent = out;
+}
+
+function setStatus(msg){ document.getElementById("status").textContent = msg; }
+
+function saveToLocal(entry){
+  const key = "historico_exames_pdf_v1";
+  const list = JSON.parse(localStorage.getItem(key) || "[]");
+  list.unshift(entry);
+  localStorage.setItem(key, JSON.stringify(list));
+  renderHistory();
+}
+
+function renderHistory(){
+  const key = "historico_exames_pdf_v1";
+  const list = JSON.parse(localStorage.getItem(key) || "[]");
+  const box = document.getElementById("hist");
+  if (!list.length){ box.textContent = "Sem histórico ainda."; return; }
+
+  box.innerHTML = list.slice(0,15).map((e, idx)=> {
+    const when = new Date(e.ts).toLocaleString();
+    const exams = e.exams.map(x => `${x.name}:${x.value}`).join(", ");
+    return `<div class="mono" style="padding:6px 0;border-bottom:1px solid var(--stroke)">
+      <b>${e.nome}</b> (${e.sexo}, ${e.idade}a) — ${when}<br/>
+      <span style="color:var(--muted)">${exams}</span>
+    </div>`;
+  }).join("");
+}
+
+document.getElementById("btnLer").addEventListener("click", async ()=>{
+  const nome = document.getElementById("nome").value.trim() || "Sem nome";
+  const idade = Number(document.getElementById("idade").value || 0);
+  const sexo = document.getElementById("sexo").value;
+  const file = document.getElementById("pdf").files?.[0];
+
+  if (!file){ alert("Selecione um PDF."); return; }
+
+  setStatus("Lendo PDF…");
+  try{
+    const text = await extractTextFromPdf(file);
+    document.getElementById("raw").value = text;
+
+    const exams = detectExams(text);
+    const ctx = {nome, idade, sexo};
+
+    renderChart(exams, ctx);
+    renderTable(exams, ctx);
+
+    saveToLocal({
+      ts: Date.now(),
+      nome, idade, sexo,
+      exams
+    });
+
+    setStatus(`OK — ${exams.length} exame(s) detectado(s)`);
+  }catch(err){
+    console.error(err);
+    setStatus("Erro ao ler PDF");
+    alert("Não consegui ler o PDF. Tente outro arquivo ou veja o console.");
+  }
+});
+
+document.getElementById("btnClear").addEventListener("click", ()=>{
+  if (!confirm("Apagar TODO o histórico local?")) return;
+  localStorage.removeItem("historico_exames_pdf_v1");
+  renderHistory();
+});
+
+document.getElementById("btnExport").addEventListener("click", ()=>{
+  const key = "historico_exames_pdf_v1";
+  const list = localStorage.getItem(key) || "[]";
+  const blob = new Blob([list], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "historico_exames.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+renderHistory();
+setStatus("Aguardando PDF…");
+</script>
+</body>
+                  </html>
