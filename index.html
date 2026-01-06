@@ -80,9 +80,13 @@
     .status.ok{color:var(--ok)}
     .status.bad{color:var(--bad)}
     .status.na{color:var(--muted)}
-    .cardsVar{
-      display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px
+    .group{
+      border:1px dashed var(--stroke);
+      border-radius:16px;
+      padding:10px;margin-bottom:14px;background:#fff
     }
+    .group h3{margin:4px 6px 8px;font-size:14px;color:#0f172a}
+    .cardsVar{display:grid;grid-template-columns:1fr;gap:12px}
     @media(min-width:760px){ .cardsVar{grid-template-columns: 1fr 1fr} }
     .varCard{
       border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff
@@ -112,12 +116,11 @@
       padding:10px;border-radius:14px;display:none
     }
     footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+    .editRow{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .editRow select,.editRow input{flex:1}
   </style>
 
-  <!-- Chart.js (SEM time adapter — usaremos category) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
@@ -127,11 +130,10 @@
       <div class="title">
         <h1>Leitor de Exames (PDF) — histórico + gráficos por variável</h1>
         <p class="sub">
-          Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor.
-          Ferramenta de visualização (não diagnóstico).
+          Tudo roda <b>localmente</b>. Nada é enviado para servidor. Ferramenta de visualização (não diagnóstico).
         </p>
       </div>
-      <div class="pill">📌 Se der erro, veja o bloco “Erro técnico” (mostra o motivo real).</div>
+      <div class="pill">📌 Se der erro, veja “Erro técnico”.</div>
     </header>
 
     <div class="grid">
@@ -162,13 +164,13 @@
         </div>
 
         <div class="btns" style="margin-top:10px">
-          <button id="btnRead">Ler PDF e adicionar ao histórico</button>
+          <button id="btnRead">Adicionar esse PDF ao histórico</button>
           <button id="btnExport" class="ghost" type="button">Exportar histórico (JSON)</button>
           <button id="btnClear" class="secondary" type="button">Zerar histórico</button>
         </div>
 
         <div class="hint">
-          • A data usada é sempre <b>Data e Hora de Coleta</b> (quando existir).<br/>
+          • A data usada é sempre <b>Data e Hora de Coleta da 1ª página</b>.<br/>
           • Se o PDF for “escaneado imagem”, pode não ter texto extraível sem OCR.
         </div>
 
@@ -194,7 +196,7 @@
           </div>
         </div>
         <div class="btns" style="margin-top:10px">
-          <button id="btnManual" class="ghost" type="button">Adicionar valor manual ao histórico</button>
+          <button id="btnManual" class="ghost" type="button">Adicionar valor manual</button>
         </div>
 
         <div class="hr"></div>
@@ -224,9 +226,13 @@
 
         <div class="hr"></div>
 
-        <h2>Mini-gráficos por variável</h2>
-        <div class="hint">Cada variável vira um card. Referências = linhas tracejadas (mín/máx).</div>
-        <div id="vars" class="cardsVar"></div>
+        <h2>Mini-gráficos por série</h2>
+        <div id="groups"></div>
+
+        <div class="hr"></div>
+
+        <h2>Resumo (últimos valores)</h2>
+        <div id="resume" class="list"></div>
 
         <div class="hr"></div>
 
@@ -240,112 +246,102 @@
   </div>
 
 <script>
-/* =========================
-   CATÁLOGO DE VARIÁVEIS + REFERÊNCIAS (padrão)
-   ========================= */
+/* ===== VARS + REFERÊNCIAS ===== */
 const VARS = [
-  // Lipídios / enzimas
-  { key:"Colesterol Total", unit:"mg/dL", ref: { type:"max", getMax: ()=>190 } },
-  { key:"HDL", unit:"mg/dL", ref: { type:"minBySex", getMin: (sex)=> sex==="M" ? 40 : 50 } },
-  { key:"LDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
-  { key:"VLDL", unit:"mg/dL", ref: { type:"range", min:0, max:30 } },
-  { key:"Triglicérides", unit:"mg/dL", ref: { type:"max", getMax: ()=>150 } },
-  { key:"Não-HDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>145 } },
+  // Lípides
+  { key:"Colesterol Total", unit:"mg/dL", ref:{ type:"max", getMax:()=>190 } },
+  { key:"HDL", unit:"mg/dL", ref:{ type:"minBySex", getMin:(sex)=> sex==="M"?40:50 } },
+  { key:"LDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
+  { key:"VLDL", unit:"mg/dL", ref:{ type:"range", min:0, max:30 } },
+  { key:"Triglicérides", unit:"mg/dL", ref:{ type:"max", getMax:()=>150 } },
+  { key:"Não-HDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>145 } },
 
-  { key:"TGO (AST)", unit:"U/L", ref: { type:"max", getMax: ()=>40 } },
-  { key:"TGP (ALT)", unit:"U/L", ref: { type:"maxBySex", getMax: (sex)=> sex==="M" ? 50 : 40 } },
+  // Enzimas hepáticas (apenas ref simples)
+  { key:"TGO (AST)", unit:"U/L", ref:{ type:"max", getMax:()=>40 } },
+  { key:"TGP (ALT)", unit:"U/L", ref:{ type:"maxBySex", getMax:(sex)=> sex==="M"?50:40 } },
 
-  // Hemograma (principais)
-  { key:"Hemácias", unit:"milh./mm³", ref: { type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} } },
-  { key:"Hemoglobina", unit:"g/dL", ref: { type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} } },
-  { key:"Hematócrito", unit:"%", ref: { type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} } },
-  { key:"VGM", unit:"fL", ref: { type:"range", min:80, max:98 } },
-  { key:"HGM", unit:"pg", ref: { type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} } },
-  { key:"CHCM", unit:"%", ref: { type:"range", min:32, max:36 } },
-  { key:"RDW", unit:"%", ref: { type:"range", min:11, max:14 } },
+  // Série Vermelha
+  { key:"Hemácias", unit:"milh./mm³", ref:{ type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} } },
+  { key:"Hemoglobina", unit:"g/dL", ref:{ type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} } },
+  { key:"Hematócrito", unit:"%", ref:{ type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} } },
+  { key:"VGM", unit:"fL", ref:{ type:"range", min:80, max:98 } },
+  { key:"HGM", unit:"pg", ref:{ type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} } },
+  { key:"CHCM", unit:"%", ref:{ type:"range", min:32, max:36 } },
+  { key:"RDW", unit:"%", ref:{ type:"range", min:11, max:14 } },
 
-  { key:"Leucócitos", unit:"/mm³", ref: { type:"range", min:4500, max:10000 } },
-  { key:"Segmentados (%)", unit:"%", ref: { type:"range", min:49, max:64 } },
-  { key:"Segmentados (abs)", unit:"/mm³", ref: { type:"range", min:2205, max:7000 } },
-  { key:"Eosinófilos (%)", unit:"%", ref: { type:"range", min:1, max:4 } },
-  { key:"Eosinófilos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:400 } },
-  { key:"Linfócitos (%)", unit:"%", ref: { type:"range", min:20, max:35 } },
-  { key:"Linfócitos (abs)", unit:"/mm³", ref: { type:"range", min:900, max:3500 } },
-  { key:"Monócitos (%)", unit:"%", ref: { type:"range", min:1, max:8 } },
-  { key:"Monócitos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:800 } },
+  // Série Branca
+  { key:"Leucócitos", unit:"/mm³", ref:{ type:"range", min:4500, max:10000 } },
+  { key:"Segmentados (%)", unit:"%", ref:{ type:"range", min:49, max:64 } },
+  { key:"Segmentados (abs)", unit:"/mm³", ref:{ type:"range", min:2205, max:7000 } },
+  { key:"Eosinófilos (%)", unit:"%", ref:{ type:"range", min:1, max:4 } },
+  { key:"Eosinófilos (abs)", unit:"/mm³", ref:{ type:"range", min:45, max:400 } },
+  { key:"Linfócitos (%)", unit:"%", ref:{ type:"range", min:20, max:35 } },
+  { key:"Linfócitos (abs)", unit:"/mm³", ref:{ type:"range", min:900, max:3500 } },
+  { key:"Monócitos (%)", unit:"%", ref:{ type:"range", min:1, max:8 } },
+  { key:"Monócitos (abs)", unit:"/mm³", ref:{ type:"range", min:45, max:800 } },
 
-  { key:"Plaquetas", unit:"/mm³", ref: { type:"range", min:140000, max:400000 } },
-  { key:"VPM", unit:"fL", ref: { type:"range", min:9.4, max:12.4 } },
+  // Plaquetas
+  { key:"Plaquetas", unit:"/mm³", ref:{ type:"range", min:140000, max:400000 } },
+  { key:"VPM", unit:"fL", ref:{ type:"range", min:9.4, max:12.4 } },
 ];
 
-function getVarMeta(key){
-  return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}};
-}
+const GROUPS = {
+  "Lípides": ["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL"],
+  "Série Vermelha": ["Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"],
+  "Série Branca": ["Leucócitos","Segmentados (%)","Segmentados (abs)","Eosinófilos (%)","Eosinófilos (abs)","Linfócitos (%)","Linfócitos (abs)","Monócitos (%)","Monócitos (abs)"],
+  "Plaquetas / Outros": ["Plaquetas","VPM","TGO (AST)","TGP (ALT)"]
+};
 
-/* =========================
-   STORAGE
-   ========================= */
-const LS_KEY = "exameview_history_v3";
+function getVarMeta(key){ return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}}; }
 
-function loadHistory(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
-  catch{ return []; }
-}
-function saveHistory(arr){
-  localStorage.setItem(LS_KEY, JSON.stringify(arr));
-}
+/* ===== STORAGE ===== */
+const LS_KEY = "exameview_history_v4";
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch{ return []; } }
+function saveHistory(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
 function nowIso(){ return new Date().toISOString(); }
 
-/* =========================
-   PDF.js CONFIG
-   ========================= */
+/* ===== PDF.js ===== */
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
-/* Fallback: se worker falhar no Android, tenta sem worker */
-async function readPdfText(file){
+/** Lê texto por páginas e retorna {full, firstPage} */
+async function readPdfTextPages(file){
   const ab = await file.arrayBuffer();
-
-  try{
-    const doc = await pdfjsLib.getDocument({ data: ab }).promise;
-    let full="";
-    for (let p=1; p<=doc.numPages; p++){
+  async function read(disableWorker=false){
+    const doc = await pdfjsLib.getDocument({ data: ab, disableWorker }).promise;
+    let full="", first="";
+    for(let p=1;p<=doc.numPages;p++){
       const page = await doc.getPage(p);
       const content = await page.getTextContent();
-      full += "\n" + content.items.map(it => it.str).join(" ");
+      const txt = content.items.map(it=>it.str).join(" ");
+      full += "\n" + txt;
+      if(p===1) first = txt;
     }
-    return full;
-  }catch(e){
-    const doc = await pdfjsLib.getDocument({ data: ab, disableWorker: true }).promise;
-    let full="";
-    for (let p=1; p<=doc.numPages; p++){
-      const page = await doc.getPage(p);
-      const content = await page.getTextContent();
-      full += "\n" + content.items.map(it => it.str).join(" ");
-    }
-    return full;
+    return {full, firstPage:first};
   }
+  try{ return await read(false); } catch{ return await read(true); }
 }
 
-/* =========================
-   PARSERS
-   ========================= */
-function parseCollectionDate(text){
-  const m1 = text.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (m1) return m1[1];
+/* ===== PARSERS ===== */
+function parseCollectionDateFromFirstPage(firstPageText){
+  // prioriza "Data e Hora de Coleta" na 1ª página
+  let m = firstPageText.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m) return m[1];
 
-  const m2 = text.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (m2) return m2[1];
+  // fallback: "Data de Coleta"
+  m = firstPageText.match(/Data\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m) return m[1];
 
-  const m3 = text.match(/Impress[aã]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (m3) return m3[1];
+  // fallback: "Data de Entrada"
+  m = firstPageText.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m) return m[1];
 
-  // fallback: primeira data que não esteja colada em Data Nasc
-  const all = [...text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
-  for (const d of all){
-    const idx = text.indexOf(d);
-    const ctx = text.slice(Math.max(0, idx-20), idx+20);
-    if (!/Data\s*Nasc/i.test(ctx)) return d;
+  // fallback final: 1ª data da 1ª página que NÃO esteja perto de "Nasc"
+  const all = [...firstPageText.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
+  for(const d of all){
+    const idx = firstPageText.indexOf(d);
+    const ctx = firstPageText.slice(Math.max(0, idx-20), idx+20);
+    if(!/Nasc/i.test(ctx)) return d;
   }
   return null;
 }
@@ -353,123 +349,103 @@ function parseCollectionDate(text){
 function parseNumberPt(s){
   if (s==null) return null;
   let t = String(s).trim();
-  // remove separador de milhar "."
-  t = t.replace(/\.(?=\d{3}\b)/g, "");
-  // vírgula decimal -> ponto
-  t = t.replace(",", ".");
+  t = t.replace(/\.(?=\d{3}\b)/g, ""); // milhar
+  t = t.replace(",", ".");             // vírgula decimal
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
-
 function parseKeyValue(text, keyRegex){
   const m = text.match(keyRegex);
   if (!m) return null;
   return parseNumberPt(m[1]);
 }
 
-function parseExamValues(text){
+function parseExamValues(fullText){
   const values = {};
-
-  // Lipídios
-  values["Colesterol Total"] = parseKeyValue(text, /Colesterol\s*Total:\s*([0-9\.,]+)\s*mg\/dL/i);
-  values["HDL"] = parseKeyValue(text, /Colesterol\s*H\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
-  values["LDL"] = parseKeyValue(text, /Colesterol\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
-  values["VLDL"] = parseKeyValue(text, /Colesterol\s*V\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
-  values["Triglicérides"] = parseKeyValue(text, /Triglic[eé]rides:\s*([0-9\.,]+)\s*mg\/dL/i);
-  values["Não-HDL"] = parseKeyValue(text, /Colesterol\s*N[aã]o-?HDL:\s*([0-9\.,]+)\s*mg\/dL/i);
+  // Lípides
+  values["Colesterol Total"] = parseKeyValue(fullText, /Colesterol\s*Total:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["HDL"] = parseKeyValue(fullText, /Colesterol\s*H\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["LDL"] = parseKeyValue(fullText, /Colesterol\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["VLDL"] = parseKeyValue(fullText, /Colesterol\s*V\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["Triglicérides"] = parseKeyValue(fullText, /Triglic[eé]rides:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["Não-HDL"] = parseKeyValue(fullText, /Colesterol\s*N[aã]o-?HDL:\s*([0-9\.,]+)\s*mg\/dL/i);
 
   // TGO/TGP
-  values["TGO (AST)"] = parseKeyValue(text, /TGO[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
-  values["TGP (ALT)"] = parseKeyValue(text, /TGP[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
+  values["TGO (AST)"] = parseKeyValue(fullText, /TGO[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
+  values["TGP (ALT)"] = parseKeyValue(fullText, /TGP[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
 
-  // Hemograma série vermelha
-  values["Hemácias"] = parseKeyValue(text, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
-  values["Hemoglobina"] = parseKeyValue(text, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/dl/i);
-  values["Hematócrito"] = parseKeyValue(text, /Hematocrito\.*\s*([0-9\.,]+)\s*%/i);
-  values["VGM"] = parseKeyValue(text, /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i);
-  values["HGM"] = parseKeyValue(text, /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i);
-  values["CHCM"] = parseKeyValue(text, /C\.?H\.?G\.?M\.*\s*([0-9\.,]+)\s*%/i);
-  values["RDW"] = parseKeyValue(text, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
+  // Série vermelha
+  values["Hemácias"]     = parseKeyValue(fullText, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
+  values["Hemoglobina"]  = parseKeyValue(fullText, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/dl/i);
+  values["Hematócrito"]  = parseKeyValue(fullText, /Hematocrito\.*\s*([0-9\.,]+)\s*%/i);
+  values["VGM"]          = parseKeyValue(fullText, /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i);
+  values["HGM"]          = parseKeyValue(fullText, /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i);
+  values["CHCM"]         = parseKeyValue(fullText, /C\.?H\.?G\.?M\.*\s*([0-9\.,]+)\s*%/i);
+  values["RDW"]          = parseKeyValue(fullText, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
 
-  // Série branca (% e absoluto na mesma linha em alguns laudos)
-  let mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  // Série branca (linha % e abs)
+  let mSeg = fullText.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
   if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
 
-  let mEos = text.match(/Eosinofilos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  let mEos = fullText.match(/Eosinofilos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
   if (mEos){ values["Eosinófilos (%)"]=parseNumberPt(mEos[1]); values["Eosinófilos (abs)"]=parseNumberPt(mEos[2]); }
 
-  let mLinf = text.match(/Linfocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  let mLinf = fullText.match(/Linfocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
   if (mLinf){ values["Linfócitos (%)"]=parseNumberPt(mLinf[1]); values["Linfócitos (abs)"]=parseNumberPt(mLinf[2]); }
 
-  let mMono = text.match(/Monocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  let mMono = fullText.match(/Monocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
   if (mMono){ values["Monócitos (%)"]=parseNumberPt(mMono[1]); values["Monócitos (abs)"]=parseNumberPt(mMono[2]); }
 
-  values["Leucócitos"] = parseKeyValue(text, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
-  values["Plaquetas"] = parseKeyValue(text, /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i);
-  values["VPM"] = parseKeyValue(text, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
+  values["Leucócitos"] = parseKeyValue(fullText, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
+  values["Plaquetas"]  = parseKeyValue(fullText, /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i);
+  values["VPM"]        = parseKeyValue(fullText, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
 
-  Object.keys(values).forEach(k=>{
-    if (values[k]==null || Number.isNaN(values[k])) delete values[k];
-  });
-
+  Object.keys(values).forEach(k=>{ if(values[k]==null || Number.isNaN(values[k])) delete values[k]; });
   return values;
 }
 
-// tenta ler tabela de resultados anteriores (colesterol etc.)
-function parseLipidHistory(text){
-  const mDates = text.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
+/** Lê “Resultados anteriores” (tabela de lipídios) se existir */
+function parseLipidHistory(fullText){
+  const mDates = fullText.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
   if (!mDates) return [];
   const dates = (mDates[1].match(/\d{2}\/\d{2}\/\d{4}/g) || []);
   if (!dates.length) return [];
 
   function rowValues(label){
     const re = new RegExp(label + "[^0-9]*([0-9\\s\\.,]+)", "i");
-    const m = text.match(re);
+    const m = fullText.match(re);
     if (!m) return [];
-    const nums = (m[1].match(/[0-9\.,]+/g) || []).map(parseNumberPt).filter(n=>n!=null);
-    return nums;
+    return (m[1].match(/[0-9\.,]+/g) || []).map(parseNumberPt).filter(n=>n!=null);
   }
-
   const rows = {
     "Colesterol Total": rowValues("Colesterol\\s*Total"),
-    "HDL": rowValues("Colesterol\\s*HDL"),
-    "LDL": rowValues("Colesterol\\s*LDL"),
-    "VLDL": rowValues("Colesterol\\s*VLDL"),
-    "Triglicérides": rowValues("Triglic[eé]rides"),
-    "Não-HDL": rowValues("Colesterol\\s*N[aã]o-?HDL")
+    "HDL":              rowValues("Colesterol\\s*HDL"),
+    "LDL":              rowValues("Colesterol\\s*LDL"),
+    "VLDL":             rowValues("Colesterol\\s*VLDL"),
+    "Triglicérides":    rowValues("Triglic[eé]rides"),
+    "Não-HDL":          rowValues("Colesterol\\s*N[aã]o-?HDL")
   };
 
   const points=[];
-  for (let i=0;i<dates.length;i++){
-    const values={}
-    for (const k of Object.keys(rows)){
-      if (rows[k][i]!=null) values[k]=rows[k][i];
-    }
-    if (Object.keys(values).length){
-      points.push({ date: dates[i], values, source:"Tabela (PDF)" });
-    }
+  for(let i=0;i<dates.length;i++){
+    const values={};
+    for (const k of Object.keys(rows)){ if(rows[k][i]!=null) values[k]=rows[k][i]; }
+    if(Object.keys(values).length){ points.push({ date: dates[i], values, source:"Tabela (PDF)" }); }
   }
   return points;
 }
 
-/* =========================
-   REFERÊNCIAS / STATUS
-   ========================= */
+/* ===== REFERÊNCIAS / STATUS ===== */
 function refMinMax(varKey, sex){
   const meta = getVarMeta(varKey);
   const r = meta.ref || {type:"none"};
-
   if (r.type==="range") return {min:r.min, max:r.max, note:r.note};
   if (r.type==="max") return {min:null, max:r.getMax(sex), note:r.note};
   if (r.type==="minBySex") return {min:r.getMin(sex), max:null, note:r.note};
   if (r.type==="maxBySex") return {min:null, max:r.getMax(sex), note:r.note};
-  if (r.type==="rangeBySex"){
-    const rr = r[sex] || r.M;
-    return {min:rr?.min ?? null, max:rr?.max ?? null, note:r.note};
-  }
+  if (r.type==="rangeBySex"){ const rr = r[sex] || r.M; return {min:rr?.min??null, max:rr?.max??null, note:r.note}; }
   return {min:null, max:null, note:r.note};
 }
-
 function statusFor(value, ref){
   const {min,max} = ref;
   if (value==null) return {label:"—", cls:"na"};
@@ -478,53 +454,28 @@ function statusFor(value, ref){
   return {label:"Dentro", cls:"ok"};
 }
 
-/* =========================
-   HELPERS DE DATA
-   ========================= */
-function ddmmyyyyToISO(d){
-  const [dd,mm,yyyy]=d.split("/");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function isoToLabel(iso){
-  const [y,m,d]=iso.split("-");
-  return `${d}/${m}/${y}`;
-}
+/* ===== DATAS ===== */
+function ddmmyyyyToISO(d){ const [dd,mm,yyyy]=d.split("/"); return `${yyyy}-${mm}-${dd}`; }
+function isoToLabel(iso){ const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 
-/* =========================
-   UI / RENDER
-   ========================= */
+/* ===== UI ===== */
 const manualVar = document.getElementById('manualVar');
-VARS.forEach(v=>{
-  const opt=document.createElement('option');
-  opt.value=v.key;
-  opt.textContent=`${v.key} (${v.unit || "-"})`;
-  manualVar.appendChild(opt);
-});
+VARS.forEach(v=>{ const opt=document.createElement('option'); opt.value=v.key; opt.textContent=`${v.key} (${v.unit||"-"})`; manualVar.appendChild(opt); });
 
 const elPoints = document.getElementById('kpiPoints');
-const elDates = document.getElementById('kpiDates');
-const elVars = document.getElementById('vars');
-const elHist = document.getElementById('history');
-const elRaw = document.getElementById('raw');
-const errBox = document.getElementById('errBox');
-const okBox = document.getElementById('okBox');
+const elDates  = document.getElementById('kpiDates');
+const elGroups = document.getElementById('groups');
+const elHist   = document.getElementById('history');
+const elResume = document.getElementById('resume');
+const elRaw    = document.getElementById('raw');
+const errBox   = document.getElementById('errBox');
+const okBox    = document.getElementById('okBox');
 
 let charts = new Map();
-function destroyCharts(){
-  for (const c of charts.values()) c.destroy();
-  charts.clear();
-}
+function destroyCharts(){ for(const c of charts.values()) c.destroy(); charts.clear(); }
 
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-function hashKey(s){
-  let h=0;
-  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-  return h.toString(16);
-}
+function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function hashKey(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0; return h.toString(16); }
 function formatRefLine(ref, meta){
   const unit = meta.unit ? ` ${meta.unit}` : "";
   const parts=[];
@@ -535,35 +486,29 @@ function formatRefLine(ref, meta){
   return parts.join("  |  ");
 }
 
+/** Monta cards por grupo + resumo */
 function rebuild(){
   const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
 
+  // KPIs
   const allDates = new Set(hist.map(h=>h.date));
-  let points=0;
-  hist.forEach(h=> points += Object.keys(h.values||{}).length);
-  elPoints.textContent = points;
-  elDates.textContent = allDates.size;
+  let points=0; hist.forEach(h=> points += Object.keys(h.values||{}).length);
+  elPoints.textContent = points; elDates.textContent = allDates.size;
 
-  // histórico
+  // Histórico bruto
   elHist.innerHTML="";
   hist.slice().reverse().forEach(h=>{
-    const div=document.createElement('div');
-    div.className="item";
-    const top=document.createElement('div');
-    top.className="itemTop";
+    const div=document.createElement('div'); div.className="item";
+    const top=document.createElement('div'); top.className="itemTop";
     top.innerHTML = `
-      <div class="itemTitle">${escapeHtml(h.name || "Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
-      <div class="muted">${escapeHtml(h.source || "PDF")}</div>
-    `;
-    const body=document.createElement('div');
-    body.className="mono muted";
-    body.style.marginTop="8px";
+      <div class="itemTitle">${escapeHtml(h.name||"Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
+      <div class="muted">${escapeHtml(h.source||"PDF")}</div>`;
+    const body=document.createElement('div'); body.className="mono muted"; body.style.marginTop="8px";
     body.textContent = Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  ");
-    div.appendChild(top); div.appendChild(body);
-    elHist.appendChild(div);
+    div.appendChild(top); div.appendChild(body); elHist.appendChild(div);
   });
 
-  // series por variável
+  // Monta séries por variável
   const series = new Map();
   hist.forEach(h=>{
     const iso = ddmmyyyyToISO(h.date);
@@ -574,24 +519,20 @@ function rebuild(){
   });
   for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
 
-  destroyCharts();
-  elVars.innerHTML="";
-
-  const keys = [...series.keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  // Render grupos
+  destroyCharts(); elGroups.innerHTML="";
   const sex = document.getElementById('sex').value;
 
-  keys.forEach(varKey=>{
+  const lastStatus = {}; // para resumo (pega status do último valor)
+  function renderVarCard(varKey, container){
     const meta = getVarMeta(varKey);
-    const ref = refMinMax(varKey, sex);
+    const ref  = refMinMax(varKey, sex);
     const unit = meta.unit ? ` ${meta.unit}` : "";
-
     const data = series.get(varKey) || [];
-    const last = data[data.length-1];
-    const lastVal = last?.y ?? null;
-    const st = statusFor(lastVal, ref);
+    const last = data[data.length-1]; const lastVal = last?.y ?? null;
+    const st   = statusFor(lastVal, ref); lastStatus[varKey] = st;
 
-    const card=document.createElement('div');
-    card.className="varCard";
+    const card=document.createElement('div'); card.className="varCard";
     card.innerHTML = `
       <div class="varHead">
         <div>
@@ -600,79 +541,88 @@ function rebuild(){
         </div>
         <span class="status ${st.cls}">${st.label}</span>
       </div>
-      <div style="height:150px;margin-top:10px">
-        <canvas id="c_${hashKey(varKey)}"></canvas>
-      </div>
+      <div style="height:150px;margin-top:10px"><canvas id="c_${hashKey(varKey)}"></canvas></div>
       <div class="varMeta">
         <div class="small"><b>Último:</b> ${lastVal!=null ? lastVal + unit : "—"} <span class="muted">em ${last?.x ? isoToLabel(last.x) : "—"}</span></div>
       </div>
+      <div class="editRow">
+        <select class="edDate"></select>
+        <input class="edValue" type="number" step="any" placeholder="novo valor" />
+        <button class="edSave" type="button">Salvar</button>
+      </div>
     `;
-    elVars.appendChild(card);
+    container.appendChild(card);
 
-    // ✅ Sem time scale: usa category com labels DD/MM/AAAA
+    // labels/valores
     const labels = data.map(p => isoToLabel(p.x));
     const values = data.map(p => p.y);
-
     const ds = [{
-      label: "Valor",
-      data: values,
-      tension: 0.25,
-      pointRadius: 3,
-      borderWidth: 2
+      label:"Valor", data: values, tension:.25, pointRadius:3, borderWidth:2
     }];
-
-    if (ref.min!=null){
-      ds.push({
-        label:"Ref. mínima",
-        data: labels.map(()=>ref.min),
-        borderDash:[6,6],
-        pointRadius:0,
-        borderWidth:2
-      });
-    }
-    if (ref.max!=null){
-      ds.push({
-        label:"Ref. máxima",
-        data: labels.map(()=>ref.max),
-        borderDash:[6,6],
-        pointRadius:0,
-        borderWidth:2
-      });
-    }
+    if (ref.min!=null) ds.push({ label:"Ref. mínima", data: labels.map(()=>ref.min), borderDash:[6,6], pointRadius:0, borderWidth:2 });
+    if (ref.max!=null) ds.push({ label:"Ref. máxima", data: labels.map(()=>ref.max), borderDash:[6,6], pointRadius:0, borderWidth:2 });
 
     const ctx = card.querySelector("canvas").getContext("2d");
     const ch = new Chart(ctx, {
       type:"line",
       data:{ labels, datasets: ds },
       options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
-          tooltip:{
-            callbacks:{
-              title:(items)=> items?.[0]?.label || "",
-              label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
-            }
-          }
-        },
-        scales:{
-          x:{ type:"category", ticks:{ maxTicksLimit:5 } },
-          y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } }
-        }
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } } },
+        scales:{ x:{ type:"category", ticks:{ maxTicksLimit:5 } }, y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } } }
       }
     });
     charts.set(varKey, ch);
+
+    // editor (lista datas dessa variável)
+    const sel = card.querySelector(".edDate");
+    data.forEach(p=>{ const o=document.createElement('option'); o.value=p.x; o.textContent=isoToLabel(p.x); sel.appendChild(o); });
+    const inp = card.querySelector(".edValue");
+    const btn = card.querySelector(".edSave");
+    btn.addEventListener('click', ()=>{
+      const iso = sel.value; const val = Number(inp.value);
+      if (!iso || !Number.isFinite(val)){ alert("Escolha a data e informe um valor numérico."); return; }
+      // atualiza o item correspondente no histórico
+      const dateBR = isoToLabel(iso);
+      const hist = loadHistory();
+      let changed=false;
+      for(const h of hist){
+        if (h.date===dateBR && h.values && h.values[varKey]!=null){
+          h.values[varKey] = val; changed=true;
+        }
+      }
+      if (!changed){ alert("Não encontrei esse ponto para edição."); return; }
+      saveHistory(hist);
+      okBox.style.display="block"; okBox.textContent="Valor editado e salvo no histórico.";
+      errBox.style.display="none";
+      rebuild();
+    });
+  }
+
+  // cria blocos de grupo
+  Object.entries(GROUPS).forEach(([gname, keys])=>{
+    const g=document.createElement('div'); g.className="group";
+    g.innerHTML=`<h3>${gname}</h3><div class="cardsVar"></div>`;
+    const holder = g.querySelector(".cardsVar");
+    keys.forEach(k => { if(series.has(k)) renderVarCard(k, holder); });
+    // só mostra se tiver pelo menos 1 card
+    if (holder.children.length) elGroups.appendChild(g);
   });
 
-  if (!keys.length){
-    elVars.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
+  if (!elGroups.children.length){
+    elGroups.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
   }
+
+  // Resumo (últimos valores)
+  elResume.innerHTML="";
+  const out = Object.entries(lastStatus).filter(([,st])=>st.cls==="bad").map(([k])=>k).sort();
+  const inr = Object.entries(lastStatus).filter(([,st])=>st.cls==="ok").map(([k])=>k).sort();
+  const b1=document.createElement('div'); b1.className="item"; b1.innerHTML=`<div class="itemTitle">Fora do intervalo</div><div class="muted">${out.length? out.join(" • ") : "—"}</div>`;
+  const b2=document.createElement('div'); b2.className="item"; b2.innerHTML=`<div class="itemTitle">Dentro do intervalo</div><div class="muted">${inr.length? inr.join(" • ") : "—"}</div>`;
+  elResume.appendChild(b1); elResume.appendChild(b2);
 }
 
-/* =========================
-   AÇÕES
-   ========================= */
+/* ===== AÇÕES ===== */
 document.getElementById('btnClear').addEventListener('click', ()=>{
   if (!confirm("Zerar o histórico do dispositivo?")) return;
   localStorage.removeItem(LS_KEY);
@@ -683,33 +633,25 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
   const data = loadHistory();
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download="historico-exames.json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a'); a.href=url; a.download="historico-exames.json";
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 });
 
 document.getElementById('btnManual').addEventListener('click', ()=>{
   const name = document.getElementById('name').value.trim() || "Sem nome";
-  const age = Number(document.getElementById('age').value || 0);
-  const sex = document.getElementById('sex').value;
+  const age  = Number(document.getElementById('age').value || 0);
+  const sex  = document.getElementById('sex').value;
 
-  const varKey = document.getElementById('manualVar').value;
+  const varKey  = document.getElementById('manualVar').value;
   const dateISO = document.getElementById('manualDate').value;
-  const value = Number(document.getElementById('manualValue').value);
+  const value   = Number(document.getElementById('manualValue').value);
 
-  if (!dateISO || !Number.isFinite(value)){
-    alert("Preencha data e valor numérico.");
-    return;
-  }
+  if (!dateISO || !Number.isFinite(value)){ alert("Preencha data e valor numérico."); return; }
 
   const date = isoToLabel(dateISO);
   const hist = loadHistory();
   hist.push({
-    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+    id:(crypto?.randomUUID? crypto.randomUUID() : String(Math.random()).slice(2)),
     createdAt: nowIso(),
     source: "Manual",
     name, age, sex,
@@ -718,60 +660,58 @@ document.getElementById('btnManual').addEventListener('click', ()=>{
   });
   saveHistory(hist);
 
-  okBox.style.display="block";
-  okBox.textContent = "Valor manual adicionado ao histórico.";
+  okBox.style.display="block"; okBox.textContent="Valor manual adicionado ao histórico.";
   errBox.style.display="none";
   rebuild();
 });
 
 document.getElementById('btnRead').addEventListener('click', async ()=>{
   const file = document.getElementById('pdf').files?.[0];
-  if (!file){
-    alert("Escolha um PDF.");
-    return;
-  }
+  if (!file){ alert("Escolha um PDF."); return; }
 
-  errBox.style.display="none";
-  okBox.style.display="none";
-  elRaw.value="Lendo PDF...";
+  errBox.style.display="none"; okBox.style.display="none"; elRaw.value="Lendo PDF...";
 
   try{
-    const text = await readPdfText(file);
-    elRaw.value = text.slice(0, 20000);
+    const {full, firstPage} = await readPdfTextPages(file);
+    elRaw.value = full.slice(0, 20000);
 
-    const date = parseCollectionDate(text);
-    if (!date){
-      throw new Error("Não consegui identificar a data do exame (procurei Coleta/Entrada/Impressão).");
-    }
+    const date = parseCollectionDateFromFirstPage(firstPage);
+    if (!date){ throw new Error("Não consegui identificar a data da 1ª página (Coleta/Entrada)."); }
 
-    const valuesNow = parseExamValues(text);
-    const lipidPoints = parseLipidHistory(text);
+    const valuesNow   = parseExamValues(full);
+    const lipidPoints = parseLipidHistory(full);
 
     const name = document.getElementById('name').value.trim() || "Sem nome";
-    const age = Number(document.getElementById('age').value || 0);
-    const sex = document.getElementById('sex').value;
+    const age  = Number(document.getElementById('age').value || 0);
+    const sex  = document.getElementById('sex').value;
 
     const hist = loadHistory();
 
     if (Object.keys(valuesNow).length){
-      hist.push({
-        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
-        createdAt: nowIso(),
-        source: file.name || "PDF",
-        name, age, sex,
-        date,
-        values: valuesNow
-      });
+      // evita duplicar (mesma data + mesmo conjunto de valores principais)
+      const signature = date + "||" + JSON.stringify(valuesNow);
+      const already = hist.some(h => (h.date===date) && JSON.stringify(h.values)===JSON.stringify(valuesNow));
+      if (!already){
+        hist.push({
+          id:(crypto?.randomUUID? crypto.randomUUID() : String(Math.random()).slice(2)),
+          createdAt: nowIso(),
+          source: file.name || "PDF",
+          name, age, sex,
+          date,
+          values: valuesNow
+        });
+      }
     } else {
-      throw new Error("Consegui ler o texto do PDF, mas não achei valores reconhecíveis (layout diferente).");
+      throw new Error("Li o PDF, mas não achei valores reconhecíveis (layout diferente).");
     }
 
+    // adiciona “resultados anteriores” (sem duplicar)
     for (const p of lipidPoints){
-      const signature = JSON.stringify(p.values);
-      const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===signature && (h.source||"").includes("Tabela"));
+      const signature = p.date + "||" + JSON.stringify(p.values);
+      const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===JSON.stringify(p.values) && (h.source||"").includes("Tabela"));
       if (!exists){
         hist.push({
-          id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+          id:(crypto?.randomUUID? crypto.randomUUID() : String(Math.random()).slice(2)),
           createdAt: nowIso(),
           source: "Tabela (Resultados anteriores do PDF)",
           name, age, sex,
@@ -784,24 +724,25 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
     saveHistory(hist);
 
     okBox.style.display="block";
-    okBox.textContent =
-      `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date})` +
-      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela.` : ".");
+    okBox.textContent = `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date})` + (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela.` : ".");
     errBox.style.display="none";
 
+    // limpa o input para você saber que já foi adicionado
+    document.getElementById('pdf').value = "";
     rebuild();
   }catch(err){
     const msg = String(err?.message || err);
-    errBox.style.display="block";
-    errBox.textContent = msg;
-    okBox.style.display="none";
-    errBox.scrollIntoView({behavior:"smooth", block:"start"});
+    errBox.style.display="block"; errBox.textContent = msg;
+    okBox.style.display="none"; errBox.scrollIntoView({behavior:"smooth", block:"start"});
     alert("Erro ao processar: " + msg);
   }
 });
 
 // init
-rebuild();
+(function init(){
+  const manualVar = document.getElementById('manualVar');
+  rebuild();
+})();
 </script>
 </body>
 </html>
