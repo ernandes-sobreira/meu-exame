@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Leitor de Exames (PDF) — histórico + gráficos por variável</title>
 
-  <!-- UI branca/limpa -->
   <style>
     :root{
       --bg:#f6f7fb;
@@ -16,7 +15,6 @@
       --brand:#2563eb;
       --ok:#16a34a;
       --bad:#dc2626;
-      --warn:#f59e0b;
       --shadow: 0 10px 30px rgba(2,6,23,.08);
       --radius: 18px;
     }
@@ -31,9 +29,7 @@
     }
     .wrap{max-width:1100px;margin:28px auto;padding:0 16px 60px}
     header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-    .title{
-      display:flex;flex-direction:column;gap:6px;
-    }
+    .title{display:flex;flex-direction:column;gap:6px}
     h1{margin:0;font-size:22px;letter-spacing:-.02em}
     .sub{margin:0;color:var(--muted);line-height:1.35}
     .pill{
@@ -84,7 +80,6 @@
     .status.ok{color:var(--ok)}
     .status.bad{color:var(--bad)}
     .status.na{color:var(--muted)}
-    .bigChart{height:280px}
     .cardsVar{
       display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px
     }
@@ -106,9 +101,6 @@
     .itemTitle{font-weight:900}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
     .muted{color:var(--muted)}
-    .danger{color:var(--bad);font-weight:800}
-    .okText{color:var(--ok);font-weight:800}
-    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
     .errBox{
       white-space:pre-wrap;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -119,12 +111,13 @@
       font-size:12px;color:#14532d;background:#ecfdf5;border:1px solid #bbf7d0;
       padding:10px;border-radius:14px;display:none
     }
+    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
   </style>
 
-  <!-- Chart.js -->
+  <!-- Chart.js (SEM time adapter — usaremos category) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- PDF.js (v3 legacy) -->
+  <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
@@ -138,7 +131,7 @@
           Ferramenta de visualização (não diagnóstico).
         </p>
       </div>
-      <div class="pill">📌 Dica: se der erro, abra “inspecionar/console” ou veja o bloco “Erro técnico” aqui.</div>
+      <div class="pill">📌 Se der erro, veja o bloco “Erro técnico” (mostra o motivo real).</div>
     </header>
 
     <div class="grid">
@@ -175,7 +168,7 @@
         </div>
 
         <div class="hint">
-          • A data usada para o eixo do tempo é sempre: <b>Data e Hora de Coleta</b> (quando existir).<br/>
+          • A data usada é sempre <b>Data e Hora de Coleta</b> (quando existir).<br/>
           • Se o PDF for “escaneado imagem”, pode não ter texto extraível sem OCR.
         </div>
 
@@ -206,9 +199,10 @@
 
         <div class="hr"></div>
 
-        <h2>3) Diagnóstico técnico (para ajustar)</h2>
+        <h2>3) Erro técnico (e texto extraído)</h2>
         <div id="okBox" class="okBox"></div>
         <div id="errBox" class="errBox"></div>
+
         <label style="margin-top:10px">Texto extraído do PDF (debug)</label>
         <textarea id="raw" rows="7" placeholder="Aqui vai aparecer o texto extraído..."></textarea>
       </section>
@@ -230,14 +224,14 @@
 
         <div class="hr"></div>
 
-        <h2>Tendência por variável (mini-gráficos)</h2>
-        <div class="hint">Cada card é uma variável. As referências aparecem como linhas tracejadas (mín/máx).</div>
+        <h2>Mini-gráficos por variável</h2>
+        <div class="hint">Cada variável vira um card. Referências = linhas tracejadas (mín/máx).</div>
         <div id="vars" class="cardsVar"></div>
 
         <div class="hr"></div>
 
         <h2>Histórico bruto</h2>
-        <div class="hint">salvo no <b>localStorage</b> do seu dispositivo</div>
+        <div class="hint">salvo no <b>localStorage</b></div>
         <div id="history" class="list"></div>
 
         <footer>ExameView • Visualização local • Não substitui orientação médica.</footer>
@@ -247,13 +241,12 @@
 
 <script>
 /* =========================
-   CONFIG / “CATÁLOGO” DE VARIÁVEIS
+   CATÁLOGO DE VARIÁVEIS + REFERÊNCIAS (padrão)
    ========================= */
 const VARS = [
   // Lipídios / enzimas
   { key:"Colesterol Total", unit:"mg/dL", ref: { type:"max", getMax: ()=>190 } },
   { key:"HDL", unit:"mg/dL", ref: { type:"minBySex", getMin: (sex)=> sex==="M" ? 40 : 50 } },
-  // LDL depende de risco; como não temos, deixamos “meta típica baixo risco” como max 115
   { key:"LDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
   { key:"VLDL", unit:"mg/dL", ref: { type:"range", min:0, max:30 } },
   { key:"Triglicérides", unit:"mg/dL", ref: { type:"max", getMax: ()=>150 } },
@@ -285,15 +278,6 @@ const VARS = [
   { key:"VPM", unit:"fL", ref: { type:"range", min:9.4, max:12.4 } },
 ];
 
-// preenchimento do select manual
-const manualVar = document.getElementById('manualVar');
-VARS.forEach(v=>{
-  const opt=document.createElement('option');
-  opt.value=v.key;
-  opt.textContent=`${v.key} (${v.unit || "-"})`;
-  manualVar.appendChild(opt);
-});
-
 function getVarMeta(key){
   return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}};
 }
@@ -301,7 +285,7 @@ function getVarMeta(key){
 /* =========================
    STORAGE
    ========================= */
-const LS_KEY = "exameview_history_v2";
+const LS_KEY = "exameview_history_v3";
 
 function loadHistory(){
   try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
@@ -310,45 +294,53 @@ function loadHistory(){
 function saveHistory(arr){
   localStorage.setItem(LS_KEY, JSON.stringify(arr));
 }
-
-function nowIso(){
-  return new Date().toISOString();
-}
+function nowIso(){ return new Date().toISOString(); }
 
 /* =========================
-   PDF EXTRACT
+   PDF.js CONFIG
    ========================= */
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
+/* Fallback: se worker falhar no Android, tenta sem worker */
 async function readPdfText(file){
   const ab = await file.arrayBuffer();
-  const doc = await pdfjsLib.getDocument({data: ab}).promise;
-  let full="";
-  for (let p=1; p<=doc.numPages; p++){
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    const strings = content.items.map(it => it.str);
-    full += "\n\n---PAGE " + p + "---\n" + strings.join(" ");
+
+  try{
+    const doc = await pdfjsLib.getDocument({ data: ab }).promise;
+    let full="";
+    for (let p=1; p<=doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const content = await page.getTextContent();
+      full += "\n" + content.items.map(it => it.str).join(" ");
+    }
+    return full;
+  }catch(e){
+    const doc = await pdfjsLib.getDocument({ data: ab, disableWorker: true }).promise;
+    let full="";
+    for (let p=1; p<=doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const content = await page.getTextContent();
+      full += "\n" + content.items.map(it => it.str).join(" ");
+    }
+    return full;
   }
-  return full;
 }
 
-// pega a data de coleta corretamente (e NÃO confunde com Data Nasc.)
+/* =========================
+   PARSERS
+   ========================= */
 function parseCollectionDate(text){
-  // prioridade 1: Data e Hora de Coleta: DD/MM/YYYY
   const m1 = text.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
   if (m1) return m1[1];
 
-  // fallback 2: Data de Entrada
   const m2 = text.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
   if (m2) return m2[1];
 
-  // fallback 3: Impressão
   const m3 = text.match(/Impress[aã]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
   if (m3) return m3[1];
 
-  // último fallback: primeira data que NÃO esteja colada em "Data Nasc"
+  // fallback: primeira data que não esteja colada em Data Nasc
   const all = [...text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
   for (const d of all){
     const idx = text.indexOf(d);
@@ -360,7 +352,6 @@ function parseCollectionDate(text){
 
 function parseNumberPt(s){
   if (s==null) return null;
-  // 17,70 -> 17.70 ; 5.740 -> 5740 ; 216,000 -> 216000
   let t = String(s).trim();
   // remove separador de milhar "."
   t = t.replace(/\.(?=\d{3}\b)/g, "");
@@ -370,9 +361,6 @@ function parseNumberPt(s){
   return Number.isFinite(n) ? n : null;
 }
 
-/* =========================
-   PARSERS (modelo São Matheus - parecido com seu PDF)
-   ========================= */
 function parseKeyValue(text, keyRegex){
   const m = text.match(keyRegex);
   if (!m) return null;
@@ -382,7 +370,7 @@ function parseKeyValue(text, keyRegex){
 function parseExamValues(text){
   const values = {};
 
-  // Lipídios (linha única)
+  // Lipídios
   values["Colesterol Total"] = parseKeyValue(text, /Colesterol\s*Total:\s*([0-9\.,]+)\s*mg\/dL/i);
   values["HDL"] = parseKeyValue(text, /Colesterol\s*H\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
   values["LDL"] = parseKeyValue(text, /Colesterol\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
@@ -403,8 +391,7 @@ function parseExamValues(text){
   values["CHCM"] = parseKeyValue(text, /C\.?H\.?G\.?M\.*\s*([0-9\.,]+)\s*%/i);
   values["RDW"] = parseKeyValue(text, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
 
-  // Série branca (tem % e absoluto na mesma linha)
-  // Segmentados: "72 4.133"
+  // Série branca (% e absoluto na mesma linha em alguns laudos)
   let mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
   if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
 
@@ -421,7 +408,6 @@ function parseExamValues(text){
   values["Plaquetas"] = parseKeyValue(text, /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i);
   values["VPM"] = parseKeyValue(text, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
 
-  // limpa nulls
   Object.keys(values).forEach(k=>{
     if (values[k]==null || Number.isNaN(values[k])) delete values[k];
   });
@@ -429,13 +415,8 @@ function parseExamValues(text){
   return values;
 }
 
-/**
- * BÔNUS: lê "Data Resultado anterior" de colesterol e cria pontos históricos para
- * Colesterol Total/HDL/LDL/VLDL/Triglicérides/Não-HDL.
- * Se não achar, retorna [].
- */
+// tenta ler tabela de resultados anteriores (colesterol etc.)
 function parseLipidHistory(text){
-  // datas: "Data Resultado anterior...... 02/12/2025 04/07/2025 ..."
   const mDates = text.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
   if (!mDates) return [];
   const dates = (mDates[1].match(/\d{2}\/\d{2}\/\d{4}/g) || []);
@@ -465,14 +446,14 @@ function parseLipidHistory(text){
       if (rows[k][i]!=null) values[k]=rows[k][i];
     }
     if (Object.keys(values).length){
-      points.push({ date: dates[i], values, source:"Tabela de resultados anteriores" });
+      points.push({ date: dates[i], values, source:"Tabela (PDF)" });
     }
   }
   return points;
 }
 
 /* =========================
-   REF + STATUS
+   REFERÊNCIAS / STATUS
    ========================= */
 function refMinMax(varKey, sex){
   const meta = getVarMeta(varKey);
@@ -498,8 +479,28 @@ function statusFor(value, ref){
 }
 
 /* =========================
-   RENDER
+   HELPERS DE DATA
    ========================= */
+function ddmmyyyyToISO(d){
+  const [dd,mm,yyyy]=d.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function isoToLabel(iso){
+  const [y,m,d]=iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+/* =========================
+   UI / RENDER
+   ========================= */
+const manualVar = document.getElementById('manualVar');
+VARS.forEach(v=>{
+  const opt=document.createElement('option');
+  opt.value=v.key;
+  opt.textContent=`${v.key} (${v.unit || "-"})`;
+  manualVar.appendChild(opt);
+});
+
 const elPoints = document.getElementById('kpiPoints');
 const elDates = document.getElementById('kpiDates');
 const elVars = document.getElementById('vars');
@@ -508,35 +509,42 @@ const elRaw = document.getElementById('raw');
 const errBox = document.getElementById('errBox');
 const okBox = document.getElementById('okBox');
 
-let charts = new Map(); // key -> Chart instance
-
+let charts = new Map();
 function destroyCharts(){
   for (const c of charts.values()) c.destroy();
   charts.clear();
 }
 
-function ddmmyyyyToISO(d){
-  // "05/01/2026" -> "2026-01-05"
-  const [dd,mm,yyyy]=d.split("/");
-  return `${yyyy}-${mm}-${dd}`;
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
 }
-function isoToLabel(iso){
-  // "2026-01-05" -> "05/01/2026"
-  const [y,m,d]=iso.split("-");
-  return `${d}/${m}/${y}`;
+function hashKey(s){
+  let h=0;
+  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
+function formatRefLine(ref, meta){
+  const unit = meta.unit ? ` ${meta.unit}` : "";
+  const parts=[];
+  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
+  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
+  if (!parts.length) parts.push("referência: —");
+  if (ref.note) parts.push(`• ${ref.note}`);
+  return parts.join("  |  ");
 }
 
 function rebuild(){
   const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
 
-  // KPIs
   const allDates = new Set(hist.map(h=>h.date));
   let points=0;
   hist.forEach(h=> points += Object.keys(h.values||{}).length);
   elPoints.textContent = points;
   elDates.textContent = allDates.size;
 
-  // HISTÓRICO
+  // histórico
   elHist.innerHTML="";
   hist.slice().reverse().forEach(h=>{
     const div=document.createElement('div');
@@ -555,28 +563,26 @@ function rebuild(){
     elHist.appendChild(div);
   });
 
-  // AGREGA por variável
-  const series = new Map(); // varKey -> [{dateISO,value}]
+  // series por variável
+  const series = new Map();
   hist.forEach(h=>{
     const iso = ddmmyyyyToISO(h.date);
     for (const [k,v] of Object.entries(h.values||{})){
       if (!series.has(k)) series.set(k, []);
-      series.get(k).push({x: iso, y: v, sex: h.sex});
+      series.get(k).push({x: iso, y: v});
     }
   });
-  for (const arr of series.values()){
-    arr.sort((a,b)=> a.x.localeCompare(b.x));
-  }
+  for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
 
-  // RENDER VAR CARDS
   destroyCharts();
   elVars.innerHTML="";
 
-  // lista ordenada por nome
   const keys = [...series.keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  const sex = document.getElementById('sex').value;
+
   keys.forEach(varKey=>{
     const meta = getVarMeta(varKey);
-    const ref = refMinMax(varKey, document.getElementById('sex').value);
+    const ref = refMinMax(varKey, sex);
     const unit = meta.unit ? ` ${meta.unit}` : "";
 
     const data = series.get(varKey) || [];
@@ -590,7 +596,7 @@ function rebuild(){
       <div class="varHead">
         <div>
           <div class="varName">${escapeHtml(varKey)}</div>
-          <div class="varRef">${formatRefLine(ref, meta, document.getElementById('sex').value)}</div>
+          <div class="varRef">${formatRefLine(ref, meta)}</div>
         </div>
         <span class="status ${st.cls}">${st.label}</span>
       </div>
@@ -603,103 +609,69 @@ function rebuild(){
     `;
     elVars.appendChild(card);
 
-    // datasets: valor + refMin + refMax (tracejadas)
-    const labels = data.map(p=>p.x);
-    const values = data.map(p=>p.y);
+    // ✅ Sem time scale: usa category com labels DD/MM/AAAA
+    const labels = data.map(p => isoToLabel(p.x));
+    const values = data.map(p => p.y);
 
-    const refMin = (ref.min!=null) ? labels.map(()=>ref.min) : null;
-    const refMax = (ref.max!=null) ? labels.map(()=>ref.max) : null;
-
-    const ctx = card.querySelector("canvas").getContext("2d");
     const ds = [{
       label: "Valor",
-      data: data,
+      data: values,
       tension: 0.25,
       pointRadius: 3,
       borderWidth: 2
     }];
 
-    if (refMin){
+    if (ref.min!=null){
       ds.push({
         label:"Ref. mínima",
-        data: labels.map((x,i)=>({x, y: ref.min})),
+        data: labels.map(()=>ref.min),
         borderDash:[6,6],
         pointRadius:0,
         borderWidth:2
       });
     }
-    if (refMax){
+    if (ref.max!=null){
       ds.push({
         label:"Ref. máxima",
-        data: labels.map((x,i)=>({x, y: ref.max})),
+        data: labels.map(()=>ref.max),
         borderDash:[6,6],
         pointRadius:0,
         borderWidth:2
       });
     }
 
+    const ctx = card.querySelector("canvas").getContext("2d");
     const ch = new Chart(ctx, {
       type:"line",
-      data:{ datasets: ds },
+      data:{ labels, datasets: ds },
       options:{
         responsive:true,
         maintainAspectRatio:false,
-        parsing:false,
         plugins:{
           legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
           tooltip:{
             callbacks:{
-              title:(items)=> items?.[0]?.raw?.x ? isoToLabel(items[0].raw.x) : "",
-              label:(item)=> `${item.dataset.label}: ${item.raw.y}`
+              title:(items)=> items?.[0]?.label || "",
+              label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
             }
           }
         },
         scales:{
-          x:{
-            type:"time",
-            time:{ unit:"day" },
-            adapters: { date: {} },
-            ticks:{ maxTicksLimit:5 }
-          },
-          y:{
-            beginAtZero:false,
-            ticks:{ maxTicksLimit:5 }
-          }
+          x:{ type:"category", ticks:{ maxTicksLimit:5 } },
+          y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } }
         }
       }
     });
     charts.set(varKey, ch);
   });
 
-  // se não tiver nada
   if (!keys.length){
     elVars.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
   }
 }
 
-function formatRefLine(ref, meta, sex){
-  const unit = meta.unit ? ` ${meta.unit}` : "";
-  const parts=[];
-  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
-  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
-  if (!parts.length) parts.push("referência: —");
-  if (ref.note) parts.push(`• ${ref.note}`);
-  return parts.join("  |  ");
-}
-
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-function hashKey(s){
-  let h=0;
-  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-  return h.toString(16);
-}
-
 /* =========================
-   ACTIONS
+   AÇÕES
    ========================= */
 document.getElementById('btnClear').addEventListener('click', ()=>{
   if (!confirm("Zerar o histórico do dispositivo?")) return;
@@ -733,10 +705,11 @@ document.getElementById('btnManual').addEventListener('click', ()=>{
     alert("Preencha data e valor numérico.");
     return;
   }
+
   const date = isoToLabel(dateISO);
   const hist = loadHistory();
   hist.push({
-    id: crypto.randomUUID(),
+    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
     createdAt: nowIso(),
     source: "Manual",
     name, age, sex,
@@ -744,6 +717,7 @@ document.getElementById('btnManual').addEventListener('click', ()=>{
     values: { [varKey]: value }
   });
   saveHistory(hist);
+
   okBox.style.display="block";
   okBox.textContent = "Valor manual adicionado ao histórico.";
   errBox.style.display="none";
@@ -756,24 +730,21 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
     alert("Escolha um PDF.");
     return;
   }
+
   errBox.style.display="none";
   okBox.style.display="none";
   elRaw.value="Lendo PDF...";
-  try{
-    // extrai texto
-    const text = await readPdfText(file);
-    elRaw.value = text.slice(0, 20000); // debug (corta para não travar)
 
-    // data
+  try{
+    const text = await readPdfText(file);
+    elRaw.value = text.slice(0, 20000);
+
     const date = parseCollectionDate(text);
     if (!date){
-      throw new Error("Não consegui identificar a data do exame (procurei Data e Hora de Coleta / Entrada / Impressão).");
+      throw new Error("Não consegui identificar a data do exame (procurei Coleta/Entrada/Impressão).");
     }
 
-    // valores
     const valuesNow = parseExamValues(text);
-
-    // pontos extras: tabela de resultados anteriores de lipídios
     const lipidPoints = parseLipidHistory(text);
 
     const name = document.getElementById('name').value.trim() || "Sem nome";
@@ -782,25 +753,25 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
 
     const hist = loadHistory();
 
-    // 1) adiciona o ponto principal (coleta atual)
     if (Object.keys(valuesNow).length){
       hist.push({
-        id: crypto.randomUUID(),
+        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
         createdAt: nowIso(),
         source: file.name || "PDF",
         name, age, sex,
         date,
         values: valuesNow
       });
+    } else {
+      throw new Error("Consegui ler o texto do PDF, mas não achei valores reconhecíveis (layout diferente).");
     }
 
-    // 2) adiciona os pontos históricos (se existirem) — sem duplicar se já existir no mesmo dia + mesmas chaves
     for (const p of lipidPoints){
       const signature = JSON.stringify(p.values);
       const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===signature && (h.source||"").includes("Tabela"));
       if (!exists){
         hist.push({
-          id: crypto.randomUUID(),
+          id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
           createdAt: nowIso(),
           source: "Tabela (Resultados anteriores do PDF)",
           name, age, sex,
@@ -811,44 +782,21 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
     }
 
     saveHistory(hist);
+
     okBox.style.display="block";
-    okBox.textContent = `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date})` +
-      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela de resultados anteriores.` : ".");
+    okBox.textContent =
+      `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date})` +
+      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela.` : ".");
+    errBox.style.display="none";
+
     rebuild();
   }catch(err){
+    const msg = String(err?.message || err);
     errBox.style.display="block";
-    errBox.textContent = String(err?.message || err);
+    errBox.textContent = msg;
     okBox.style.display="none";
-    alert("Não consegui ler o PDF. Veja o bloco “Erro técnico” e/ou o console.");
-  }
-});
-
-// Chart.js time adapter (simples): usa Date nativo
-// (Chart.js 4 precisa de adapter; este fallback usa parsing básico ISO)
-Chart._adapters._date.override({
-  parse: (v)=> (typeof v === "string" ? Date.parse(v) : v),
-  format: (t)=> new Date(t).toISOString().slice(0,10),
-  add: (t, amount, unit)=> {
-    const d = new Date(t);
-    if (unit==="day") d.setDate(d.getDate()+amount);
-    else if (unit==="month") d.setMonth(d.getMonth()+amount);
-    else if (unit==="year") d.setFullYear(d.getFullYear()+amount);
-    return d.getTime();
-  },
-  diff: (max, min, unit)=> (max-min),
-  startOf: (t, unit)=> {
-    const d = new Date(t);
-    if (unit==="day"){ d.setHours(0,0,0,0); }
-    if (unit==="month"){ d.setDate(1); d.setHours(0,0,0,0); }
-    if (unit==="year"){ d.setMonth(0,1); d.setHours(0,0,0,0); }
-    return d.getTime();
-  },
-  endOf: (t, unit)=> {
-    const d = new Date(t);
-    if (unit==="day"){ d.setHours(23,59,59,999); }
-    if (unit==="month"){ d.setMonth(d.getMonth()+1,0); d.setHours(23,59,59,999); }
-    if (unit==="year"){ d.setMonth(11,31); d.setHours(23,59,59,999); }
-    return d.getTime();
+    errBox.scrollIntoView({behavior:"smooth", block:"start"});
+    alert("Erro ao processar: " + msg);
   }
 });
 
