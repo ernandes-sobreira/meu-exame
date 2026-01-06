@@ -78,9 +78,13 @@
     button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke);font-weight:800}
 
     /* ✅ rosa claro para excluir */
-    button.danger{background:#ff5fa2}
-    button.danger:hover{filter:brightness(.96)}
-    button.danger:active{transform:translateY(1px)}
+    button.danger{
+  background:#ffd6e6;     /* rosa bem clarinho */
+  color:#7a163a;          /* texto vinho (fica legível) */
+  border:1px solid #ffc1d8;
+}
+button.danger:hover{filter:brightness(.98)}
+button.danger:active{transform:translateY(1px)}
 
     .btns{display:flex;gap:10px;flex-wrap:wrap}
     .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:8px}
@@ -722,6 +726,13 @@ function renderSeries(seriesMap){
   destroyCharts();
   elSeries.innerHTML = "";
 
+  varCard.querySelector(".btnDeleteDate").addEventListener("click", ()=>{
+  const iso = sel.value;
+  const lbl = isoToLabel(iso);
+  if (!confirm(`Excluir TODA a data ${lbl}? (isso apaga todas as variáveis desse dia)`)) return;
+  deleteDateAll(iso);
+});
+
   const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
   const dates = uniqueDates(hist);
   let pts = 0;
@@ -800,9 +811,10 @@ function renderSeries(seriesMap){
           </div>
 
           <div class="full inlineBtns">
-            <button class="ghost btnFill">Preencher com valor do ponto</button>
-            <button class="danger btnDelete">Excluir ponto</button>
-          </div>
+  <button class="ghost btnFill">Preencher com valor do ponto</button>
+  <button class="danger btnDelete">Excluir ponto</button>
+  <button class="ghost btnDeleteDate" type="button">Excluir data</button>
+</div>
 
           <div class="full" style="border-top:1px dashed var(--stroke);padding-top:10px">
             <div class="row">
@@ -1001,6 +1013,17 @@ function updatePointValue(varKey, iso, newVal){
 function deletePoint(varKey, iso){
   const hist = loadHistory();
   const date = isoToLabel(iso);
+
+  function deleteDateAll(iso){
+  const date = isoToLabel(iso);
+  const hist = loadHistory();
+
+  // remove TODOS os registros daquela data (mesmo duplicados)
+  const filtered = hist.filter(h => h.date !== date);
+
+  saveHistory(filtered);
+  rebuild();
+}
 
   const newHist = [];
   for (const h of hist){
