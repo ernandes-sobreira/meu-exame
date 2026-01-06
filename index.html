@@ -42,7 +42,7 @@
       font-size:13px;
     }
     .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
-    @media(min-width:980px){ .grid{grid-template-columns: 430px 1fr} }
+    @media(min-width:980px){ .grid{grid-template-columns: 460px 1fr} }
     .card{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -85,7 +85,6 @@
     .status.bad{color:var(--bad)}
     .status.na{color:var(--muted)}
     .status.warn{color:var(--warn)}
-
     .hr{height:1px;background:var(--stroke);margin:12px 0}
 
     .seriesBlock{
@@ -95,12 +94,8 @@
       background:#fbfcff;
       margin-top:12px;
     }
-    .seriesHead{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap
-    }
-    .seriesTitle{
-      display:flex;align-items:center;gap:10px;font-weight:950
-    }
+    .seriesHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .seriesTitle{display:flex;align-items:center;gap:10px;font-weight:950}
     .seriesBadge{
       font-size:12px;color:var(--muted);
       border:1px dashed var(--stroke);
@@ -110,9 +105,7 @@
     .cardsVar{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
     @media(min-width:760px){ .cardsVar{grid-template-columns: 1fr 1fr} }
 
-    .varCard{
-      border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff
-    }
+    .varCard{border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff}
     .varHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .varName{font-weight:950}
     .varRef{font-size:12px;color:var(--muted);line-height:1.3}
@@ -121,14 +114,12 @@
 
     .editBar{
       display:grid;
-      grid-template-columns: 140px 1fr 120px;
+      grid-template-columns: 160px 1fr 120px;
       gap:10px;
       margin-top:10px;
       align-items:center;
     }
-    @media(max-width:520px){
-      .editBar{grid-template-columns: 1fr; }
-    }
+    @media(max-width:520px){ .editBar{grid-template-columns: 1fr; } }
     .editLabel{font-size:12px;color:var(--muted);margin:6px 0 6px}
 
     .list{display:flex;flex-direction:column;gap:10px}
@@ -165,12 +156,13 @@
     .reportLine{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--stroke)}
     .reportLine:last-child{border-bottom:none}
     .nowrap{white-space:nowrap}
+
+    .miniTitle{font-weight:950;margin:10px 0 6px}
+    .twoCols{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:520px){ .twoCols{grid-template-columns:1fr 1fr} }
   </style>
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
@@ -184,7 +176,7 @@
           <b>Idealizado por Ernandes Sobreira</b> para fins de comparações de resultados médicos pessoais.
         </p>
       </div>
-      <div class="pill">📌 Se algum PDF não “ler”, geralmente é PDF escaneado (imagem) → sem texto extraível.</div>
+      <div class="pill">📌 Dica: PDF “escaneado imagem” não tem texto → não dá pra extrair sem OCR.</div>
     </header>
 
     <div class="grid">
@@ -223,8 +215,8 @@
 
         <div class="hint">
           • A data usada é sempre a <b>data da 1ª página</b> (Coleta/Entrada/Impressão).<br/>
-          • Um PDF = uma data. Se quiser série temporal, adicione vários PDFs (um por vez).<br/>
-          • Se o PDF for “escaneado imagem”, pode não ter texto extraível sem OCR.
+          • Um PDF = uma data. Para série temporal, adicione vários PDFs (um por vez).<br/>
+          • Se o PDF for escaneado, pode não ter texto extraível.
         </div>
 
         <div class="hr"></div>
@@ -254,19 +246,53 @@
 
         <div class="hr"></div>
 
-        <h2>3) Arquivos importados (pra você nunca se perder)</h2>
+        <h2>3) Gerenciar variáveis (criar + referência)</h2>
+        <div class="hint">Você pode criar variáveis novas e definir referência mínima/máxima. Isso fica salvo neste dispositivo.</div>
+
+        <div class="twoCols" style="margin-top:10px">
+          <div>
+            <label>Nome da variável</label>
+            <input id="newVarName" placeholder="Ex: Proteína C reativa" />
+          </div>
+          <div>
+            <label>Unidade</label>
+            <input id="newVarUnit" placeholder="Ex: mg/L" />
+          </div>
+          <div>
+            <label>Referência mínima (opcional)</label>
+            <input id="newVarMin" type="number" step="any" placeholder="Ex: 0" />
+          </div>
+          <div>
+            <label>Referência máxima (opcional)</label>
+            <input id="newVarMax" type="number" step="any" placeholder="Ex: 5" />
+          </div>
+          <div>
+            <label>Série (grupo)</label>
+            <select id="newVarSeries"></select>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px">
+            <button id="btnAddVar" type="button">Criar variável</button>
+          </div>
+        </div>
+
+        <div class="miniTitle">Variáveis personalizadas</div>
+        <div id="customVars" class="chipRow"></div>
+
+        <div class="hr"></div>
+
+        <h2>4) Arquivos importados</h2>
         <div id="filesRow" class="chipRow"></div>
 
         <div class="hr"></div>
 
-        <h2>4) Debug (opcional)</h2>
+        <h2>5) Debug (opcional)</h2>
         <details>
-          <summary>Ver texto extraído + erro técnico (só para ajustar regras quando um PDF vem diferente)</summary>
+          <summary>Ver texto extraído + erros (só pra ajustar regras quando o laboratório vem diferente)</summary>
           <div style="margin-top:10px">
             <div id="okBox" class="okBox"></div>
             <div id="errBox" class="errBox"></div>
 
-            <label style="margin-top:10px">Texto extraído do PDF (até ~30k chars)</label>
+            <label style="margin-top:10px">Texto extraído do PDF (até ~40k chars)</label>
             <textarea id="raw" rows="9" placeholder="Aqui aparece o texto extraído..."></textarea>
           </div>
         </details>
@@ -290,14 +316,14 @@
         <div class="hr"></div>
 
         <h2>Mini-gráficos por série</h2>
-        <div class="hint">As linhas tracejadas são referências (mín/máx) e aparecem mesmo com 1 ponto.</div>
+        <div class="hint">Linhas tracejadas = referências (mín/máx). O eixo Y ganha “folga” para a referência nunca sumir.</div>
 
         <div id="seriesContainer"></div>
 
         <div class="hr"></div>
 
         <h2>Resumo (últimos valores)</h2>
-        <div class="hint">Aqui considera <b>somente o último valor de cada variável</b> (a leitura mais recente registrada).</div>
+        <div class="hint">Considera <b>somente o último valor de cada variável</b> (a leitura mais recente registrada).</div>
         <div class="reportGrid">
           <div class="reportBox">
             <h3>Fora do intervalo</h3>
@@ -322,153 +348,107 @@
 
 <script>
 /* =========================
-   CATÁLOGO DE VARIÁVEIS + REFERÊNCIAS + SÉRIES (agrupamento)
-   ========================= */
-
-const SERIES = [
-  { key:"Série Vermelha", icon:"🩸", vars: [
-    "Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"
-  ]},
-  { key:"Série Branca", icon:"🧬", vars: [
-    "Leucócitos",
-    "Segmentados (%)","Segmentados (abs)",
-    "Linfócitos (%)","Linfócitos (abs)",
-    "Monócitos (%)","Monócitos (abs)",
-    "Eosinófilos (%)","Eosinófilos (abs)"
-  ]},
-  { key:"Plaquetas", icon:"🧫", vars: ["Plaquetas","VPM"] },
-  { key:"Perfil Lipídico", icon:"🫀", vars: ["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL"] },
-  { key:"Enzimas / Fígado", icon:"🧪", vars: ["TGO (AST)","TGP (ALT)"] },
-  { key:"Hormônios / Vitaminas / Ferro", icon:"💊", vars: [
-    "Ferro sérico","Ferritina","Transferrina","Saturação de Transferrina",
-    "Vitamina B12","Vitamina D (25-OH)",
-    "Zinco",
-    "Testosterona Total","Testosterona Livre","DHT",
-    "FSH","LH","Prolactina",
-    "TSH","T4 Livre","T3 Livre"
-  ]},
-  { key:"Metabólico / Rim", icon:"⚙️", vars: [
-    "Glicose","Hemoglobina Glicada (HbA1c)","Creatinina","Ureia","Ácido Úrico"
-  ]},
-];
-
-const VARS = [
-  // Perfil lipídico
-  { key:"Colesterol Total", unit:"mg/dL", ref: { type:"max", getMax: ()=>190 } },
-  { key:"HDL", unit:"mg/dL", ref: { type:"minBySex", getMin: (sex)=> sex==="M" ? 40 : 50 } },
-  { key:"LDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
-  { key:"VLDL", unit:"mg/dL", ref: { type:"range", min:0, max:30 } },
-  { key:"Triglicérides", unit:"mg/dL", ref: { type:"max", getMax: ()=>150 } },
-  { key:"Não-HDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>145 } },
-
-  // Enzimas
-  { key:"TGO (AST)", unit:"U/L", ref: { type:"max", getMax: ()=>40 } },
-  { key:"TGP (ALT)", unit:"U/L", ref: { type:"maxBySex", getMax: (sex)=> sex==="M" ? 50 : 40 } },
-
-  // Série vermelha
-  { key:"Hemácias", unit:"milh./mm³", ref: { type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} } },
-  { key:"Hemoglobina", unit:"g/dL", ref: { type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} } },
-  { key:"Hematócrito", unit:"%", ref: { type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} } },
-  { key:"VGM", unit:"fL", ref: { type:"range", min:80, max:98 } },
-  { key:"HGM", unit:"pg", ref: { type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} } },
-  { key:"CHCM", unit:"%", ref: { type:"range", min:32, max:36 } },
-  { key:"RDW", unit:"%", ref: { type:"range", min:11, max:14 } },
-
-  // Série branca / diferencial
-  { key:"Leucócitos", unit:"/mm³", ref: { type:"range", min:4500, max:10000 } },
-  { key:"Segmentados (%)", unit:"%", ref: { type:"range", min:49, max:64 } },
-  { key:"Segmentados (abs)", unit:"/mm³", ref: { type:"range", min:2205, max:7000 } },
-  { key:"Eosinófilos (%)", unit:"%", ref: { type:"range", min:1, max:4 } },
-  { key:"Eosinófilos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:400 } },
-  { key:"Linfócitos (%)", unit:"%", ref: { type:"range", min:20, max:35 } },
-  { key:"Linfócitos (abs)", unit:"/mm³", ref: { type:"range", min:900, max:3500 } },
-  { key:"Monócitos (%)", unit:"%", ref: { type:"range", min:1, max:8 } },
-  { key:"Monócitos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:800 } },
-
-  // Plaquetas
-  { key:"Plaquetas", unit:"/mm³", ref: { type:"range", min:140000, max:400000 } },
-  { key:"VPM", unit:"fL", ref: { type:"range", min:9.4, max:12.4 } },
-
-  // Ferro / vitaminas / minerais
-  { key:"Ferro sérico", unit:"µg/dL", ref: { type:"range", min:65, max:175, note:"Pode variar por laboratório." } },
-  { key:"Ferritina", unit:"ng/mL", ref: { type:"rangeBySex", M:{min:30,max:400}, F:{min:13,max:150}, note:"Pode variar por laboratório." } },
-  { key:"Transferrina", unit:"mg/dL", ref: { type:"range", min:200, max:360, note:"Pode variar por laboratório." } },
-  { key:"Saturação de Transferrina", unit:"%", ref: { type:"range", min:20, max:50, note:"Pode variar por laboratório." } },
-  { key:"Vitamina B12", unit:"pg/mL", ref: { type:"range", min:200, max:900, note:"Faixa pode variar por laboratório." } },
-  { key:"Vitamina D (25-OH)", unit:"ng/mL", ref: { type:"range", min:30, max:100, note:"Suficiência frequentemente ≥30. Faixa varia." } },
-  { key:"Zinco", unit:"µg/dL", ref: { type:"range", min:60, max:120, note:"Pode variar por laboratório." } },
-
-  // Hormônios (faixas variam muito por método/lab → deixo “range” aproximado)
-  { key:"Testosterona Total", unit:"ng/dL", ref: { type:"rangeBySex", M:{min:165,max:753}, F:{min:15,max:70}, note:"Varia por método/lab e idade." } },
-  { key:"Testosterona Livre", unit:"pg/mL", ref: { type:"none", note:"Referência varia muito por método." } },
-  { key:"DHT", unit:"ng/dL", ref: { type:"rangeBySex", M:{min:30,max:85}, F:{min:5,max:30}, note:"Varia por método/unidade." } },
-  { key:"FSH", unit:"mUI/mL", ref: { type:"rangeBySex", M:{min:1.5,max:12.4}, F:{min:3.5,max:12.5}, note:"Mulheres variam por fase do ciclo." } },
-  { key:"LH", unit:"mUI/mL", ref: { type:"rangeBySex", M:{min:1.7,max:8.6}, F:{min:2.4,max:12.6}, note:"Mulheres variam por fase do ciclo." } },
-  { key:"Prolactina", unit:"ng/mL", ref: { type:"rangeBySex", M:{min:2.5,max:17}, F:{min:4.8,max:23}, note:"Varia por laboratório." } },
-  { key:"TSH", unit:"µUI/mL", ref: { type:"range", min:0.4, max:4.0, note:"Faixa pode variar por laboratório." } },
-  { key:"T4 Livre", unit:"ng/dL", ref: { type:"range", min:0.8, max:1.8, note:"Faixa pode variar por laboratório." } },
-  { key:"T3 Livre", unit:"pg/mL", ref: { type:"range", min:2.0, max:4.4, note:"Faixa pode variar por laboratório." } },
-
-  // Metabólico / Rim
-  { key:"Glicose", unit:"mg/dL", ref: { type:"range", min:70, max:99, note:"Jejum. Depende do contexto." } },
-  { key:"Hemoglobina Glicada (HbA1c)", unit:"%", ref: { type:"max", getMax: ()=>5.6, note:"Faixa alvo depende do contexto clínico." } },
-  { key:"Creatinina", unit:"mg/dL", ref: { type:"rangeBySex", M:{min:0.74,max:1.35}, F:{min:0.59,max:1.04}, note:"Varia por laboratório." } },
-  { key:"Ureia", unit:"mg/dL", ref: { type:"range", min:15, max:45, note:"Varia por laboratório." } },
-  { key:"Ácido Úrico", unit:"mg/dL", ref: { type:"rangeBySex", M:{min:3.4,max:7.0}, F:{min:2.4,max:6.0}, note:"Varia por laboratório." } },
-];
-
-function getVarMeta(key){
-  return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}, note:""};
-}
-
-/* =========================
    STORAGE
    ========================= */
-const LS_KEY = "exameview_history_v5";
+const LS_KEY = "exameview_history_v6";
+const LS_CUSTOM_VARS = "exameview_custom_vars_v1";
 
-function loadHistory(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
-  catch{ return []; }
-}
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch{ return []; } }
 function saveHistory(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
 function nowIso(){ return new Date().toISOString(); }
 function uid(){ return (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)); }
 
-/* =========================
-   PDF.js CONFIG
-   ========================= */
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-
-async function readPdfTextByPage(file){
-  const ab = await file.arrayBuffer();
-  let doc;
-  try{
-    doc = await pdfjsLib.getDocument({ data: ab }).promise;
-  }catch(e){
-    doc = await pdfjsLib.getDocument({ data: ab, disableWorker: true }).promise;
-  }
-
-  const pages = [];
-  for (let p=1; p<=doc.numPages; p++){
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    pages.push(content.items.map(it => it.str).join(" "));
-  }
-  return pages;
+function loadCustomVars(){
+  try{ return JSON.parse(localStorage.getItem(LS_CUSTOM_VARS) || "[]"); } catch{ return []; }
+}
+function saveCustomVars(arr){
+  localStorage.setItem(LS_CUSTOM_VARS, JSON.stringify(arr));
 }
 
 /* =========================
-   PARSERS
+   SÉRIES (grupos)
    ========================= */
+const SERIES = [
+  { key:"Série Vermelha", icon:"🩸", vars: ["Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"]},
+  { key:"Série Branca", icon:"🧬", vars: ["Leucócitos","Segmentados (%)","Segmentados (abs)","Linfócitos (%)","Linfócitos (abs)","Monócitos (%)","Monócitos (abs)","Eosinófilos (%)","Eosinófilos (abs)"]},
+  { key:"Plaquetas", icon:"🧫", vars: ["Plaquetas","VPM"] },
+  { key:"Perfil Lipídico", icon:"🫀", vars: ["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL"] },
+  { key:"Enzimas / Fígado", icon:"🧪", vars: ["TGO (AST)","TGP (ALT)"] },
+  { key:"Hormônios / Vitaminas / Ferro", icon:"💊", vars: ["Ferro sérico","Ferritina","Transferrina","Saturação de Transferrina","Vitamina B12","Vitamina D (25-OH)","Zinco","Testosterona Total","Testosterona Livre","DHT","FSH","LH","Prolactina","TSH","T4 Livre","T3 Livre"]},
+  { key:"Metabólico / Rim", icon:"⚙️", vars: ["Glicose","Hemoglobina Glicada (HbA1c)","Creatinina","Ureia","Ácido Úrico"]},
+];
 
-function normalize(s){
-  return String(s||"")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/\s+/g," ")
-    .trim();
+/* =========================
+   METADADOS (default) — você ainda pode criar mais no UI
+   ========================= */
+const DEFAULT_VARS = [
+  { key:"Colesterol Total", unit:"mg/dL", ref:{min:null,max:190} },
+  { key:"HDL", unit:"mg/dL", ref:{minBySex:true, M:40, F:50} },
+  { key:"LDL", unit:"mg/dL", ref:{min:null,max:115, note:"Meta típica baixo risco (<115). Depende do risco."} },
+  { key:"VLDL", unit:"mg/dL", ref:{min:0,max:30} },
+  { key:"Triglicérides", unit:"mg/dL", ref:{min:null,max:150} },
+  { key:"Não-HDL", unit:"mg/dL", ref:{min:null,max:145} },
+
+  { key:"TGO (AST)", unit:"U/L", ref:{min:null,max:40} },
+  { key:"TGP (ALT)", unit:"U/L", ref:{maxBySex:true, M:50, F:40} },
+
+  { key:"Hemácias", unit:"milh./mm³", ref:{rangeBySex:true, M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40}} },
+  { key:"Hemoglobina", unit:"g/dL", ref:{rangeBySex:true, M:{min:13.0,max:18.6}, F:{min:12.0,max:15.5}} },
+  { key:"Hematócrito", unit:"%", ref:{rangeBySex:true, M:{min:40,max:56}, F:{min:36,max:46}} },
+  { key:"VGM", unit:"fL", ref:{min:80,max:98} },
+  { key:"HGM", unit:"pg", ref:{min:27,max:33} },
+  { key:"CHCM", unit:"%", ref:{min:32,max:36} },
+  { key:"RDW", unit:"%", ref:{min:11,max:14} },
+
+  { key:"Leucócitos", unit:"/mm³", ref:{min:4500,max:10000} },
+  { key:"Segmentados (%)", unit:"%", ref:{min:49,max:75} },
+  { key:"Segmentados (abs)", unit:"/mm³", ref:{min:1500,max:7500} },
+  { key:"Eosinófilos (%)", unit:"%", ref:{min:0,max:6} },
+  { key:"Eosinófilos (abs)", unit:"/mm³", ref:{min:0,max:600} },
+  { key:"Linfócitos (%)", unit:"%", ref:{min:20,max:45} },
+  { key:"Linfócitos (abs)", unit:"/mm³", ref:{min:900,max:3500} },
+  { key:"Monócitos (%)", unit:"%", ref:{min:0,max:12} },
+  { key:"Monócitos (abs)", unit:"/mm³", ref:{min:0,max:1200} },
+
+  { key:"Plaquetas", unit:"/mm³", ref:{min:140000,max:400000} },
+  { key:"VPM", unit:"fL", ref:{min:9.4,max:12.4} },
+
+  { key:"Ferro sérico", unit:"µg/dL", ref:{min:65,max:175, note:"Varia por laboratório."} },
+  { key:"Ferritina", unit:"ng/mL", ref:{rangeBySex:true, M:{min:30,max:400}, F:{min:13,max:150}, note:"Varia por laboratório."} },
+  { key:"Transferrina", unit:"mg/dL", ref:{min:200,max:360, note:"Varia por laboratório."} },
+  { key:"Saturação de Transferrina", unit:"%", ref:{min:20,max:50, note:"Varia por laboratório."} },
+
+  { key:"Vitamina B12", unit:"pg/mL", ref:{min:200,max:900, note:"Varia por laboratório."} },
+  { key:"Vitamina D (25-OH)", unit:"ng/mL", ref:{min:30,max:100, note:"Varia por laboratório."} },
+  { key:"Zinco", unit:"µg/dL", ref:{min:60,max:120, note:"Varia por laboratório."} },
+
+  { key:"Testosterona Total", unit:"ng/dL", ref:{rangeBySex:true, M:{min:165,max:753}, F:{min:15,max:70}, note:"Varia por método/lab e idade."} },
+  { key:"Testosterona Livre", unit:"", ref:{none:true, note:"Referência varia muito por método."} },
+  { key:"DHT", unit:"", ref:{none:true, note:"Unidade e faixa variam por laboratório (ng/dL ou pg/mL)." } },
+  { key:"FSH", unit:"mUI/mL", ref:{none:true, note:"Varia por laboratório/sexo/fase."} },
+  { key:"LH", unit:"mUI/mL", ref:{none:true, note:"Varia por laboratório/sexo/fase."} },
+  { key:"Prolactina", unit:"ng/mL", ref:{none:true, note:"Varia por laboratório."} },
+  { key:"TSH", unit:"µUI/mL", ref:{min:0.4,max:4.0, note:"Varia por laboratório."} },
+  { key:"T4 Livre", unit:"ng/dL", ref:{none:true, note:"Varia por laboratório."} },
+  { key:"T3 Livre", unit:"pg/mL", ref:{none:true, note:"Varia por laboratório."} },
+
+  { key:"Glicose", unit:"mg/dL", ref:{min:70,max:99, note:"Jejum (geral)." } },
+  { key:"Hemoglobina Glicada (HbA1c)", unit:"%", ref:{min:null,max:5.6, note:"Depende do contexto clínico."} },
+  { key:"Creatinina", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório/sexo."} },
+  { key:"Ureia", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório."} },
+  { key:"Ácido Úrico", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório/sexo."} },
+];
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
 }
-
+function hashKey(s){
+  let h=0;
+  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
 function parseNumberPt(s){
   if (s==null) return null;
   let t = String(s).trim();
@@ -477,11 +457,100 @@ function parseNumberPt(s){
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
+function ddmmyyyyToISO(d){ const [dd,mm,yyyy]=d.split("/"); return `${yyyy}-${mm}-${dd}`; }
+function isoToLabel(iso){ const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 
-/**
- * Data: SOMENTE 1ª página.
- * Procura padrões comuns: "Data e Hora de Coleta", "Coleta", "Data de Entrada", "Impressão"
- */
+function normalize(s){
+  return String(s||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ")
+    .trim()
+    .toLowerCase();
+}
+
+/* =========================
+   PDF.js CONFIG + EXTRAÇÃO COM QUEBRA DE LINHA (IMPORTANTÍSSIMO)
+   ========================= */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+async function readPdfTextByPage(file){
+  const ab = await file.arrayBuffer();
+  let doc;
+  try{ doc = await pdfjsLib.getDocument({ data: ab }).promise; }
+  catch{ doc = await pdfjsLib.getDocument({ data: ab, disableWorker: true }).promise; }
+
+  const pages = [];
+  for (let p=1; p<=doc.numPages; p++){
+    const page = await doc.getPage(p);
+    const content = await page.getTextContent();
+
+    // Reconstrói linhas usando hasEOL (melhor pra tabelas)
+    let out = "";
+    for (const it of content.items){
+      out += it.str;
+      if (it.hasEOL) out += "\n";
+      else out += " ";
+    }
+    pages.push(out);
+  }
+  return pages;
+}
+
+/* =========================
+   VAR META (default + custom)
+   ========================= */
+function getAllVarMeta(){
+  const custom = loadCustomVars();
+  const map = new Map();
+  for (const v of DEFAULT_VARS) map.set(v.key, v);
+  for (const v of custom) map.set(v.key, v);
+  return map;
+}
+function getVarMeta(key){
+  const m = getAllVarMeta();
+  return m.get(key) || {key, unit:"", ref:{none:true}};
+}
+function getAllVarKeysSorted(){
+  return [...getAllVarMeta().keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+}
+
+/* =========================
+   REFERÊNCIA / STATUS
+   ========================= */
+function refMinMax(varKey, sex){
+  const meta = getVarMeta(varKey);
+  const r = meta.ref || {};
+
+  if (r.none) return {min:null,max:null,note:r.note};
+  if (r.minBySex) return {min: (sex==="M"? r.M : r.F), max:null, note:r.note};
+  if (r.maxBySex) return {min:null, max: (sex==="M"? r.M : r.F), note:r.note};
+  if (r.rangeBySex){
+    const rr = (sex==="M"? r.M : r.F) || r.M;
+    return {min: rr?.min ?? null, max: rr?.max ?? null, note:r.note};
+  }
+  return {min: (r.min ?? null), max: (r.max ?? null), note:r.note};
+}
+function statusFor(value, ref){
+  const {min,max} = ref;
+  if (value==null) return {label:"—", cls:"na"};
+  if (min!=null && value < min) return {label:"Fora", cls:"bad"};
+  if (max!=null && value > max) return {label:"Fora", cls:"bad"};
+  return {label:"Dentro", cls:"ok"};
+}
+function formatRefLine(ref, meta){
+  const unit = meta.unit ? ` ${meta.unit}` : "";
+  const parts=[];
+  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
+  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
+  if (!parts.length) parts.push(`referência: —`);
+  if (ref.note) parts.push(`• ${ref.note}`);
+  return parts.join("  |  ");
+}
+
+/* =========================
+   DATA (somente 1ª página)
+   ========================= */
 function parseCollectionDateFirstPage(textPage1){
   const t = textPage1;
 
@@ -501,213 +570,247 @@ function parseCollectionDateFirstPage(textPage1){
   const all = [...t.matchAll(/([0-3]\d\/[01]\d\/\d{4})/g)].map(x=>x[1]);
   for (const d of all){
     const idx = t.indexOf(d);
-    const ctx = t.slice(Math.max(0, idx-25), idx+25);
+    const ctx = t.slice(Math.max(0, idx-30), idx+30);
     if (!/Data\s*Nasc/i.test(ctx)) return d;
   }
   return null;
 }
 
-function parseKeyValue(text, keyRegex){
-  const m = text.match(keyRegex);
+/* =========================
+   PARSER DE VALORES (mais robusto)
+   - usa linhas (muito melhor pra tabelas)
+   - procura sinônimos
+   ========================= */
+function pickFirstNumberAfter(line, startIndex){
+  const tail = line.slice(startIndex);
+  const m = tail.match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
   if (!m) return null;
-  return parseNumberPt(m[1]);
+  return parseNumberPt(m[0]);
 }
 
-/**
- * Estratégia:
- * - usa texto completo (todas páginas) para achar valores
- * - mas NÃO pega datas internas: a data vem só da primeira página.
- */
+function findInLines(linesNorm, rawLines, patterns){
+  // patterns: array de regex (em texto NORMALIZADO)
+  for (let i=0;i<linesNorm.length;i++){
+    const ln = linesNorm[i];
+    for (const re of patterns){
+      const m = ln.match(re);
+      if (m){
+        // tenta pegar número depois do match
+        const idx = m.index + m[0].length;
+        const val = pickFirstNumberAfter(rawLines[i], idx);
+        if (val!=null) return val;
+
+        // fallback: pega o primeiro número da linha toda
+        const m2 = rawLines[i].match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
+        if (m2) return parseNumberPt(m2[0]);
+
+        // fallback 2: olha na próxima linha (às vezes valor cai na linha abaixo)
+        if (i+1 < rawLines.length){
+          const m3 = rawLines[i+1].match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
+          if (m3) return parseNumberPt(m3[0]);
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function parseExamValues(textFull){
-  const t = textFull;
+  const rawLines = textFull.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const linesNorm = rawLines.map(x=>normalize(x));
 
-  const values = {};
+  const out = {};
 
-  // Perfil lipídico
-  values["Colesterol Total"] = parseKeyValue(t, /Colesterol\s*Total[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["HDL"] = parseKeyValue(t, /Colesterol\s*H\s*D\s*L[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["LDL"] = parseKeyValue(t, /Colesterol\s*L\s*D\s*L[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["VLDL"] = parseKeyValue(t, /Colesterol\s*V\s*L\s*D\s*L[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Triglicérides"] = parseKeyValue(t, /Triglic[eé]rides[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Não-HDL"] = parseKeyValue(t, /Colesterol\s*N[aã]o-?HDL[:\s]*([0-9\.,]+)\s*mg\/dL/i);
+  // ==== PERFIL LIPÍDICO (muito comum falhar se não tiver linhas!)
+  out["Colesterol Total"] = findInLines(linesNorm, rawLines, [
+    /\bcolesterol\s*total\b/,
+    /\bcolesterol\b.*\btotal\b/
+  ]);
 
-  // Enzimas
-  values["TGO (AST)"] = parseKeyValue(t, /TGO[^]*?(Resultado|RESULTADO)[:\s]*([0-9\.,]+)\s*U\/L/i) ?? parseKeyValue(t, /TGO\s*\(AST\)[:\s]*([0-9\.,]+)\s*U\/L/i);
-  values["TGP (ALT)"] = parseKeyValue(t, /TGP[^]*?(Resultado|RESULTADO)[:\s]*([0-9\.,]+)\s*U\/L/i) ?? parseKeyValue(t, /TGP\s*\(ALT\)[:\s]*([0-9\.,]+)\s*U\/L/i);
+  out["HDL"] = findInLines(linesNorm, rawLines, [
+    /\bhdl\b/,
+    /\bcolesterol\b.*\bhdl\b/,
+    /\bc[-\s]?hdl\b/
+  ]);
 
-  // Hemograma (vermelha)
-  values["Hemácias"] = parseKeyValue(t, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
-  values["Hemoglobina"] = parseKeyValue(t, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d?l/i);
-  values["Hematócrito"] = parseKeyValue(t, /Hemat[oó]crito\.*\s*([0-9\.,]+)\s*%/i);
-  values["VGM"] = parseKeyValue(t, /V\.?\s*G\.?\s*M\.?\.*\s*([0-9\.,]+)\s*(fL|u3)?/i);
-  values["HGM"] = parseKeyValue(t, /H\.?\s*G\.?\s*M\.?\.*\s*([0-9\.,]+)\s*pg/i);
-  values["CHCM"] = parseKeyValue(t, /C\.?\s*H\.?\s*C\.?\s*M\.?\.*\s*([0-9\.,]+)\s*%/i) ?? parseKeyValue(t, /C\.?\s*H\.?\s*G\.?\s*M\.?\.*\s*([0-9\.,]+)\s*%/i);
-  values["RDW"] = parseKeyValue(t, /R\.?\s*D\.?\s*W\.?\.*\s*([0-9\.,]+)\s*%/i);
+  out["LDL"] = findInLines(linesNorm, rawLines, [
+    /\bldl\b/,
+    /\bcolesterol\b.*\bldl\b/,
+    /\bc[-\s]?ldl\b/
+  ]);
 
-  // Série branca (tentativa “% abs” na mesma linha)
-  const mSeg = t.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
-  const mEos = t.match(/Eosin[oó]filos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mEos){ values["Eosinófilos (%)"]=parseNumberPt(mEos[1]); values["Eosinófilos (abs)"]=parseNumberPt(mEos[2]); }
-  const mLinf = t.match(/Linf[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mLinf){ values["Linfócitos (%)"]=parseNumberPt(mLinf[1]); values["Linfócitos (abs)"]=parseNumberPt(mLinf[2]); }
-  const mMono = t.match(/Mon[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mMono){ values["Monócitos (%)"]=parseNumberPt(mMono[1]); values["Monócitos (abs)"]=parseNumberPt(mMono[2]); }
+  out["VLDL"] = findInLines(linesNorm, rawLines, [
+    /\bvldl\b/,
+    /\bcolesterol\b.*\bvldl\b/
+  ]);
 
-  values["Leucócitos"] = parseKeyValue(t, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
-  values["Plaquetas"] = parseKeyValue(t, /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i) ?? parseKeyValue(t, /Plaquetas\.*\s*([0-9\.,]+)/i);
-  values["VPM"] = parseKeyValue(t, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
+  out["Triglicérides"] = findInLines(linesNorm, rawLines, [
+    /\btriglicerid/,
+    /\btriglicerides\b/,
+    /\btrigliceride\b/
+  ]);
 
-  // ---- Hormônios / Vitaminas / Ferro (varia muito — adiciono várias formas)
-  values["Ferro sérico"] = parseKeyValue(t, /Ferro\s*s[eé]rico[:\s]*([0-9\.,]+)\s*(ug\/dL|µg\/dL)/i);
-  values["Ferritina"] = parseKeyValue(t, /Ferritina[:\s]*([0-9\.,]+)\s*ng\/mL/i);
-  values["Transferrina"] = parseKeyValue(t, /Transferrina[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Saturação de Transferrina"] = parseKeyValue(t, /Satura[cç][aã]o\s*de\s*Transferrina[:\s]*([0-9\.,]+)\s*%/i);
+  out["Não-HDL"] = findInLines(linesNorm, rawLines, [
+    /\bnao[-\s]?hdl\b/,
+    /\bcolesterol\b.*\bnao[-\s]?hdl\b/
+  ]);
 
-  values["Vitamina B12"] = parseKeyValue(t, /Vitamina\s*B\s*12[:\s]*([0-9\.,]+)\s*pg\/mL/i) ?? parseKeyValue(t, /Cobalamina[:\s]*([0-9\.,]+)\s*pg\/mL/i);
-  values["Vitamina D (25-OH)"] = parseKeyValue(t, /(Vitamina\s*D|25\s*OH\s*Vitamina\s*D|25\-OH)[^0-9]*([0-9\.,]+)\s*ng\/mL/i)?.__unused ?? null;
-  // workaround para pegar o 2º grupo:
-  {
-    const m = t.match(/(Vitamina\s*D|25\s*OH\s*Vitamina\s*D|25\-OH)[^0-9]*([0-9\.,]+)\s*ng\/mL/i);
-    if (m) values["Vitamina D (25-OH)"] = parseNumberPt(m[2]);
+  // ==== HORMÔNIOS / VITAMINAS / MINERAIS
+  out["Vitamina B12"] = findInLines(linesNorm, rawLines, [
+    /\bvitamina\s*b\s*12\b/,
+    /\bcobalamina\b/,
+    /\bb12\b/
+  ]);
+
+  out["Vitamina D (25-OH)"] = findInLines(linesNorm, rawLines, [
+    /\bvitamina\s*d\b/,
+    /\b25\s*oh\b/,
+    /\b25[-\s]?oh\b/,
+    /\b25oh\b/
+  ]);
+
+  out["Zinco"] = findInLines(linesNorm, rawLines, [
+    /\bzinco\b/,
+    /\bzn\b/
+  ]);
+
+  out["Ferro sérico"] = findInLines(linesNorm, rawLines, [
+    /\bferro\b.*\bseric/,
+    /\bferro\s*seric/
+  ]);
+
+  out["Ferritina"] = findInLines(linesNorm, rawLines, [
+    /\bferritina\b/
+  ]);
+
+  out["Testosterona Total"] = findInLines(linesNorm, rawLines, [
+    /\btestosterona\b.*\btotal\b/,
+    /\btestosterona\s*total\b/,
+    /\btesto\b.*\btotal\b/
+  ]);
+
+  out["Testosterona Livre"] = findInLines(linesNorm, rawLines, [
+    /\btestosterona\b.*\blivre\b/,
+    /\btestosterona\s*livre\b/
+  ]);
+
+  out["DHT"] = findInLines(linesNorm, rawLines, [
+    /\bdht\b/,
+    /\bdihidrotestosteron/
+  ]);
+
+  out["FSH"] = findInLines(linesNorm, rawLines, [
+    /\bfsh\b/,
+    /\bhormonio\s*foliculo\s*estimulante\b/
+  ]);
+
+  out["LH"] = findInLines(linesNorm, rawLines, [
+    /\blh\b/,
+    /\bhormonio\s*luteinizante\b/
+  ]);
+
+  out["Prolactina"] = findInLines(linesNorm, rawLines, [
+    /\bprolactina\b/
+  ]);
+
+  out["TSH"] = findInLines(linesNorm, rawLines, [
+    /\btsh\b/
+  ]);
+
+  out["T4 Livre"] = findInLines(linesNorm, rawLines, [
+    /\bt4\b.*\blivre\b/,
+    /\btiroxina\b.*\blivre\b/
+  ]);
+
+  out["T3 Livre"] = findInLines(linesNorm, rawLines, [
+    /\bt3\b.*\blivre\b/,
+    /\btriiodotironina\b.*\blivre\b/
+  ]);
+
+  // ==== ENZIMAS
+  out["TGO (AST)"] = findInLines(linesNorm, rawLines, [
+    /\btgo\b/,
+    /\bast\b/
+  ]);
+
+  out["TGP (ALT)"] = findInLines(linesNorm, rawLines, [
+    /\btgp\b/,
+    /\balt\b/
+  ]);
+
+  // ==== HEMOGRAMA (alguns labs mudam formato; pegamos os mais comuns)
+  out["Hemácias"] = findInLines(linesNorm, rawLines, [/\bhemaci/]);
+  out["Hemoglobina"] = findInLines(linesNorm, rawLines, [/\bhemoglobin/]);
+  out["Hematócrito"] = findInLines(linesNorm, rawLines, [/\bhematocrit/]);
+  out["VGM"] = findInLines(linesNorm, rawLines, [/\bvgm\b/]);
+  out["HGM"] = findInLines(linesNorm, rawLines, [/\bhgm\b/]);
+  out["CHCM"] = findInLines(linesNorm, rawLines, [/\bchcm\b/]);
+  out["RDW"] = findInLines(linesNorm, rawLines, [/\brdw\b/]);
+
+  out["Leucócitos"] = findInLines(linesNorm, rawLines, [/\bleucocit/, /\bleucocitos\b/]);
+  out["Plaquetas"] = findInLines(linesNorm, rawLines, [/\bplaquet/]);
+  out["VPM"] = findInLines(linesNorm, rawLines, [/\bvpm\b/, /\bvolume\s*plaquet/]);
+
+  // diferencial: às vezes vem “Segmentados 72 4133”
+  // a gente tenta pegar % e abs se achar dois números na mesma linha
+  function parsePctAbs(keyPct, keyAbs, label){
+    for (let i=0;i<linesNorm.length;i++){
+      if (!linesNorm[i].includes(label)) continue;
+      const nums = rawLines[i].match(/([0-9]+(,[0-9]+)?)/g);
+      if (nums && nums.length>=2){
+        out[keyPct] = parseNumberPt(nums[0]);
+        out[keyAbs] = parseNumberPt(nums[1]);
+        return;
+      }
+    }
   }
+  parsePctAbs("Segmentados (%)","Segmentados (abs)","segmentad");
+  parsePctAbs("Linfócitos (%)","Linfócitos (abs)","linfocit");
+  parsePctAbs("Monócitos (%)","Monócitos (abs)","monocit");
+  parsePctAbs("Eosinófilos (%)","Eosinófilos (abs)","eosinofil");
 
-  values["Zinco"] = parseKeyValue(t, /Zinco[:\s]*([0-9\.,]+)\s*(ug\/dL|µg\/dL)/i);
-
-  // Testosterona / DHT / FSH / etc.
-  values["Testosterona Total"] =
-    parseKeyValue(t, /Testosterona\s*Total[:\s]*([0-9\.,]+)\s*ng\/dL/i) ??
-    parseKeyValue(t, /Testosterona[:\s]*([0-9\.,]+)\s*ng\/dL/i);
-
-  values["Testosterona Livre"] =
-    parseKeyValue(t, /Testosterona\s*Livre[:\s]*([0-9\.,]+)\s*(pg\/mL|ng\/dL)/i);
-
-  values["DHT"] =
-    parseKeyValue(t, /\bDHT\b[^0-9]*([0-9\.,]+)\s*(ng\/dL|pg\/mL)/i) ??
-    parseKeyValue(t, /Di-?hidrotestosterona[^0-9]*([0-9\.,]+)\s*(ng\/dL|pg\/mL)/i);
-
-  values["FSH"] = parseKeyValue(t, /\bFSH\b[^0-9]*([0-9\.,]+)\s*(mUI\/mL|UI\/L)/i);
-  values["LH"]  = parseKeyValue(t, /\bLH\b[^0-9]*([0-9\.,]+)\s*(mUI\/mL|UI\/L)/i);
-  values["Prolactina"] = parseKeyValue(t, /Prolactina[:\s]*([0-9\.,]+)\s*ng\/mL/i);
-
-  values["TSH"] = parseKeyValue(t, /\bTSH\b[^0-9]*([0-9\.,]+)\s*(uUI\/mL|µUI\/mL|mUI\/L)/i);
-  values["T4 Livre"] = parseKeyValue(t, /T4\s*Livre[:\s]*([0-9\.,]+)\s*ng\/dL/i);
-  values["T3 Livre"] = parseKeyValue(t, /T3\s*Livre[:\s]*([0-9\.,]+)\s*pg\/mL/i);
-
-  // Metabólico
-  values["Glicose"] = parseKeyValue(t, /Glicose[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Hemoglobina Glicada (HbA1c)"] = parseKeyValue(t, /(HbA1c|Hemoglobina\s*Glicada)[^0-9]*([0-9\.,]+)\s*%/i)?.__unused ?? null;
-  {
-    const m = t.match(/(HbA1c|Hemoglobina\s*Glicada)[^0-9]*([0-9\.,]+)\s*%/i);
-    if (m) values["Hemoglobina Glicada (HbA1c)"] = parseNumberPt(m[2]);
-  }
-  values["Creatinina"] = parseKeyValue(t, /Creatinina[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Ureia"] = parseKeyValue(t, /Ur[eé]ia[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-  values["Ácido Úrico"] = parseKeyValue(t, /[AÁ]cido\s*[UÚ]rico[:\s]*([0-9\.,]+)\s*mg\/dL/i);
-
-  // remove null/NaN
-  Object.keys(values).forEach(k=>{
-    if (values[k]==null || Number.isNaN(values[k])) delete values[k];
+  // remove null/NaN (SEM CRIAR ZERO!)
+  Object.keys(out).forEach(k=>{
+    if (out[k]==null || Number.isNaN(out[k])) delete out[k];
   });
 
-  return values;
+  return out;
 }
 
 /* =========================
-   REFERÊNCIAS / STATUS
+   CHARTS (eixo com folga pra ref aparecer sempre)
    ========================= */
-function refMinMax(varKey, sex){
-  const meta = getVarMeta(varKey);
-  const r = meta.ref || {type:"none"};
-
-  if (r.type==="range") return {min:r.min, max:r.max, note:r.note};
-  if (r.type==="max") return {min:null, max:r.getMax(sex), note:r.note};
-  if (r.type==="minBySex") return {min:r.getMin(sex), max:null, note:r.note};
-  if (r.type==="maxBySex") return {min:null, max:r.getMax(sex), note:r.note};
-  if (r.type==="rangeBySex"){
-    const rr = r[sex] || r.M;
-    return {min:rr?.min ?? null, max:rr?.max ?? null, note:r.note};
-  }
-  return {min:null, max:null, note:r.note};
-}
-
-function statusFor(value, ref){
-  const {min,max} = ref;
-  if (value==null) return {label:"—", cls:"na"};
-  if (min!=null && value < min) return {label:"Fora", cls:"bad"};
-  if (max!=null && value > max) return {label:"Fora", cls:"bad"};
-  return {label:"Dentro", cls:"ok"};
-}
-
-/* =========================
-   HELPERS DE DATA
-   ========================= */
-function ddmmyyyyToISO(d){
-  const [dd,mm,yyyy]=d.split("/");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function isoToLabel(iso){
-  const [y,m,d]=iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
-/* =========================
-   UI / RENDER
-   ========================= */
-const manualVar = document.getElementById('manualVar');
-function fillManualVar(){
-  manualVar.innerHTML="";
-  // lista ordenada por nome
-  const keys = [...new Set(VARS.map(v=>v.key))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  for (const k of keys){
-    const meta = getVarMeta(k);
-    const opt=document.createElement('option');
-    opt.value=k;
-    opt.textContent=`${k} (${meta.unit || "-"})`;
-    manualVar.appendChild(opt);
-  }
-}
-fillManualVar();
-
-const elPoints = document.getElementById('kpiPoints');
-const elDates = document.getElementById('kpiDates');
-const elSeries = document.getElementById('seriesContainer');
-const elHist = document.getElementById('history');
-const elRaw = document.getElementById('raw');
-const errBox = document.getElementById('errBox');
-const okBox = document.getElementById('okBox');
-const filesRow = document.getElementById('filesRow');
-const reportBad = document.getElementById('reportBad');
-const reportOk = document.getElementById('reportOk');
-
 let charts = new Map();
 function destroyCharts(){
   for (const c of charts.values()) c.destroy();
   charts.clear();
 }
+function computeSuggestedY(dataVals, ref){
+  // garante que referência não cole no eixo
+  const vals = [...dataVals].filter(v=>Number.isFinite(v));
+  if (ref.min!=null) vals.push(ref.min);
+  if (ref.max!=null) vals.push(ref.max);
 
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-function hashKey(s){
-  let h=0;
-  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-  return h.toString(16);
-}
-function formatRefLine(ref, meta){
-  const unit = meta.unit ? ` ${meta.unit}` : "";
-  const parts=[];
-  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
-  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
-  if (!parts.length) parts.push(`referência: —`);
-  if (ref.note) parts.push(`• ${ref.note}`);
-  return parts.join("  |  ");
+  if (!vals.length) return {sMin: undefined, sMax: undefined};
+
+  let min = Math.min(...vals);
+  let max = Math.max(...vals);
+
+  if (min === max){
+    // único valor: cria faixa
+    const pad = (min===0) ? 1 : Math.abs(min)*0.15;
+    return {sMin: min - pad, sMax: max + pad};
+  }
+
+  const range = max - min;
+  const pad = range * 0.12;
+  return {sMin: min - pad, sMax: max + pad};
 }
 
+/* =========================
+   HIST -> SERIES
+   ========================= */
 function getAllSeriesData(hist){
-  // series[varKey] = [{x: ISO, y: number, dateLabel: dd/mm/yyyy}]
   const series = new Map();
   for (const h of hist){
     const iso = ddmmyyyyToISO(h.date);
@@ -721,17 +824,90 @@ function getAllSeriesData(hist){
   return series;
 }
 
+/* =========================
+   UI ELEMENTS
+   ========================= */
+const elPoints = document.getElementById('kpiPoints');
+const elDates = document.getElementById('kpiDates');
+const elSeries = document.getElementById('seriesContainer');
+const elHist = document.getElementById('history');
+const elRaw = document.getElementById('raw');
+const errBox = document.getElementById('errBox');
+const okBox = document.getElementById('okBox');
+const filesRow = document.getElementById('filesRow');
+const reportBad = document.getElementById('reportBad');
+const reportOk = document.getElementById('reportOk');
+
+const manualVar = document.getElementById('manualVar');
+const customVarsEl = document.getElementById('customVars');
+
+function refreshVarSelects(){
+  manualVar.innerHTML="";
+  for (const k of getAllVarKeysSorted()){
+    const meta = getVarMeta(k);
+    const opt=document.createElement('option');
+    opt.value=k;
+    opt.textContent=`${k} (${meta.unit || "-"})`;
+    manualVar.appendChild(opt);
+  }
+}
+function refreshSeriesSelect(){
+  const s = document.getElementById("newVarSeries");
+  s.innerHTML = "";
+  for (const g of SERIES){
+    const opt=document.createElement("option");
+    opt.value = g.key;
+    opt.textContent = g.key;
+    s.appendChild(opt);
+  }
+}
+refreshVarSelects();
+refreshSeriesSelect();
+
+function renderCustomVarsChips(){
+  const arr = loadCustomVars();
+  customVarsEl.innerHTML = "";
+  if (!arr.length){
+    customVarsEl.innerHTML = `<div class="small muted">—</div>`;
+    return;
+  }
+  for (const v of arr){
+    const chip = document.createElement("div");
+    chip.className="chip";
+    const ref = v.ref || {};
+    const parts=[];
+    if (ref.min!=null) parts.push(`min ${ref.min}`);
+    if (ref.max!=null) parts.push(`max ${ref.max}`);
+    chip.innerHTML = `<span>🧩 ${escapeHtml(v.key)} <span class="muted">(${escapeHtml(v.unit||"-")}${parts.length? ", "+parts.join(" / "):""})</span></span>`;
+    const b = document.createElement("button");
+    b.className="x";
+    b.type="button";
+    b.textContent="Remover";
+    b.addEventListener("click", ()=>{
+      if (!confirm(`Remover a variável personalizada "${v.key}"?`)) return;
+      const left = loadCustomVars().filter(x=>x.key!==v.key);
+      saveCustomVars(left);
+      refreshVarSelects();
+      renderCustomVarsChips();
+      rebuild();
+    });
+    chip.appendChild(b);
+    customVarsEl.appendChild(chip);
+  }
+}
+
+/* =========================
+   REBUILD
+   ========================= */
 function rebuild(){
   const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
-
-  // KPIs
   const allDates = new Set(hist.map(h=>h.date));
   let points=0;
   hist.forEach(h=> points += Object.keys(h.values||{}).length);
   elPoints.textContent = points;
   elDates.textContent = allDates.size;
 
-  // Arquivos importados (chips)
+  // Arquivos
   filesRow.innerHTML = "";
   const files = [...new Set(hist.map(h=>h.source).filter(Boolean))];
   if (!files.length){
@@ -741,7 +917,6 @@ function rebuild(){
       const chip = document.createElement("div");
       chip.className = "chip";
       chip.innerHTML = `<span>📄 ${escapeHtml(f)}</span>`;
-      // botão para remover todos os pontos daquele arquivo
       const b = document.createElement("button");
       b.className = "x";
       b.type="button";
@@ -762,23 +937,18 @@ function rebuild(){
   hist.slice().reverse().forEach(h=>{
     const div=document.createElement('div');
     div.className="item";
-    const top=document.createElement('div');
-    top.className="itemTop";
-    top.innerHTML = `
-      <div class="itemTitle">${escapeHtml(h.name || "Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
-      <div class="muted">${escapeHtml(h.source || "PDF")}</div>
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${escapeHtml(h.name || "Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
+        <div class="muted">${escapeHtml(h.source || "PDF")}</div>
+      </div>
+      <div class="mono muted" style="margin-top:8px">${escapeHtml(Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  "))}</div>
     `;
-    const body=document.createElement('div');
-    body.className="mono muted";
-    body.style.marginTop="8px";
-    body.textContent = Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  ");
-    div.appendChild(top); div.appendChild(body);
     elHist.appendChild(div);
   });
 
-  // Séries por variável
+  // Séries
   const series = getAllSeriesData(hist);
-
   destroyCharts();
   elSeries.innerHTML="";
 
@@ -814,12 +984,23 @@ function rebuild(){
   reportBad.innerHTML = renderReport(bad);
   reportOk.innerHTML = renderReport(ok);
 
-  // Render por SÉRIE (agrupado)
+  // Render por série (inclui variáveis custom na série escolhida)
+  // cria mapa série->lista variáveis (default + custom)
+  const seriesMap = new Map(SERIES.map(s=>[s.key, new Set(s.vars)]));
+  for (const cv of loadCustomVars()){
+    if (cv.series && seriesMap.has(cv.series)){
+      seriesMap.get(cv.series).add(cv.key);
+    }
+  }
+
   const presentKeys = new Set(series.keys());
+  let renderedSomething = false;
 
   for (const sBlock of SERIES){
-    const keysInThis = sBlock.vars.filter(v=>presentKeys.has(v));
+    const varsInGroup = [...(seriesMap.get(sBlock.key) || new Set())];
+    const keysInThis = varsInGroup.filter(v=>presentKeys.has(v));
     if (!keysInThis.length) continue;
+    renderedSomething = true;
 
     const block = document.createElement("div");
     block.className = "seriesBlock";
@@ -834,7 +1015,6 @@ function rebuild(){
 
     const grid = block.querySelector(`#grid_${hashKey(sBlock.key)}`);
 
-    // cards
     for (const varKey of keysInThis){
       const meta = getVarMeta(varKey);
       const ref = refMinMax(varKey, sex);
@@ -849,7 +1029,6 @@ function rebuild(){
       card.className="varCard";
       const canvasId = `c_${hashKey(sBlock.key + "_" + varKey)}`;
 
-      // datas disponíveis pra edição
       const dateOptions = data.map(p=>`<option value="${p.x}">${isoToLabel(p.x)}</option>`).join("");
       const defaultDate = last?.x || "";
 
@@ -872,9 +1051,7 @@ function rebuild(){
 
         <div class="editLabel">Editar / adicionar valor nessa variável</div>
         <div class="editBar">
-          <select data-role="dateSel">
-            ${dateOptions}
-          </select>
+          <select data-role="dateSel">${dateOptions}</select>
           <input data-role="valInp" type="number" step="any" placeholder="Digite um valor (ex: 50)" />
           <button data-role="saveBtn" type="button">Salvar</button>
         </div>
@@ -887,20 +1064,17 @@ function rebuild(){
 
       grid.appendChild(card);
 
-      // monta gráfico
       const labels = data.map(p => isoToLabel(p.x));
       const values = data.map(p => p.y);
 
-      // datasets (sempre cria ref lines quando min/max existe)
       const ds = [{
         label: "Valor",
         data: values,
         tension: 0.25,
         pointRadius: 3,
-        borderWidth: 2
+        borderWidth: 2,
       }];
 
-      // linhas de referência tracejadas (sempre)
       if (ref.min!=null){
         ds.push({
           label:"Ref. mínima",
@@ -921,6 +1095,8 @@ function rebuild(){
       }
 
       const ctx = card.querySelector("canvas").getContext("2d");
+      const {sMin, sMax} = computeSuggestedY(values, ref);
+
       const ch = new Chart(ctx, {
         type:"line",
         data:{ labels, datasets: ds },
@@ -931,20 +1107,28 @@ function rebuild(){
             legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
             tooltip:{
               callbacks:{
-                title:(items)=> items?.[0]?.label || "",
-                label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
+                label:(item)=>{
+                  if (item.dataset.label !== "Valor") return `${item.dataset.label}: ${item.formattedValue}`;
+                  const v = Number(item.raw);
+                  const st2 = statusFor(v, ref);
+                  return `Valor: ${item.formattedValue} (${st2.label})`;
+                }
               }
             }
           },
           scales:{
             x:{ type:"category", ticks:{ maxTicksLimit:5 } },
-            y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } }
+            y:{
+              beginAtZero:false,
+              suggestedMin: sMin,
+              suggestedMax: sMax,
+              ticks:{ maxTicksLimit:5 }
+            }
           }
         }
       });
       charts.set(varKey + "|" + sBlock.key, ch);
 
-      // handlers edição
       const dateSel = card.querySelector('[data-role="dateSel"]');
       const valInp  = card.querySelector('[data-role="valInp"]');
       const saveBtn = card.querySelector('[data-role="saveBtn"]');
@@ -967,7 +1151,6 @@ function rebuild(){
         if (!iso){ alert("Selecione uma data."); return; }
         if (!Number.isFinite(newVal)){ alert("Digite um valor numérico."); return; }
 
-        // atualiza no histórico (primeiro registro daquela data que contém a variável; se não existir, cria entrada manual)
         const hist2 = loadHistory();
         const targetDate = isoToLabel(iso);
         let updated = false;
@@ -981,7 +1164,6 @@ function rebuild(){
         }
 
         if (!updated){
-          // cria entrada manual com essa data
           const name = document.getElementById('name').value.trim() || "Sem nome";
           const age = Number(document.getElementById('age').value || 0);
           const sexv = document.getElementById('sex').value;
@@ -1012,7 +1194,6 @@ function rebuild(){
             delete h.values[varKey];
           }
         }
-        // remove entradas que ficaram sem valores
         const cleaned = hist2.filter(h => h.values && Object.keys(h.values).length>0);
         saveHistory(cleaned);
         rebuild();
@@ -1020,15 +1201,14 @@ function rebuild(){
     }
   }
 
-  if (!series.size){
-    elSeries.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
+  if (!renderedSomething){
+    elSeries.innerHTML = `<div class="hint">Ainda não há dados reconhecíveis. Faça upload de um PDF válido ou adicione manualmente.</div>`;
   }
 }
 
 /* =========================
    AÇÕES
    ========================= */
-
 document.getElementById('btnClear').addEventListener('click', ()=>{
   if (!confirm("Zerar o histórico do dispositivo?")) return;
   localStorage.removeItem(LS_KEY);
@@ -1052,7 +1232,6 @@ document.getElementById('btnExportTxt').addEventListener('click', ()=>{
   const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
   const sex = document.getElementById('sex').value;
   const name = document.getElementById('name').value.trim() || "Sem nome";
-
   const series = getAllSeriesData(hist);
 
   const lines = [];
@@ -1087,9 +1266,9 @@ document.getElementById('btnExportTxt').addEventListener('click', ()=>{
     if (it.ref.note) lines.push(`  obs: ${it.ref.note}`);
   }
 
+  const files = [...new Set(hist.map(h=>h.source).filter(Boolean))];
   lines.push(``);
   lines.push(`== Arquivos importados ==`);
-  const files = [...new Set(hist.map(h=>h.source).filter(Boolean))];
   for (const f of files) lines.push(`• ${f}`);
 
   const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
@@ -1135,6 +1314,44 @@ document.getElementById('btnManual').addEventListener('click', ()=>{
   rebuild();
 });
 
+document.getElementById("btnAddVar").addEventListener("click", ()=>{
+  const key = document.getElementById("newVarName").value.trim();
+  if (!key){ alert("Digite o nome da variável."); return; }
+
+  const unit = document.getElementById("newVarUnit").value.trim();
+  const minRaw = document.getElementById("newVarMin").value;
+  const maxRaw = document.getElementById("newVarMax").value;
+  const series = document.getElementById("newVarSeries").value;
+
+  const min = (minRaw==="" ? null : Number(minRaw));
+  const max = (maxRaw==="" ? null : Number(maxRaw));
+  if (min!=null && !Number.isFinite(min)) { alert("Ref mínima inválida."); return; }
+  if (max!=null && !Number.isFinite(max)) { alert("Ref máxima inválida."); return; }
+
+  const arr = loadCustomVars();
+  if (arr.some(v=>v.key.toLowerCase()===key.toLowerCase())){
+    alert("Já existe uma variável personalizada com esse nome.");
+    return;
+  }
+
+  arr.push({
+    key,
+    unit,
+    series,
+    ref: { min, max }
+  });
+  saveCustomVars(arr);
+
+  document.getElementById("newVarName").value="";
+  document.getElementById("newVarUnit").value="";
+  document.getElementById("newVarMin").value="";
+  document.getElementById("newVarMax").value="";
+
+  refreshVarSelects();
+  renderCustomVarsChips();
+  rebuild();
+});
+
 document.getElementById('btnRead').addEventListener('click', async ()=>{
   const fileInput = document.getElementById('pdf');
   const file = fileInput.files?.[0];
@@ -1152,18 +1369,16 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
     const page1 = pages[0] || "";
     const fullText = pages.join("\n");
 
-    // debug
-    elRaw.value = (fullText || "").slice(0, 30000);
+    elRaw.value = (fullText || "").slice(0, 40000);
 
-    // data SOMENTE da primeira página
     const date = parseCollectionDateFirstPage(page1);
     if (!date){
-      throw new Error("Não consegui identificar a data do exame na 1ª página (procurei Coleta/Entrada/Impressão).");
+      throw new Error("Não consegui identificar a data do exame na 1ª página (Coleta/Entrada/Impressão).");
     }
 
     const valuesNow = parseExamValues(fullText);
     if (!Object.keys(valuesNow).length){
-      throw new Error("Consegui ler o texto do PDF, mas não achei valores reconhecíveis. (Layout do laboratório diferente ou PDF escaneado).");
+      throw new Error("Li o texto do PDF, mas não achei valores reconhecíveis. Possível layout muito diferente ou PDF escaneado (imagem).");
     }
 
     const name = document.getElementById('name').value.trim() || "Sem nome";
@@ -1171,7 +1386,6 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
     const sex = document.getElementById('sex').value;
 
     const hist = loadHistory();
-
     hist.push({
       id: uid(),
       createdAt: nowIso(),
@@ -1180,17 +1394,13 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
       date,
       values: valuesNow
     });
-
     saveHistory(hist);
 
     okBox.style.display="block";
-    okBox.textContent =
-      `OK: adicionei ${Object.keys(valuesNow).length} medidas com a data ${date} (data lida da 1ª página).`;
+    okBox.textContent = `OK: adicionei ${Object.keys(valuesNow).length} medidas com a data ${date} (data da 1ª página).`;
     errBox.style.display="none";
 
-    // limpa o input pra ficar claro que foi “um por vez”
     fileInput.value = "";
-
     rebuild();
   }catch(err){
     const msg = String(err?.message || err);
@@ -1202,6 +1412,8 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
 });
 
 // init
+renderCustomVarsChips();
+refreshVarSelects();
 rebuild();
 </script>
 </body>
