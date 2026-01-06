@@ -22,12 +22,13 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1200px 600px at 20% 0%, #eaf1ff 0%, transparent 60%),
-                  radial-gradient(900px 500px at 90% 10%, #e9fff6 0%, transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, #eaf1ff 0%, transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, #e9fff6 0%, transparent 55%),
+        var(--bg);
       color:var(--txt);
     }
-    .wrap{max-width:1100px;margin:28px auto;padding:0 16px 60px}
+    .wrap{max-width:1200px;margin:28px auto;padding:0 16px 60px}
     header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
     .title{display:flex;flex-direction:column;gap:6px}
     h1{margin:0;font-size:22px;letter-spacing:-.02em}
@@ -40,7 +41,7 @@
       font-size:13px;
     }
     .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
-    @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr} }
+    @media(min-width:980px){ .grid{grid-template-columns: 430px 1fr} }
     .card{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -53,25 +54,18 @@
     @media(min-width:520px){ .row{grid-template-columns:1fr 1fr} }
     label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
     input, select, button, textarea{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--stroke);
-      background:#fff;
-      color:var(--txt);
-      outline:none;
+      width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--stroke);
+      background:#fff;color:var(--txt);outline:none;
       font-size:14px;
     }
-    input:focus, select:focus, textarea:focus{
-      border-color:#bcd1ff;
-      box-shadow:0 0 0 4px rgba(37,99,235,.12)
-    }
+    input::placeholder{color:#94a3b8}
+    input:focus, select:focus, textarea:focus{border-color:#bcd1ff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
     button{
       cursor:pointer;border:none;background:var(--brand);color:#fff;
       font-weight:800;
     }
     button.secondary{background:#0f172a}
-    button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke)}
+    button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke);font-weight:800}
     .btns{display:flex;gap:10px;flex-wrap:wrap}
     .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:8px}
     .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -86,122 +80,143 @@
     .status.ok{color:var(--ok)}
     .status.bad{color:var(--bad)}
     .status.na{color:var(--muted)}
+    .hr{height:1px;background:var(--stroke);margin:12px 0}
 
-    .group{
-      border:1px dashed var(--stroke);
-      border-radius:16px;
-      padding:10px;margin-bottom:14px;background:#fff
+    /* GRUPOS */
+    .groupTitle{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin:16px 0 8px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      background:linear-gradient(90deg, #f8fbff 0%, #f8fff9 100%);
+      font-weight:900;
     }
-    .group h3{margin:4px 6px 8px;font-size:14px;color:#0f172a}
-    .cardsVar{display:grid;grid-template-columns:1fr;gap:12px}
+    .groupTitle small{font-weight:700;color:var(--muted)}
+    .cardsVar{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
     @media(min-width:760px){ .cardsVar{grid-template-columns: 1fr 1fr} }
+
     .varCard{
       border:1px solid var(--stroke);
       border-radius:18px;
       padding:12px;
-      background:#fff
+      background:#fff;
     }
     .varHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .varName{font-weight:900}
-    .varRef{font-size:12px;color:var(--muted)}
-    .varMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .varName{font-weight:1000}
+    .varRef{font-size:12px;color:var(--muted);line-height:1.25}
     .small{font-size:12px;color:var(--muted)}
-    .hr{height:1px;background:var(--stroke);margin:12px 0}
-    .list{display:flex;flex-direction:column;gap:10px}
-    .item{border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff}
-    .itemTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .itemTitle{font-weight:900}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
     .muted{color:var(--muted)}
 
+    /* EDITOR VISÍVEL (PC e CELULAR) */
+    .miniEdit{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr .9fr;
+      gap:10px;
+      align-items:end;
+      margin-top:10px;
+    }
+    @media(max-width:520px){
+      .miniEdit{grid-template-columns:1fr; }
+    }
+    .miniEdit select, .miniEdit input{
+      padding:14px 12px;
+      font-size:15px;
+      border-radius:14px;
+      background:#f8fafc;
+      border:1px solid #dbe3f5;
+      color:#0f172a;
+      font-weight:800;
+    }
+    .miniEdit input{
+      background:#ffffff;
+    }
+    .miniEdit button{
+      padding:14px 12px;
+      border-radius:14px;
+      font-size:15px;
+      font-weight:1000;
+    }
+    .miniActions{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:10px
+    }
+    .miniActions button{width:auto}
+    .miniActions button.danger{background:#ef4444}
+    .miniActions button.ghostSmall{
+      background:#fff;border:1px solid var(--stroke);color:var(--txt)
+    }
+
+    /* RESUMO FINAL */
+    .summaryBox{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+    .summaryCols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:760px){ .summaryCols{grid-template-columns:1fr} }
+    .summaryList{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .tagItem{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      border:1px solid var(--stroke);border-radius:14px;
+      padding:10px 12px;background:#fbfcff;
+    }
+    .tagItem b{font-weight:1000}
+    .okIcon{color:var(--ok);font-weight:1000}
+    .badIcon{color:var(--bad);font-weight:1000}
+
+    /* HISTÓRICO */
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff}
+    .itemTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .itemTitle{font-weight:1000}
+
+    /* DEBUG */
+    details{border:1px solid var(--stroke);border-radius:16px;background:#fff;padding:10px 12px}
+    details summary{cursor:pointer;font-weight:1000}
     .errBox{
       white-space:pre-wrap;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size:12px;color:#991b1b;background:#fff1f2;border:1px solid #fecdd3;
-      padding:10px;border-radius:14px;display:none
+      padding:10px;border-radius:14px;display:none;margin-top:10px
     }
     .okBox{
       font-size:12px;color:#14532d;background:#ecfdf5;border:1px solid #bbf7d0;
-      padding:10px;border-radius:14px;display:none
+      padding:10px;border-radius:14px;display:none;margin-top:10px
     }
-
-    /* Editor mais VISÍVEL (médico cliente) */
-    .editRow{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns: 1.2fr 1.2fr auto;
-      gap:10px;
-      align-items:center;
-    }
-    .editRow select,
-    .editRow input{
-      height:54px;
-      padding:12px 14px;
-      border-radius:16px;
-      border:2px solid #dbe3ff;
-      background:#f8fbff;
-      font-weight:900;
-      font-size:16px;
-      color:#0f172a;
-    }
-    .editRow input::placeholder{ color:#94a3b8; font-weight:800; }
-    .editRow select:focus,
-    .editRow input:focus{
-      border-color:#2563eb;
-      box-shadow:0 0 0 4px rgba(37,99,235,.14);
-    }
-    .editRow .edSave{
-      height:54px;
-      padding:0 18px;
-      border-radius:16px;
-      font-weight:900;
-      font-size:16px;
-    }
-    @media(max-width:520px){
-      .editRow{ grid-template-columns: 1fr; }
-    }
-
-    /* Botão flutuante */
-    #fabGo{
-      position:fixed; right:14px; bottom:14px; z-index:9999;
-      padding:12px 14px; border-radius:999px; border:1px solid #e7e9f2;
-      background:#2563eb; color:#fff; font-weight:900;
-      box-shadow:0 10px 30px rgba(2,6,23,.15);
-    }
-
-    .toggleRow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
-    .toggleRow .chip{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;border:1px solid var(--stroke);
-      background:#fff;color:var(--muted);font-size:12px;font-weight:800;
-    }
-    .toggleRow input[type="checkbox"]{width:auto;transform:scale(1.1);}
-
-    details{border:1px solid var(--stroke);border-radius:14px;padding:10px;background:#fff}
-    details summary{cursor:pointer;font-weight:900;color:#0f172a}
     footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+    .stickyBtn{
+      position:sticky;top:10px;z-index:5;
+      padding:12px;border-radius:16px;
+      background:linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 10px 24px rgba(37,99,235,.22);
+    }
   </style>
 
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
 <body>
-  <button id="fabGo" type="button">📄 Ler PDF</button>
-
   <div class="wrap">
     <header>
       <div class="title">
         <h1>Leitor de Exames (PDF) — histórico + gráficos por variável</h1>
         <p class="sub">
-          Tudo roda <b>localmente</b>. Ferramenta de visualização (não diagnóstico).
+          Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor.
+          Ferramenta de visualização (não diagnóstico).
         </p>
       </div>
-      <div class="pill">📌 Se der erro, abra “Diagnóstico (opcional)”.</div>
+      <div class="pill">📌 Dica: a data válida do PDF é a da <b>1ª página</b> (Coleta/Entrada/Impressão). Não misturo datas internas.</div>
     </header>
 
     <div class="grid">
-      <section class="card" id="left">
+      <!-- CONTROLES -->
+      <section class="card">
         <h2>1) Dados do usuário + upload</h2>
 
         <div class="row">
@@ -221,31 +236,22 @@
             </select>
           </div>
           <div>
-            <label>PDF do exame</label>
+            <label>PDF do exame (1 arquivo por vez)</label>
             <input id="pdf" type="file" accept="application/pdf" />
           </div>
         </div>
 
-        <div class="toggleRow">
-          <span class="chip">
-            <input id="chkFull" type="checkbox" />
-            Ler PDF inteiro (mais lento no celular)
-          </span>
-          <span class="chip">
-            Mobile: padrão lê até <b>3 páginas</b>
-          </span>
-        </div>
-
         <div class="btns" style="margin-top:10px">
-          <button id="btnRead">Adicionar esse PDF ao histórico</button>
-          <button id="btnExportTxt" class="ghost" type="button">Exportar relatório (TXT)</button>
+          <button id="btnRead" class="stickyBtn">Adicionar esse PDF ao histórico</button>
           <button id="btnExport" class="ghost" type="button">Exportar histórico (JSON)</button>
+          <button id="btnReportTxt" class="ghost" type="button">Exportar relatório (TXT)</button>
           <button id="btnClear" class="secondary" type="button">Zerar histórico</button>
         </div>
 
         <div class="hint">
-          • Data usada: <b>Data e Hora de Coleta</b>. Se não achar na 1ª página, busca no PDF inteiro.<br/>
-          • “Resultados anteriores” não devem virar data do exame atual.
+          • O app usa <b>somente a data da 1ª página</b> para o exame (Coleta &gt; senão, a mais recente entre Entrada/Impressão).<br/>
+          • Não importo “resultados anteriores” de tabelas internas (isso estava bagunçando HDL/LDL).<br/>
+          • No celular, se faltar variáveis, o app lê o PDF inteiro automaticamente.
         </div>
 
         <div class="hr"></div>
@@ -262,7 +268,7 @@
           </div>
           <div>
             <label>Valor</label>
-            <input id="manualValue" type="number" step="any" />
+            <input id="manualValue" type="number" step="any" placeholder="Digite um número" />
           </div>
           <div>
             <label>Unidade (opcional)</label>
@@ -275,16 +281,18 @@
 
         <div class="hr"></div>
 
-        <h2>3) Diagnóstico (opcional)</h2>
         <div id="okBox" class="okBox"></div>
         <div id="errBox" class="errBox"></div>
 
-        <details>
-          <summary>Mostrar / ocultar texto extraído (debug)</summary>
-          <textarea id="raw" rows="9" placeholder="Texto extraído do PDF..."></textarea>
+        <details style="margin-top:10px">
+          <summary>Debug (opcional): texto extraído + detalhe técnico</summary>
+          <div class="hint" style="margin-top:8px">Isso é só pra quando algum PDF não “casa” com as regras. Não é erro do seu exame — é formatação do arquivo.</div>
+          <label style="margin-top:10px">Texto extraído do PDF (até 30k chars)</label>
+          <textarea id="raw" rows="9" placeholder="Aqui vai aparecer o texto extraído..."></textarea>
         </details>
       </section>
 
+      <!-- RESULTADOS -->
       <section class="card">
         <h2>Painel</h2>
 
@@ -301,14 +309,25 @@
 
         <div class="hr"></div>
 
-        <h2>Mini-gráficos por série</h2>
-        <div id="groups"></div>
+        <h2>Resumo (últimos valores)</h2>
+        <div class="summaryBox">
+          <div class="summaryCols">
+            <div>
+              <div class="status bad" style="width:max-content">Fora do intervalo</div>
+              <div id="sumOut" class="summaryList"></div>
+            </div>
+            <div>
+              <div class="status ok" style="width:max-content">Dentro do intervalo</div>
+              <div id="sumIn" class="summaryList"></div>
+            </div>
+          </div>
+        </div>
 
         <div class="hr"></div>
 
-        <h2>Relatório clínico (últimos valores)</h2>
-        <div class="hint">Dentro/fora + valor + referência + data do último registro.</div>
-        <div id="resume" class="list"></div>
+        <h2>Mini-gráficos por série</h2>
+        <div class="hint">Se não tiver resultado em um mês/arquivo, simplesmente não aparece ponto (nada de “0” falso). Referências = linhas tracejadas.</div>
+        <div id="vars"></div>
 
         <div class="hr"></div>
 
@@ -323,89 +342,157 @@
 
 <script>
 /* =========================
-   VARIÁVEIS + REFERÊNCIAS
+   CATÁLOGO DE VARIÁVEIS + REFERÊNCIAS + GRUPOS
    ========================= */
 const VARS = [
-  { key:"Colesterol Total", unit:"mg/dL", ref:{ type:"max", getMax:()=>190 } },
-  { key:"HDL", unit:"mg/dL", ref:{ type:"minBySex", getMin:(sex)=> sex==="M"?40:50 } },
-  { key:"LDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
-  { key:"VLDL", unit:"mg/dL", ref:{ type:"range", min:0, max:30 } },
-  { key:"Triglicérides", unit:"mg/dL", ref:{ type:"max", getMax:()=>150 } },
-  { key:"Não-HDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>145 } },
+  // PERFIL LIPÍDICO
+  { group:"Perfil lipídico", key:"Colesterol Total", unit:"mg/dL", ref:{ type:"max", getMax:()=>190 }, patterns:[
+    /Colesterol\s*Total:\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ]},
+  { group:"Perfil lipídico", key:"HDL", unit:"mg/dL", ref:{ type:"minBySex", getMin:(sex)=> sex==="M"?40:50 }, patterns:[
+    /(Colesterol\s*H\s*D\s*L|Colesterol\s*HDL):\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ], groupIndex:2 },
+  { group:"Perfil lipídico", key:"LDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>115, note:"Meta típica baixo risco (<115). Depende do risco." }, patterns:[
+    /(Colesterol\s*L\s*D\s*L|Colesterol\s*LDL):\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ], groupIndex:2 },
+  { group:"Perfil lipídico", key:"VLDL", unit:"mg/dL", ref:{ type:"range", min:0, max:30 }, patterns:[
+    /(Colesterol\s*V\s*L\s*D\s*L|Colesterol\s*VLDL):\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ], groupIndex:2 },
+  { group:"Perfil lipídico", key:"Triglicérides", unit:"mg/dL", ref:{ type:"max", getMax:()=>150 }, patterns:[
+    /Triglic[eé]rides:\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ]},
+  { group:"Perfil lipídico", key:"Não-HDL", unit:"mg/dL", ref:{ type:"max", getMax:()=>145 }, patterns:[
+    /Colesterol\s*N[aã]o-?HDL:\.*\s*([0-9\.,]+)\s*mg\/dL/i
+  ]},
 
-  { key:"TGO (AST)", unit:"U/L", ref:{ type:"max", getMax:()=>40 } },
-  { key:"TGP (ALT)", unit:"U/L", ref:{ type:"maxBySex", getMax:(sex)=> sex==="M"?50:40 } },
+  // SÉRIE VERMELHA
+  { group:"Série vermelha", key:"Hemácias", unit:"milh./mm³", ref:{ type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} }, patterns:[
+    /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i
+  ]},
+  { group:"Série vermelha", key:"Hemoglobina", unit:"g/dL", ref:{ type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} }, patterns:[
+    /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d?l/i
+  ]},
+  { group:"Série vermelha", key:"Hematócrito", unit:"%", ref:{ type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} }, patterns:[
+    /Hemat[oó]crito\.*\s*([0-9\.,]+)\s*%/i
+  ]},
+  { group:"Série vermelha", key:"VGM", unit:"fL", ref:{ type:"range", min:80, max:98 }, patterns:[
+    /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i
+  ]},
+  { group:"Série vermelha", key:"HGM", unit:"pg", ref:{ type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} }, patterns:[
+    /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i
+  ]},
+  { group:"Série vermelha", key:"CHCM", unit:"%", ref:{ type:"range", min:32, max:36 }, patterns:[
+    /C\.?H\.?C\.?M\.*\s*([0-9\.,]+)\s*%/i
+  ]},
+  { group:"Série vermelha", key:"RDW", unit:"%", ref:{ type:"range", min:11, max:14 }, patterns:[
+    /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i
+  ]},
 
-  { key:"Hemácias", unit:"milh./mm³", ref:{ type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} } },
-  { key:"Hemoglobina", unit:"g/dL", ref:{ type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} } },
-  { key:"Hematócrito", unit:"%", ref:{ type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} } },
-  { key:"VGM", unit:"fL", ref:{ type:"range", min:80, max:98 } },
-  { key:"HGM", unit:"pg", ref:{ type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} } },
-  { key:"CHCM", unit:"%", ref:{ type:"range", min:32, max:36 } },
-  { key:"RDW", unit:"%", ref:{ type:"range", min:11, max:14 } },
+  // SÉRIE BRANCA / PLAQUETAS
+  { group:"Série branca / plaquetas", key:"Leucócitos", unit:"/mm³", ref:{ type:"range", min:4500, max:10000 }, patterns:[
+    /Leuc[oó]citos\.*\s*([0-9\.,]+)/i
+  ]},
+  { group:"Série branca / plaquetas", key:"Plaquetas", unit:"/mm³", ref:{ type:"range", min:140000, max:400000 }, patterns:[
+    /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i
+  ]},
+  { group:"Série branca / plaquetas", key:"VPM", unit:"fL", ref:{ type:"range", min:9.4, max:12.4 }, patterns:[
+    /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i
+  ]},
 
-  { key:"Leucócitos", unit:"/mm³", ref:{ type:"range", min:4500, max:10000 } },
-  { key:"Segmentados (%)", unit:"%", ref:{ type:"range", min:49, max:64 } },
-  { key:"Segmentados (abs)", unit:"/mm³", ref:{ type:"range", min:2205, max:7000 } },
-  { key:"Eosinófilos (%)", unit:"%", ref:{ type:"range", min:1, max:4 } },
-  { key:"Eosinófilos (abs)", unit:"/mm³", ref:{ type:"range", min:45, max:400 } },
-  { key:"Linfócitos (%)", unit:"%", ref:{ type:"range", min:20, max:35 } },
-  { key:"Linfócitos (abs)", unit:"/mm³", ref:{ type:"range", min:900, max:3500 } },
-  { key:"Monócitos (%)", unit:"%", ref:{ type:"range", min:1, max:8 } },
-  { key:"Monócitos (abs)", unit:"/mm³", ref:{ type:"range", min:45, max:800 } },
+  // HORMÔNIOS / VITAMINAS / FERRO
+  { group:"Hormônios / Vitaminas / Ferro", key:"Ferro sérico", unit:"µg/dL", ref:{ type:"range", min:65, max:175, note:"Pode variar por laboratório." }, patterns:[
+    /Ferro\s*s[ée]rico[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*(ug\/dL|µg\/dL)/i
+  ]},
+  { group:"Hormônios / Vitaminas / Ferro", key:"Ferritina", unit:"ng/mL", ref:{ type:"rangeBySex", M:{min:30,max:400}, F:{min:13,max:150}, note:"Faixa varia por idade/método." }, patterns:[
+    /Ferritina[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i
+  ]},
+  { group:"Hormônios / Vitaminas / Ferro", key:"Vitamina B12", unit:"pg/mL", ref:{ type:"range", min:172, max:890 }, patterns:[
+    /Vitamina\s*B12[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*pg\/mL/i
+  ]},
+  { group:"Hormônios / Vitaminas / Ferro", key:"Vitamina D (25-OH)", unit:"ng/mL", ref:{ type:"range", min:20, max:60, note:"Pop. geral: 20–60. Grupos de risco podem mirar 30–60." }, patterns:[
+    /Vitamina\s*D[\s\S]{0,220}?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i,
+    /25\s*h?idroxi[\s\S]{0,220}?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i
+  ]},
+  { group:"Hormônios / Vitaminas / Ferro", key:"Testosterona Total", unit:"ng/dL", ref:{ type:"rangeBySex",
+      M:{min:165,max:753, note:"Faixa varia por método/lab."},
+      F:{min:15,max:70, note:"Faixa varia por método/lab."}
+    }, patterns:[
+      /Testosterona\s*Total[\s\S]{0,220}?Resultado:\.*\s*([0-9\.,]+)\s*ng\/dL/i
+    ]},
+  { group:"Hormônios / Vitaminas / Ferro", key:"DHT", unit:"ng/dL", ref:{ type:"rangeBySex",
+      M:{min:30,max:85, note:"DHT varia por método/unidade."},
+      F:{min:5,max:45, note:"DHT varia por método/unidade."}
+    }, patterns:[
+      /(Dihidrotestosterona|DHT)[\s\S]{0,260}?Resultado:\.*\s*([0-9\.,]+)\s*(ng\/dL|ng\/dl)/i
+    ], groupIndex:2},
+  { group:"Hormônios / Vitaminas / Ferro", key:"FSH", unit:"mUI/mL", ref:{ type:"rangeBySex",
+      M:{min:1.40,max:18.10, note:"Mulheres variam por fase do ciclo."},
+      F:{min:1.50,max:33.40, note:"Mulheres variam por fase do ciclo."}
+    }, patterns:[
+      /FSH[\s\S]{0,260}?Resultado:\.*\s*([0-9\.,]+)\s*mUI\/mL/i
+    ]},
 
-  { key:"Plaquetas", unit:"/mm³", ref:{ type:"range", min:140000, max:400000 } },
-  { key:"VPM", unit:"fL", ref:{ type:"range", min:9.4, max:12.4 } },
-
-  { key:"Ferro sérico", unit:"µg/dL", ref:{ type:"rangeBySex", M:{min:65,max:175}, F:{min:35,max:170}, note:"Pode variar por laboratório." } },
-  { key:"Ferritina", unit:"ng/mL", ref:{ type:"rangeBySex", M:{min:30,max:400}, F:{min:13,max:150} } },
-  { key:"Vitamina B12", unit:"pg/mL", ref:{ type:"range", min:200, max:900 } },
-  { key:"Vitamina D - 25 hidroxi", unit:"ng/mL", ref:{ type:"range", min:20, max:60 } },
-  { key:"Testosterona Total", unit:"ng/dL", ref:{ type:"rangeBySex", M:{min:165,max:753}, F:{min:15,max:70}, note:"Faixa varia por método/lab." } },
-  { key:"DHT", unit:"ng/dL", ref:{ type:"rangeBySex", M:{min:30,max:85}, F:{min:5,max:45}, note:"DHT varia por método/unidade." } },
-  { key:"FSH", unit:"mUI/mL", ref:{ type:"rangeBySex", M:{min:1.5,max:9.3}, F:{min:3.0,max:12.0}, note:"Mulheres variam por fase do ciclo." } },
+  // ENZIMAS (EXEMPLO — já lê TGO/TGP)
+  { group:"Enzimas / Fígado", key:"TGO (AST)", unit:"U/L", ref:{ type:"max", getMax:()=>40 }, patterns:[
+    /TGO[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*U\/L/i,
+    /TGO\s*-\s*Transaminase[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*U\/L/i
+  ]},
+  { group:"Enzimas / Fígado", key:"TGP (ALT)", unit:"U/L", ref:{ type:"maxBySex", getMax:(sex)=> sex==="M"?50:40 }, patterns:[
+    /TGP[\s\S]{0,160}?Resultado:\.*\s*([0-9\.,]+)\s*U\/L/i
+  ]},
 ];
 
-const GROUPS = {
-  "Perfil lipídico": ["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL"],
-  "Série Vermelha": ["Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"],
-  "Série Branca": ["Leucócitos","Segmentados (%)","Segmentados (abs)","Eosinófilos (%)","Eosinófilos (abs)","Linfócitos (%)","Linfócitos (abs)","Monócitos (%)","Monócitos (abs)"],
-  "Plaquetas / Hepáticas": ["Plaquetas","VPM","TGO (AST)","TGP (ALT)"],
-  "Hormônios / Vitaminas / Ferro": ["Ferro sérico","Ferritina","Vitamina B12","Vitamina D - 25 hidroxi","Testosterona Total","DHT","FSH"]
-};
-
-function getVarMeta(key){ return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}}; }
+/* =========================
+   HELPERS (VAR META)
+   ========================= */
+function getVarMeta(key){
+  return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}, group:"Outros"};
+}
 
 /* =========================
    STORAGE
    ========================= */
 const LS_KEY = "exameview_history_v6";
-function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch{ return []; } }
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+  catch{ return []; }
+}
 function saveHistory(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
 function nowIso(){ return new Date().toISOString(); }
 
 /* =========================
-   PDF.js
+   PDF.js CONFIG
    ========================= */
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
+/* Lê N páginas (com fallback sem worker) */
 async function readPdfTextPages(file, maxPages){
   const ab = await file.arrayBuffer();
-  async function read(disableWorker=false){
+  async function read(disableWorker=false, pages=3){
     const doc = await pdfjsLib.getDocument({ data: ab, disableWorker }).promise;
     let full="", first="";
-    const n = Math.min(doc.numPages, maxPages);
-    for(let p=1;p<=n;p++){
+    const n = Math.min(doc.numPages, pages);
+    for (let p=1; p<=n; p++){
       const page = await doc.getPage(p);
       const content = await page.getTextContent();
-      const txt = content.items.map(it=>it.str).join(" ");
+      const txt = content.items.map(it => it.str).join(" ");
       full += "\n" + txt;
-      if(p===1) first = txt;
+      if (p===1) first = txt;
     }
-    return {full, firstPage:first, pagesRead:n, totalPages:doc.numPages};
+    return { full, firstPage:first, pagesRead:n, totalPages:doc.numPages };
   }
-  try{ return await read(false); } catch{ return await read(true); }
+  try{ return await read(false, maxPages); }
+  catch{ return await read(true, maxPages); }
+}
+
+/* Lê 3 páginas, tenta parsear; se faltar muita coisa, lê tudo */
+async function readPdfSmart(file){
+  const firstPass = await readPdfTextPages(file, 3);
+  const quickValues = parseExamValues(firstPass.full);
+  const missingTooMuch = Object.keys(quickValues).length < 10;
+  if (!missingTooMuch) return firstPass;
+  return await readPdfTextPages(file, 9999);
 }
 
 /* =========================
@@ -414,172 +501,127 @@ async function readPdfTextPages(file, maxPages){
 function parseNumberPt(s){
   if (s==null) return null;
   let t = String(s).trim();
-  t = t.replace(/\.(?=\d{3}\b)/g, "");
-  t = t.replace(",", ".");
+  t = t.replace(/\.(?=\d{3}\b)/g, ""); // milhar
+  t = t.replace(",", ".");            // decimal
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
 
-function pickDateNear(pattern, text){
-  const m = text.match(pattern);
-  return m ? m[1] : null;
-}
-
-function isBadContext(text, idx){
-  const ctx = text.slice(Math.max(0, idx-60), idx+60).toLowerCase();
+function hasRefContext(text, idx){
+  const ctx = text.slice(Math.max(0, idx-80), idx+80).toLowerCase();
   return (
-    ctx.includes("nasc") ||
-    ctx.includes("resultado anterior") ||
-    ctx.includes("anterior") ||
-    ctx.includes("hist") ||
-    ctx.includes("histórico")
+    ctx.includes("valor de refer") ||
+    ctx.includes("valor de refer") ||
+    ctx.includes("referên") ||
+    ctx.includes("referenc") ||
+    ctx.includes("valores de refer") ||
+    ctx.includes("mín") ||
+    ctx.includes("max") ||
+    ctx.includes("intervalo")
   );
 }
 
-function parseCollectionDateRobust(firstPageText, fullText){
-  // 1) tenta na 1ª página (mais confiável)
-  const patterns = [
-    /Data\s*e\s*Hora\s*de\s*Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i,
-    /Data\s*de\s*Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i,
-    /Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i,
-    /Data\s*de\s*Entrada:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i
-  ];
-  for(const p of patterns){
-    const d1 = pickDateNear(p, firstPageText);
-    if (d1) return d1;
-  }
-
-  // 2) procura no texto inteiro por “Data e Hora de Coleta”
-  for(const p of patterns){
-    const d2 = pickDateNear(p, fullText);
-    if (d2) return d2;
-  }
-
-  // 3) fallback: primeira data do documento, ignorando contextos ruins
-  const all = [...fullText.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)];
-  for(const m of all){
-    const d = m[1];
-    const idx = m.index ?? fullText.indexOf(d);
-    if (!isBadContext(fullText, idx)) return d;
-  }
-  return null;
-}
-
-function parseKeyValue(text, keyRegex){
-  const m = text.match(keyRegex);
+/* extrai número e evita “0” vindo de referência */
+function safeMatchToNumber(text, regex, groupIndex=1){
+  const m = text.match(regex);
   if (!m) return null;
-  return parseNumberPt(m[1]);
+
+  const raw = m[groupIndex];
+  const idx = text.indexOf(raw);
+  const val = parseNumberPt(raw);
+
+  if (val == null) return null;
+  if (val === 0 && idx >= 0 && hasRefContext(text, idx)) return null;
+
+  return val;
 }
 
-function pickResultBlock(text, testName){
-  const i = text.toLowerCase().indexOf(testName.toLowerCase());
-  if (i < 0) return null;
-  return text.slice(i, i + 1500);
-}
-function parseResultFromBlock(block){
-  if (!block) return null;
-  const m = block.match(/Resultado:\s*[\s\S]{0,260}?([0-9][0-9\.,]*)\s*([a-zA-Zµ/%][a-zA-Z0-9µ/%\.\-]*)?/i);
-  if (!m) return null;
-  const value = parseNumberPt(m[1]);
-  return { value, unit: (m[2]||"").trim() };
+/* DATA SOMENTE DA 1ª PÁGINA:
+   - Se existir Coleta: usa Coleta
+   - Senão: usa a MAIS RECENTE entre Entrada/Impressão */
+function parseDateFromFirstPage(firstPageText){
+  const get = (labelRegex)=>{
+    const m = firstPageText.match(labelRegex);
+    return m ? m[1] : null;
+  };
+
+  const dColeta = get(/Data\s*e\s*Hora\s*de\s*Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i)
+               || get(/Data\s*de\s*Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i)
+               || get(/Coleta:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i);
+
+  if (dColeta) return dColeta;
+
+  const dEntrada = get(/Data\s*de\s*Entrada:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i);
+  const dImpress = get(/Impress[aã]o:\s*[\s\S]{0,140}?(\d{2}\/\d{2}\/\d{4})/i);
+
+  const cands = [dEntrada, dImpress].filter(Boolean);
+  if (!cands.length){
+    // fallback: primeira data na 1ª página que não esteja colada em Nasc
+    const all = [...firstPageText.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)];
+    for (const mm of all){
+      const d = mm[1];
+      const idx = mm.index ?? firstPageText.indexOf(d);
+      const ctx = firstPageText.slice(Math.max(0, idx-40), idx+40).toLowerCase();
+      if (!ctx.includes("nasc")) return d;
+    }
+    return null;
+  }
+
+  // pega a mais recente entre Entrada/Impressão
+  const toISO = (d)=> {
+    const [dd,mm,yyyy]=d.split("/");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  cands.sort((a,b)=> toISO(a).localeCompare(toISO(b)));
+  return cands[cands.length-1];
 }
 
+/* Extrai valores conhecidos (sem puxar “resultados anteriores”) */
 function parseExamValues(text){
   const values = {};
 
-  // Lipídios (mais robusto, com/sem :)
-  values["Colesterol Total"] = parseKeyValue(text, /Colesterol\s*Total[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["HDL"] = parseKeyValue(text, /(Colesterol\s*H\s*D\s*L|Colesterol\s*HDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*H\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["LDL"] = parseKeyValue(text, /(Colesterol\s*L\s*D\s*L|Colesterol\s*LDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*L\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["VLDL"] = parseKeyValue(text, /(Colesterol\s*V\s*L\s*D\s*L|Colesterol\s*VLDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*V\s*L\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["Triglicérides"] = parseKeyValue(text, /Triglic[eé]rides[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["Não-HDL"] = parseKeyValue(text, /Colesterol\s*N[aã]o-?HDL[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+  // Loop baseado em padrões do catálogo
+  for (const v of VARS){
+    const patterns = v.patterns || [];
+    let got = null;
 
-  // TGO/TGP
-  values["TGO (AST)"] = parseKeyValue(text, /TGO[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
-  values["TGP (ALT)"] = parseKeyValue(text, /TGP[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
-
-  // Hemograma
-  values["Hemácias"] = parseKeyValue(text, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
-  values["Hemoglobina"] = parseKeyValue(text, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d[lL]/i);
-  values["Hematócrito"] = parseKeyValue(text, /Hemat[oó]crito\.*\s*([0-9\.,]+)\s*%/i);
-  values["VGM"] = parseKeyValue(text, /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i);
-  values["HGM"] = parseKeyValue(text, /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i);
-  values["CHCM"] = parseKeyValue(text, /C\.?H\.?C\.?M\.*\s*([0-9\.,]+)\s*%/i);
-  values["RDW"] = parseKeyValue(text, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
-
-  let mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
-  let mEos = text.match(/Eosin[oó]filos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mEos){ values["Eosinófilos (%)"]=parseNumberPt(mEos[1]); values["Eosinófilos (abs)"]=parseNumberPt(mEos[2]); }
-  let mLinf = text.match(/Linf[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mLinf){ values["Linfócitos (%)"]=parseNumberPt(mLinf[1]); values["Linfócitos (abs)"]=parseNumberPt(mLinf[2]); }
-  let mMono = text.match(/Mon[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
-  if (mMono){ values["Monócitos (%)"]=parseNumberPt(mMono[1]); values["Monócitos (abs)"]=parseNumberPt(mMono[2]); }
-
-  values["Leucócitos"] = parseKeyValue(text, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
-  values["Plaquetas"] = parseKeyValue(text, /(Contagem\s*de\s*plaquetas|Plaquetas)\.*\s*([0-9\.,]+)/i);
-  values["VPM"] = parseKeyValue(text, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
-
-  // Genéricos (Resultado:)
-  const genericTests = [
-    { key:"Ferro sérico", names:["Ferro sérico","Ferro"] },
-    { key:"Ferritina", names:["Ferritina"] },
-    { key:"Vitamina B12", names:["Vitamina B12","Vitamina B 12"] },
-    { key:"Vitamina D - 25 hidroxi", names:["Vitamina D - 25 hidroxi","Vitamina D 25","25(OH) Vitamina D","25 OH Vitamina D"] },
-    { key:"Testosterona Total", names:["Testosterona Total","Testosterona"] },
-    { key:"DHT", names:["Dihidrotestosterona","DHT"] },
-    { key:"FSH", names:["FSH - Hormônio Folículo Estimulante","FSH"] },
-  ];
-
-  for (const t of genericTests){
-    if (values[t.key]!=null) continue;
-    for (const nm of t.names){
-      const block = pickResultBlock(text, nm);
-      const r = parseResultFromBlock(block);
-      if (r && r.value!=null){ values[t.key] = r.value; break; }
+    for (const re of patterns){
+      const gi = v.groupIndex || 1;
+      got = safeMatchToNumber(text, re, gi);
+      if (got != null) break;
     }
+
+    if (got != null) values[v.key] = got;
   }
 
+  // Segmentados/Eos/Linf/Mono (linha dupla) — se aparecer no PDF
+  const mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mSeg){
+    values["Segmentados (%)"] = parseNumberPt(mSeg[1]);
+    values["Segmentados (abs)"] = parseNumberPt(mSeg[2]);
+  }
+  const mEos = text.match(/Eosin[oó]filos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mEos){
+    values["Eosinófilos (%)"] = parseNumberPt(mEos[1]);
+    values["Eosinófilos (abs)"] = parseNumberPt(mEos[2]);
+  }
+  const mLinf = text.match(/Linf[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mLinf){
+    values["Linfócitos (%)"] = parseNumberPt(mLinf[1]);
+    values["Linfócitos (abs)"] = parseNumberPt(mLinf[2]);
+  }
+  const mMono = text.match(/Mon[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mMono){
+    values["Monócitos (%)"] = parseNumberPt(mMono[1]);
+    values["Monócitos (abs)"] = parseNumberPt(mMono[2]);
+  }
+
+  // remove nulos/NaN
   Object.keys(values).forEach(k=>{
     if (values[k]==null || Number.isNaN(values[k])) delete values[k];
   });
+
   return values;
-}
-
-function parseLipidHistory(text){
-  const mDates = text.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
-  if (!mDates) return [];
-  const dates = (mDates[1].match(/\d{2}\/\d{2}\/\d{4}/g) || []);
-  if (!dates.length) return [];
-
-  function rowValues(label){
-    const re = new RegExp(label + "[^0-9]*([0-9\\s\\.,]+)", "i");
-    const m = text.match(re);
-    if (!m) return [];
-    return (m[1].match(/[0-9\.,]+/g) || []).map(parseNumberPt).filter(n=>n!=null);
-  }
-
-  const rows = {
-    "Colesterol Total": rowValues("Colesterol\\s*Total"),
-    "HDL": rowValues("Colesterol\\s*HDL"),
-    "LDL": rowValues("Colesterol\\s*LDL"),
-    "VLDL": rowValues("Colesterol\\s*VLDL"),
-    "Triglicérides": rowValues("Triglic[eé]rides"),
-    "Não-HDL": rowValues("Colesterol\\s*N[aã]o-?HDL")
-  };
-
-  const points=[];
-  for (let i=0;i<dates.length;i++){
-    const values={}
-    for (const k of Object.keys(rows)){
-      if (rows[k][i]!=null) values[k]=rows[k][i];
-    }
-    if (Object.keys(values).length){
-      points.push({ date: dates[i], values, source:"Tabela (PDF)" });
-    }
-  }
-  return points;
 }
 
 /* =========================
@@ -588,16 +630,18 @@ function parseLipidHistory(text){
 function refMinMax(varKey, sex){
   const meta = getVarMeta(varKey);
   const r = meta.ref || {type:"none"};
+
   if (r.type==="range") return {min:r.min, max:r.max, note:r.note};
   if (r.type==="max") return {min:null, max:r.getMax(sex), note:r.note};
   if (r.type==="minBySex") return {min:r.getMin(sex), max:null, note:r.note};
   if (r.type==="maxBySex") return {min:null, max:r.getMax(sex), note:r.note};
   if (r.type==="rangeBySex"){
     const rr = r[sex] || r.M;
-    return {min:rr?.min ?? null, max:rr?.max ?? null, note:r.note};
+    return {min:rr?.min ?? null, max:rr?.max ?? null, note:rr?.note ?? r.note};
   }
   return {min:null, max:null, note:r.note};
 }
+
 function statusFor(value, ref){
   const {min,max} = ref;
   if (value==null) return {label:"—", cls:"na"};
@@ -607,7 +651,7 @@ function statusFor(value, ref){
 }
 
 /* =========================
-   DATA
+   DATA HELPERS
    ========================= */
 function ddmmyyyyToISO(d){
   const [dd,mm,yyyy]=d.split("/");
@@ -619,27 +663,31 @@ function isoToLabel(iso){
 }
 
 /* =========================
-   UI
+   UI / INIT
    ========================= */
 const manualVar = document.getElementById('manualVar');
-VARS.forEach(v=>{
+for (const v of VARS){
   const opt=document.createElement('option');
   opt.value=v.key;
   opt.textContent=`${v.key} (${v.unit || "-"})`;
   manualVar.appendChild(opt);
-});
+}
 
 const elPoints = document.getElementById('kpiPoints');
-const elDates  = document.getElementById('kpiDates');
-const elGroups = document.getElementById('groups');
-const elHist   = document.getElementById('history');
-const elResume = document.getElementById('resume');
-const elRaw    = document.getElementById('raw');
-const errBox   = document.getElementById('errBox');
-const okBox    = document.getElementById('okBox');
+const elDates = document.getElementById('kpiDates');
+const elVars = document.getElementById('vars');
+const elHist = document.getElementById('history');
+const elRaw = document.getElementById('raw');
+const errBox = document.getElementById('errBox');
+const okBox = document.getElementById('okBox');
+const sumOut = document.getElementById('sumOut');
+const sumIn  = document.getElementById('sumIn');
 
 let charts = new Map();
-function destroyCharts(){ for (const c of charts.values()) c.destroy(); charts.clear(); }
+function destroyCharts(){
+  for (const c of charts.values()) c.destroy();
+  charts.clear();
+}
 
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, m=>({
@@ -661,227 +709,483 @@ function formatRefLine(ref, meta){
   return parts.join("  |  ");
 }
 
-/* Força linhas pontilhadas a aparecerem mesmo com 1 ponto */
-function normalizeSinglePoint(labels, values){
-  if (labels.length !== 1) return {labels, values};
-  const lbl = labels[0];
-  return {labels: [lbl, lbl + " "], values: [values[0], values[0]]};
+/* Atualiza/Cria um ponto (data + var) no histórico */
+function upsertPoint(dateDDMMYYYY, varKey, newValue, source="Edição"){
+  const hist = loadHistory();
+  // tenta achar um registro nessa data que já tenha a variável
+  const idx = hist.findIndex(h => h.date===dateDDMMYYYY && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey));
+  if (idx >= 0){
+    hist[idx].values[varKey] = newValue;
+    hist[idx].editedAt = nowIso();
+    hist[idx].editSource = source;
+    saveHistory(hist);
+    return true;
+  }
+  // senão, tenta achar registro nessa data (mesmo sem var) e colocar lá
+  const idx2 = hist.findIndex(h => h.date===dateDDMMYYYY);
+  if (idx2 >= 0){
+    hist[idx2].values = hist[idx2].values || {};
+    hist[idx2].values[varKey] = newValue;
+    hist[idx2].editedAt = nowIso();
+    hist[idx2].editSource = source;
+    saveHistory(hist);
+    return true;
+  }
+  // se não existe data, cria registro mínimo
+  const name = document.getElementById('name').value.trim() || "Sem nome";
+  const age = Number(document.getElementById('age').value || 0);
+  const sex = document.getElementById('sex').value;
+  hist.push({
+    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+    createdAt: nowIso(),
+    source,
+    name, age, sex,
+    date: dateDDMMYYYY,
+    values: { [varKey]: newValue }
+  });
+  saveHistory(hist);
+  return true;
 }
 
+/* Remove um ponto (data + var) do histórico */
+function deletePoint(dateDDMMYYYY, varKey){
+  const hist = loadHistory();
+  let changed=false;
+  for (const h of hist){
+    if (h.date===dateDDMMYYYY && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
+      delete h.values[varKey];
+      changed=true;
+    }
+  }
+  // remove registros vazios (sem valores)
+  const cleaned = hist.filter(h => h.values && Object.keys(h.values).length);
+  if (changed){
+    saveHistory(cleaned);
+    return true;
+  }
+  return false;
+}
+
+/* =========================
+   REBUILD (render geral)
+   ========================= */
 function rebuild(){
   const sex = document.getElementById('sex').value;
-  const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
+
+  const hist = loadHistory()
+    .filter(h => h && h.date && h.values && Object.keys(h.values).length)
+    .sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
 
   const allDates = new Set(hist.map(h=>h.date));
-  let points=0; hist.forEach(h=> points += Object.keys(h.values||{}).length);
+  let points=0;
+  hist.forEach(h=> points += Object.keys(h.values||{}).length);
   elPoints.textContent = points;
   elDates.textContent = allDates.size;
 
-  // histórico bruto
+  // Histórico bruto
   elHist.innerHTML="";
   hist.slice().reverse().forEach(h=>{
     const div=document.createElement('div');
     div.className="item";
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${escapeHtml(h.name||"Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
-        <div class="muted">${escapeHtml(h.source||"PDF")}</div>
+    const top=document.createElement('div');
+    top.className="itemTop";
+    top.innerHTML = `
+      <div class="itemTitle">${escapeHtml(h.name || "Sem nome")}
+        <span class="muted">(${h.sex || "—"}, ${h.age ?? "—"}a)</span>
+        — <span class="mono">${h.date}</span>
       </div>
-      <div class="mono muted" style="margin-top:8px">${escapeHtml(Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  "))}</div>
+      <div class="muted">${escapeHtml(h.source || "PDF")}</div>
     `;
+    const body=document.createElement('div');
+    body.className="mono muted";
+    body.style.marginTop="8px";
+    body.textContent = Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  ");
+    div.appendChild(top); div.appendChild(body);
     elHist.appendChild(div);
   });
 
-  // series por variável
-  const series = new Map();
+  // Series por variável
+  const series = new Map(); // varKey -> [{x(iso),y}]
   hist.forEach(h=>{
     const iso = ddmmyyyyToISO(h.date);
     for (const [k,v] of Object.entries(h.values||{})){
+      if (!Number.isFinite(v)) continue;
       if (!series.has(k)) series.set(k, []);
       series.get(k).push({x: iso, y: v});
     }
   });
   for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
 
-  destroyCharts();
-  elGroups.innerHTML="";
-  elResume.innerHTML="";
+  // Resumo (últimos valores): dentro/fora
+  sumOut.innerHTML = "";
+  sumIn.innerHTML  = "";
 
-  const lastRows = [];
-
-  function renderVarCard(varKey, container){
+  const lastByVar = [];
+  for (const [varKey, arr] of series.entries()){
+    if (!arr.length) continue;
+    const last = arr[arr.length-1];
     const meta = getVarMeta(varKey);
     const ref  = refMinMax(varKey, sex);
-    const unit = meta.unit ? ` ${meta.unit}` : "";
-    const data = series.get(varKey) || [];
-    const last = data[data.length-1];
-    const lastVal = last?.y ?? null;
-    const st = statusFor(lastVal, ref);
+    const st   = statusFor(last.y, ref);
+    lastByVar.push({varKey, last, meta, ref, st});
+  }
 
-    lastRows.push({ key: varKey, meta, ref, last, lastVal, st });
+  // ordenar alfabeticamente
+  lastByVar.sort((a,b)=> a.varKey.localeCompare(b.varKey,"pt-BR"));
 
-    const card=document.createElement('div');
-    card.className="varCard";
-    card.innerHTML = `
-      <div class="varHead">
-        <div>
-          <div class="varName">${escapeHtml(varKey)}</div>
-          <div class="varRef">${formatRefLine(ref, meta)}</div>
-        </div>
-        <span class="status ${st.cls}">${st.label}</span>
+  const makeTag = (row)=>{
+    const unit = row.meta.unit ? ` ${row.meta.unit}` : "";
+    const el = document.createElement("div");
+    el.className="tagItem";
+    el.innerHTML = `
+      <div>
+        <b>${escapeHtml(row.varKey)}</b>
+        <div class="small">Último: <span class="mono">${row.last.y}${unit}</span> em <span class="mono">${isoToLabel(row.last.x)}</span></div>
       </div>
-
-      <div style="height:150px;margin-top:10px">
-        <canvas id="c_${hashKey(varKey)}"></canvas>
-      </div>
-
-      <div class="varMeta">
-        <div class="small"><b>Último:</b> ${lastVal!=null ? lastVal + unit : "—"} <span class="muted">em ${last?.x ? isoToLabel(last.x) : "—"}</span></div>
-      </div>
-
-      <div class="editRow">
-        <select class="edDate"></select>
-        <input class="edValue" type="number" step="any" placeholder="digite novo valor" />
-        <button class="edSave" type="button">Salvar</button>
+      <div class="${row.st.cls==='ok' ? 'okIcon' : row.st.cls==='bad' ? 'badIcon' : ''}">
+        ${row.st.cls==='ok' ? '✅' : row.st.cls==='bad' ? '⚠️' : '—'}
       </div>
     `;
-    container.appendChild(card);
+    return el;
+  };
 
-    // labels/valores (normaliza se só tiver 1 ponto)
-    let labels = data.map(p => isoToLabel(p.x));
-    let values = data.map(p => p.y);
-    const norm = normalizeSinglePoint(labels, values);
-    labels = norm.labels;
-    values = norm.values;
+  const outRows = lastByVar.filter(r=>r.st.cls==='bad');
+  const inRows  = lastByVar.filter(r=>r.st.cls==='ok');
 
-    const ds = [{
-      label:"Valor",
-      data: values,
-      tension: 0.25,
-      pointRadius: labels.length===2 && labels[0].trim()===labels[1].trim() ? 3 : 3,
-      borderWidth: 2
-    }];
-
-    if (ref.min!=null){
-      ds.push({
-        label:"Ref. mínima",
-        data: labels.map(()=>ref.min),
-        borderDash:[6,6],
-        pointRadius:0,
-        borderWidth:2
-      });
-    }
-    if (ref.max!=null){
-      ds.push({
-        label:"Ref. máxima",
-        data: labels.map(()=>ref.max),
-        borderDash:[6,6],
-        pointRadius:0,
-        borderWidth:2
-      });
-    }
-
-    const ctx = card.querySelector("canvas").getContext("2d");
-    const ch = new Chart(ctx, {
-      type:"line",
-      data:{ labels, datasets: ds },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } }
-        },
-        scales:{
-          x:{ type:"category", ticks:{ maxTicksLimit:5 } },
-          y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } }
-        }
-      }
-    });
-    charts.set(varKey, ch);
-
-    // editor
-    const sel = card.querySelector(".edDate");
-    data.forEach(p=>{
-      const o=document.createElement('option');
-      o.value=p.x;
-      o.textContent=isoToLabel(p.x);
-      sel.appendChild(o);
-    });
-
-    const inp = card.querySelector(".edValue");
-    const btn = card.querySelector(".edSave");
-    btn.addEventListener('click', ()=>{
-      const iso = sel.value;
-      const val = Number(inp.value);
-      if (!iso || !Number.isFinite(val)){
-        alert("Escolha a data e informe um valor numérico.");
-        return;
-      }
-      const dateBR = isoToLabel(iso);
-      const histNow = loadHistory();
-      let changed=false;
-
-      for(const h of histNow){
-        if (h.date===dateBR && h.values && h.values[varKey]!=null){
-          h.values[varKey] = val;
-          changed=true;
-        }
-      }
-      if (!changed){
-        alert("Não encontrei esse ponto para edição.");
-        return;
-      }
-      saveHistory(histNow);
-      okBox.style.display="block";
-      okBox.textContent="Valor editado e salvo no histórico.";
-      errBox.style.display="none";
-      rebuild();
-    });
+  if (!outRows.length){
+    const d=document.createElement("div");
+    d.className="muted small";
+    d.textContent="—";
+    sumOut.appendChild(d);
+  }else{
+    outRows.forEach(r=>sumOut.appendChild(makeTag(r)));
   }
 
-  // grupos
-  Object.entries(GROUPS).forEach(([gname, keys])=>{
-    const g=document.createElement('div');
-    g.className="group";
-    g.innerHTML=`<h3>${escapeHtml(gname)}</h3><div class="cardsVar"></div>`;
-    const holder = g.querySelector(".cardsVar");
-    keys.forEach(k => { if(series.has(k)) renderVarCard(k, holder); });
-    if (holder.children.length) elGroups.appendChild(g);
+  if (!inRows.length){
+    const d=document.createElement("div");
+    d.className="muted small";
+    d.textContent="—";
+    sumIn.appendChild(d);
+  }else{
+    inRows.forEach(r=>sumIn.appendChild(makeTag(r)));
+  }
+
+  // Render gráficos por grupo
+  destroyCharts();
+  elVars.innerHTML="";
+
+  const keys = [...series.keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  if (!keys.length){
+    elVars.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
+    return;
+  }
+
+  // agrupa por grupo
+  const grouped = new Map(); // group -> [varKey]
+  for (const k of keys){
+    const meta = getVarMeta(k);
+    const g = meta.group || "Outros";
+    if (!grouped.has(g)) grouped.set(g, []);
+    grouped.get(g).push(k);
+  }
+
+  const groupOrder = [
+    "Perfil lipídico",
+    "Hormônios / Vitaminas / Ferro",
+    "Série vermelha",
+    "Série branca / plaquetas",
+    "Enzimas / Fígado",
+    "Outros"
+  ];
+
+  const groupsSorted = [...grouped.keys()].sort((a,b)=>{
+    const ia = groupOrder.indexOf(a); const ib = groupOrder.indexOf(b);
+    if (ia===-1 && ib===-1) return a.localeCompare(b,"pt-BR");
+    if (ia===-1) return 1;
+    if (ib===-1) return -1;
+    return ia-ib;
   });
 
-  if (!elGroups.children.length){
-    elGroups.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
-  }
+  for (const g of groupsSorted){
+    const title = document.createElement("div");
+    title.className="groupTitle";
+    title.innerHTML = `<div>${escapeHtml(g)}</div><small>${grouped.get(g).length} variáveis</small>`;
+    elVars.appendChild(title);
 
-  // relatório
-  const out = lastRows.filter(r=>r.st.cls==="bad").sort((a,b)=>a.key.localeCompare(b.key,"pt-BR"));
-  const ok  = lastRows.filter(r=>r.st.cls==="ok").sort((a,b)=>a.key.localeCompare(b.key,"pt-BR"));
+    const grid = document.createElement("div");
+    grid.className="cardsVar";
+    elVars.appendChild(grid);
 
-  function makeReportBox(title, arr){
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerHTML = `<div class="itemTitle">${escapeHtml(title)}</div>`;
-    if(!arr.length){
-      div.innerHTML += `<div class="muted">—</div>`;
-      return div;
+    for (const varKey of grouped.get(g)){
+      const meta = getVarMeta(varKey);
+      const ref  = refMinMax(varKey, sex);
+      const unit = meta.unit ? ` ${meta.unit}` : "";
+      const data = series.get(varKey) || [];
+      if (!data.length) continue;
+
+      const last = data[data.length-1];
+      const st = statusFor(last?.y ?? null, ref);
+
+      const card=document.createElement('div');
+      card.className="varCard";
+      const canvasId = `c_${hashKey(g + "|" + varKey)}`;
+
+      card.innerHTML = `
+        <div class="varHead">
+          <div>
+            <div class="varName">${escapeHtml(varKey)}</div>
+            <div class="varRef">${formatRefLine(ref, meta)}</div>
+          </div>
+          <span class="status ${st.cls}">${st.label}</span>
+        </div>
+
+        <div style="height:160px;margin-top:10px">
+          <canvas id="${canvasId}"></canvas>
+        </div>
+
+        <div class="small" style="margin-top:8px">
+          <b>Último:</b> <span class="mono">${last.y}${unit}</span>
+          <span class="muted">em</span> <span class="mono">${isoToLabel(last.x)}</span>
+        </div>
+
+        <div class="miniEdit">
+          <div>
+            <label>Data</label>
+            <select class="editDate"></select>
+          </div>
+          <div>
+            <label>Novo valor</label>
+            <input class="editValue" type="number" step="any" placeholder="Digite e salve" />
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button class="btnSave">Salvar</button>
+          </div>
+        </div>
+
+        <div class="miniActions">
+          <button class="ghostSmall btnFill">Preencher com valor do ponto</button>
+          <button class="danger btnDelete">Excluir ponto</button>
+        </div>
+      `;
+      grid.appendChild(card);
+
+      // labels e valores
+      const labels = data.map(p => isoToLabel(p.x));
+      const values = data.map(p => p.y);
+
+      // dataset principal
+      const ds = [{
+        label: "Valor",
+        data: values,
+        tension: 0.25,
+        pointRadius: 3,
+        borderWidth: 2,
+        spanGaps: true,
+        order: 1
+      }];
+
+      // linhas referência sempre aparecendo
+      if (ref.min!=null){
+        ds.push({
+          label:"Ref. mínima",
+          data: labels.map(()=>ref.min),
+          borderDash:[6,6],
+          pointRadius:0,
+          borderWidth:2,
+          spanGaps:true,
+          order: 2
+        });
+      }
+      if (ref.max!=null){
+        ds.push({
+          label:"Ref. máxima",
+          data: labels.map(()=>ref.max),
+          borderDash:[6,6],
+          pointRadius:0,
+          borderWidth:2,
+          spanGaps:true,
+          order: 3
+        });
+      }
+
+      // escala: inclui refs + valores, com padding
+      const allY = [];
+      values.forEach(v=>allY.push(v));
+      if (ref.min!=null) allY.push(ref.min);
+      if (ref.max!=null) allY.push(ref.max);
+      let ymin = Math.min(...allY);
+      let ymax = Math.max(...allY);
+      if (!Number.isFinite(ymin) || !Number.isFinite(ymax)){ ymin=0; ymax=1; }
+      if (ymin === ymax){ ymin = ymin - 1; ymax = ymax + 1; }
+      const pad = (ymax - ymin) * 0.12;
+      const suggestedMin = ymin - pad;
+      const suggestedMax = ymax + pad;
+
+      const ctx = card.querySelector("canvas").getContext("2d");
+      const ch = new Chart(ctx, {
+        type:"line",
+        data:{ labels, datasets: ds },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
+            tooltip:{
+              callbacks:{
+                title:(items)=> items?.[0]?.label || "",
+                label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
+              }
+            }
+          },
+          scales:{
+            x:{ type:"category", ticks:{ maxTicksLimit:6 } },
+            y:{
+              beginAtZero:false,
+              suggestedMin,
+              suggestedMax,
+              ticks:{ maxTicksLimit:6 }
+            }
+          }
+        }
+      });
+      charts.set(g + "|" + varKey, ch);
+
+      // Editor (data select + valor)
+      const sel = card.querySelector(".editDate");
+      const inp = card.querySelector(".editValue");
+      const btnSave = card.querySelector(".btnSave");
+      const btnFill = card.querySelector(".btnFill");
+      const btnDel  = card.querySelector(".btnDelete");
+
+      labels.forEach((lab)=>{
+        const opt=document.createElement("option");
+        opt.value=lab;
+        opt.textContent=lab;
+        sel.appendChild(opt);
+      });
+      sel.value = labels[labels.length-1];
+
+      function fillWithSelected(){
+        const ix = labels.indexOf(sel.value);
+        if (ix>=0) inp.value = String(values[ix]);
+      }
+      fillWithSelected();
+
+      btnFill.addEventListener("click", ()=>{
+        fillWithSelected();
+        inp.focus();
+      });
+
+      btnSave.addEventListener("click", ()=>{
+        const d = sel.value; // DD/MM/YYYY
+        const nv = Number(inp.value);
+        if (!Number.isFinite(nv)){
+          alert("Digite um valor numérico válido.");
+          return;
+        }
+        upsertPoint(d, varKey, nv, "Edição manual no gráfico");
+        okBox.style.display="block";
+        okBox.textContent = `OK: atualizei ${varKey} em ${d}.`;
+        errBox.style.display="none";
+        rebuild();
+      });
+
+      btnDel.addEventListener("click", ()=>{
+        const d = sel.value;
+        if (!confirm(`Excluir o ponto de ${varKey} em ${d}?`)) return;
+        const ok = deletePoint(d, varKey);
+        if (ok){
+          okBox.style.display="block";
+          okBox.textContent = `OK: excluí ${varKey} em ${d}.`;
+          errBox.style.display="none";
+          rebuild();
+        }else{
+          alert("Não achei esse ponto para excluir.");
+        }
+      });
     }
-    const list = document.createElement("div");
-    list.style.marginTop="8px";
-    list.className="mono muted";
-    list.innerHTML = arr.map(r=>{
-      const unit = r.meta.unit ? ` ${r.meta.unit}` : "";
-      const refTxt = [];
-      if (r.ref.min!=null) refTxt.push(`min ${r.ref.min}${unit}`);
-      if (r.ref.max!=null) refTxt.push(`max ${r.ref.max}${unit}`);
-      const d = r.last?.x ? isoToLabel(r.last.x) : "—";
-      return `• <b>${escapeHtml(r.key)}</b>: ${r.lastVal ?? "—"}${unit} | ${refTxt.join(" / ") || "ref —"} | ${d}`;
-    }).join("<br/>");
-    div.appendChild(list);
-    return div;
+  }
+}
+
+/* =========================
+   EXPORT RELATÓRIO TXT
+   ========================= */
+function buildReportTxt(){
+  const sex = document.getElementById('sex').value;
+  const name = document.getElementById('name').value.trim() || "Sem nome";
+
+  const hist = loadHistory()
+    .filter(h => h && h.date && h.values && Object.keys(h.values).length)
+    .sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
+
+  // último valor por variável
+  const lastByVar = new Map(); // varKey -> {dateISO, dateLabel, value}
+  for (const h of hist){
+    const dISO = ddmmyyyyToISO(h.date);
+    for (const [k,v] of Object.entries(h.values||{})){
+      if (!Number.isFinite(v)) continue;
+      const prev = lastByVar.get(k);
+      if (!prev || prev.dateISO < dISO){
+        lastByVar.set(k, {dateISO:dISO, dateLabel:h.date, value:v});
+      }
+    }
   }
 
-  elResume.appendChild(makeReportBox("Fora do intervalo (último valor)", out));
-  elResume.appendChild(makeReportBox("Dentro do intervalo (último valor)", ok));
+  const rows = [];
+  for (const [k, info] of lastByVar.entries()){
+    const meta = getVarMeta(k);
+    const ref = refMinMax(k, sex);
+    const st  = statusFor(info.value, ref);
+    rows.push({k, info, meta, ref, st});
+  }
+  rows.sort((a,b)=>a.k.localeCompare(b.k,"pt-BR"));
+
+  const out = rows.filter(r=>r.st.cls==='bad');
+  const inside = rows.filter(r=>r.st.cls==='ok');
+
+  const lines = [];
+  lines.push(`RELATÓRIO — ExameView (local)`);
+  lines.push(`Paciente: ${name}`);
+  lines.push(`Sexo: ${sex} | Gerado em: ${new Date().toLocaleString('pt-BR')}`);
+  lines.push(``);
+  lines.push(`FORA DO INTERVALO (${out.length})`);
+  lines.push(`----------------------------------------`);
+  if (!out.length) lines.push(`(nenhum)`);
+  for (const r of out){
+    const unit = r.meta.unit ? ` ${r.meta.unit}` : "";
+    const refTxt = [];
+    if (r.ref.min!=null) refTxt.push(`mín ${r.ref.min}${unit}`);
+    if (r.ref.max!=null) refTxt.push(`máx ${r.ref.max}${unit}`);
+    lines.push(`- ${r.k}: ${r.info.value}${unit} em ${r.info.dateLabel} | ref: ${refTxt.join(" / ") || "—"}`);
+  }
+  lines.push(``);
+  lines.push(`DENTRO DO INTERVALO (${inside.length})`);
+  lines.push(`----------------------------------------`);
+  if (!inside.length) lines.push(`(nenhum)`);
+  for (const r of inside){
+    const unit = r.meta.unit ? ` ${r.meta.unit}` : "";
+    const refTxt = [];
+    if (r.ref.min!=null) refTxt.push(`mín ${r.ref.min}${unit}`);
+    if (r.ref.max!=null) refTxt.push(`máx ${r.ref.max}${unit}`);
+    lines.push(`- ${r.k}: ${r.info.value}${unit} em ${r.info.dateLabel} | ref: ${refTxt.join(" / ") || "—"}`);
+  }
+
+  lines.push(``);
+  lines.push(`OBS: Esta ferramenta é para visualização e organização. Não é diagnóstico.`);
+  return lines.join("\n");
+}
+
+function downloadText(filename, content){
+  const blob = new Blob([content], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 /* =========================
@@ -906,118 +1210,108 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('btnExportTxt').addEventListener('click', ()=>{
-  const name = document.getElementById('name').value.trim() || "Sem nome";
-  const age  = document.getElementById('age').value || "—";
-  const sex  = document.getElementById('sex').value;
-
-  const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
-  const series = new Map();
-  hist.forEach(h=>{
-    const iso = ddmmyyyyToISO(h.date);
-    for (const [k,v] of Object.entries(h.values||{})){
-      if (!series.has(k)) series.set(k, []);
-      series.get(k).push({x: iso, y: v});
-    }
-  });
-  for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
-
-  const lines=[];
-  lines.push(`RELATÓRIO — ExameView`);
-  lines.push(`Paciente: ${name}`);
-  lines.push(`Idade: ${age} | Sexo: ${sex}`);
-  lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
-  lines.push(``);
-
-  for (const [k, arr] of [...series.entries()].sort((a,b)=>a[0].localeCompare(b[0],"pt-BR"))){
-    const meta = getVarMeta(k);
-    const ref  = refMinMax(k, sex);
-    const last = arr[arr.length-1];
-    const st   = statusFor(last?.y ?? null, ref);
-    const unit = meta.unit ? ` ${meta.unit}` : "";
-    const refTxt = [];
-    if (ref.min!=null) refTxt.push(`min ${ref.min}${unit}`);
-    if (ref.max!=null) refTxt.push(`max ${ref.max}${unit}`);
-    lines.push(`${k}: ${last?.y ?? "—"}${unit} | ${st.label} | ${refTxt.join(" / ") || "ref —"} | ${last?.x ? isoToLabel(last.x) : "—"}`);
-  }
-
-  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download="relatorio-exames.txt";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+document.getElementById('btnReportTxt').addEventListener('click', ()=>{
+  const txt = buildReportTxt();
+  downloadText("relatorio-exames.txt", txt);
 });
 
 document.getElementById('btnManual').addEventListener('click', ()=>{
   const name = document.getElementById('name').value.trim() || "Sem nome";
-  const age  = Number(document.getElementById('age').value || 0);
-  const sex  = document.getElementById('sex').value;
+  const age = Number(document.getElementById('age').value || 0);
+  const sex = document.getElementById('sex').value;
 
-  const varKey  = document.getElementById('manualVar').value;
+  const varKey = document.getElementById('manualVar').value;
   const dateISO = document.getElementById('manualDate').value;
-  const value   = Number(document.getElementById('manualValue').value);
+  const value = Number(document.getElementById('manualValue').value);
 
   if (!dateISO || !Number.isFinite(value)){
     alert("Preencha data e valor numérico.");
     return;
   }
+
   const date = isoToLabel(dateISO);
   const hist = loadHistory();
-  hist.push({
-    id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
-    createdAt: nowIso(),
-    source: "Manual",
-    name, age, sex,
-    date,
-    values: { [varKey]: value }
-  });
+
+  // upsert no registro da data (pra não criar um monte de linhas soltas)
+  const existing = hist.find(h => h.date===date);
+  if (existing){
+    existing.values = existing.values || {};
+    existing.values[varKey] = value;
+    existing.editedAt = nowIso();
+    existing.editSource = "Manual";
+  }else{
+    hist.push({
+      id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+      createdAt: nowIso(),
+      source: "Manual",
+      name, age, sex,
+      date,
+      values: { [varKey]: value }
+    });
+  }
   saveHistory(hist);
+
   okBox.style.display="block";
-  okBox.textContent="Valor manual adicionado ao histórico.";
+  okBox.textContent = "OK: valor manual adicionado/atualizado.";
   errBox.style.display="none";
   rebuild();
 });
 
 document.getElementById('btnRead').addEventListener('click', async ()=>{
   const file = document.getElementById('pdf').files?.[0];
-  if (!file){ alert("Escolha um PDF."); return; }
+  if (!file){
+    alert("Escolha um PDF.");
+    return;
+  }
 
   errBox.style.display="none";
   okBox.style.display="none";
   elRaw.value="Lendo PDF...";
 
   try{
-    const readFull = document.getElementById('chkFull').checked;
-    const maxPages = readFull ? 9999 : 3;
-
-    const {full, firstPage, pagesRead, totalPages} = await readPdfTextPages(file, maxPages);
+    // leitura inteligente (3 páginas -> se faltar, lê tudo)
+    const {full, firstPage, pagesRead, totalPages} = await readPdfSmart(file);
     elRaw.value = full.slice(0, 30000);
 
-    const date = parseCollectionDateRobust(firstPage, full);
-    if (!date) throw new Error("Não consegui identificar a data do exame (Coleta/Entrada).");
+    // data apenas da 1ª página (sem misturar datas internas)
+    const date = parseDateFromFirstPage(firstPage);
+    if (!date){
+      throw new Error("Não consegui identificar a data do exame na 1ª página (Coleta/Entrada/Impressão).");
+    }
 
-    const valuesNow   = parseExamValues(full);
-    const lipidPoints = parseLipidHistory(full);
+    // valores
+    const valuesNow = parseExamValues(full);
+    if (!Object.keys(valuesNow).length){
+      throw new Error("Li o PDF, mas não achei resultados reconhecíveis (layout diferente / PDF escaneado).");
+    }
 
     const name = document.getElementById('name').value.trim() || "Sem nome";
-    const age  = Number(document.getElementById('age').value || 0);
-    const sex  = document.getElementById('sex').value;
-
-    if (!Object.keys(valuesNow).length){
-      throw new Error("Li o PDF, mas não achei valores reconhecíveis (layout diferente / páginas não lidas / PDF escaneado).");
-    }
+    const age = Number(document.getElementById('age').value || 0);
+    const sex = document.getElementById('sex').value;
 
     const hist = loadHistory();
 
-    // evita duplicar coleta principal
-    const already = hist.some(h => h.date===date && JSON.stringify(h.values)===JSON.stringify(valuesNow));
-    if (!already){
+    // evita duplicar (mesma data + mesmos valores)
+    const signature = JSON.stringify(valuesNow);
+    const exists = hist.some(h => h.date===date && JSON.stringify(h.values||{})===signature);
+    if (exists){
+      okBox.style.display="block";
+      okBox.textContent = `Esse PDF já parece estar no histórico (data ${date}). Não dupliquei.`;
+      errBox.style.display="none";
+      rebuild();
+      return;
+    }
+
+    // se já existe registro na data, mescla (pra ficar 1 registro por data)
+    const existing = hist.find(h => h.date===date);
+    if (existing){
+      existing.values = existing.values || {};
+      for (const [k,v] of Object.entries(valuesNow)) existing.values[k]=v;
+      existing.source = existing.source || file.name || "PDF";
+      existing.updatedAt = nowIso();
+    }else{
       hist.push({
-        id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
         createdAt: nowIso(),
         source: file.name || "PDF",
         name, age, sex,
@@ -1026,31 +1320,14 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
       });
     }
 
-    // resultados anteriores (sem duplicar)
-    for (const p of lipidPoints){
-      const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===JSON.stringify(p.values) && (h.source||"").includes("Tabela"));
-      if (!exists){
-        hist.push({
-          id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
-          createdAt: nowIso(),
-          source: "Tabela (Resultados anteriores do PDF)",
-          name, age, sex,
-          date: p.date,
-          values: p.values
-        });
-      }
-    }
-
     saveHistory(hist);
 
     okBox.style.display="block";
     okBox.textContent =
-      `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date}). ` +
-      `Páginas lidas: ${pagesRead}/${totalPages}.` +
-      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela.` : "");
+      `OK: adicionei/atualizei ${Object.keys(valuesNow).length} variáveis do PDF (${date}). ` +
+      `Páginas lidas: ${pagesRead}/${totalPages}.`;
     errBox.style.display="none";
 
-    document.getElementById('pdf').value = "";
     rebuild();
   }catch(err){
     const msg = String(err?.message || err);
@@ -1061,11 +1338,7 @@ document.getElementById('btnRead').addEventListener('click', async ()=>{
   }
 });
 
-document.getElementById('fabGo').addEventListener('click', ()=>{
-  document.getElementById('pdf').scrollIntoView({behavior:"smooth", block:"center"});
-  document.getElementById('pdf').focus();
-});
-
+// init
 rebuild();
 </script>
 </body>
