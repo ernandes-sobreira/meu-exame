@@ -76,7 +76,12 @@
     }
     button.secondary{background:#0f172a}
     button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke);font-weight:800}
-    button.danger{background:#dc2626}
+
+    /* ✅ COR NOVA DO EXCLUIR PONTO (rosa claro) */
+    button.danger{background:#ff5fa2}
+    button.danger:hover{filter:brightness(.95)}
+    button.danger:active{transform:translateY(1px)}
+
     .btns{display:flex;gap:10px;flex-wrap:wrap}
     .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:8px}
     .hr{height:1px;background:var(--stroke);margin:12px 0}
@@ -175,6 +180,9 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- ✅ Adapter de data (obrigatório pro eixo time no Chart.js v4) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+
   <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
@@ -190,7 +198,7 @@
           <b>Idealizado por Ernandes Sobreira</b> para fins de comparações de resultados médicos pessoais.
         </p>
       </div>
-      <div class="pill">✅ Datas: usa <b>apenas a data da 1ª página</b> do PDF (não mistura datas internas).</div>
+      <div class="pill">✅ Datas: usa <b>apenas a data de COLETA/REALIZAÇÃO</b> da 1ª página (ignora nascimento).</div>
     </header>
 
     <div class="grid">
@@ -289,7 +297,7 @@
       <section class="card">
         <div class="sectionTitle">
           <h2 style="margin:0">Painel</h2>
-          <span class="badge">📌 Referências = linhas tracejadas (mín/máx). Eixo Y tem “folga” pra elas sempre aparecerem.</span>
+          <span class="badge">📌 Referências = linhas tracejadas (mín/máx). Aparecem desde o 1º ponto.</span>
         </div>
 
         <div class="kpis">
@@ -337,8 +345,8 @@
 /* =========================
    STORAGE
    ========================= */
-const LS_HISTORY = "exameview_history_v7";
-const LS_CUSTOM  = "exameview_custom_refs_v7";
+const LS_HISTORY = "exameview_history_v8";
+const LS_CUSTOM  = "exameview_custom_refs_v8";
 
 function loadHistory(){
   try{ return JSON.parse(localStorage.getItem(LS_HISTORY) || "[]"); } catch { return []; }
@@ -376,7 +384,6 @@ async function readPdfTextAllPages(file){
   try{
     return await run({ data: ab });
   }catch(e){
-    // fallback (Android / worker issues)
     return await run({ data: ab, disableWorker: true });
   }
 }
@@ -387,10 +394,8 @@ async function readPdfTextAllPages(file){
 function parseNumberPt(s){
   if (s==null) return null;
   let t = String(s).trim();
-  // milhar "222,000" ou "140.000" -> remove separadores
   t = t.replace(/\.(?=\d{3}\b)/g, "");
   t = t.replace(/,(?=\d{3}\b)/g, "");
-  // decimal vírgula -> ponto
   t = t.replace(",", ".");
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
@@ -421,45 +426,69 @@ function hashKey(s){
 }
 
 /* =========================
-   DATE RULE (IMPORTANT)
-   - pega APENAS a data da 1ª página
-   - prioridade: Impressão > Coleta > Entrada > (fallback primeira data da 1ª página)
+   DATE RULE (FIXED, CERTA)
+   - pega APENAS a 1ª página
+   - prioridade: Coleta/Realização/Exame/Entrada > Impressão
+   - NUNCA usa data perto de "nasc"
    ========================= */
 function firstPageText(fullText){
-  // nós marcamos páginas como "[PAGE 1]"
   const m = fullText.split(/\[PAGE 2\]/i);
   return (m[0] || fullText);
 }
+
+function ctxHasBirth(p1, idx){
+  const ctx = p1.slice(Math.max(0, idx-40), idx+40).toLowerCase();
+  return /(nasc|nascimento|data\s*de\s*nasc)/i.test(ctx);
+}
+
 function parseDateFromFirstPage(fullText){
-  const p1 = firstPageText(fullText);
+  const p1 = firstPageText(fullText)
+    .replace(/\u00A0/g," ")
+    .replace(/\s+/g," ")
+    .trim();
 
-  const imp = p1.match(/Impress[aã]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (imp) return imp[1];
-
-  const coleta = p1.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (coleta) return coleta[1];
-
-  const ent = p1.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
-  if (ent) return ent[1];
-
-  const all = [...p1.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
-  for (const d of all){
-    const idx = p1.indexOf(d);
-    const ctx = p1.slice(Math.max(0, idx-30), idx+30);
-    if (!/Data\s*Nasc/i.test(ctx)) return d;
+  // 1) padrões fortes (COLETA / REALIZAÇÃO / EXAME / ENTRADA)
+  const strong = [
+    /data\s*e\s*hora\s*de\s*coleta\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /data\s*(?:da)?\s*coleta\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /coleta\s*(?:realizada|em|:)?\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /coletado\s*em\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /data\s*(?:de)?\s*realiza(?:ç|c)ão\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /data\s*do\s*exame\s*[:\-]?\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /data\s*de\s*entrada\s*:\s*(\d{2}\/\d{2}\/\d{4})/i
+  ];
+  for (const re of strong){
+    const m = p1.match(re);
+    if (m?.[1]){
+      const idx = p1.toLowerCase().indexOf(m[1].toLowerCase());
+      if (idx >= 0 && ctxHasBirth(p1, idx)) continue;
+      return m[1];
+    }
   }
+
+  // 2) Impressão (se existir e não for nascimento)
+  const imp = p1.match(/impress[aã]o\s*:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (imp?.[1]){
+    const idx = p1.toLowerCase().indexOf(imp[1].toLowerCase());
+    if (!(idx >= 0 && ctxHasBirth(p1, idx))) return imp[1];
+  }
+
+  // 3) fallback: primeira data da página que NÃO esteja no contexto de nascimento
+  const all = [...p1.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(m=>({d:m[1], idx:m.index ?? -1}));
+  for (const it of all){
+    if (it.idx >= 0 && ctxHasBirth(p1, it.idx)) continue;
+    return it.d;
+  }
+
   return null;
 }
 
 /* =========================
    VARIABLE PARSING (ROBUST)
-   - ignora "Data anterior" e "Resultado anterior"
-   - foca em linhas "Resultado:" ou "Colesterol ...: 147 mg/dL" etc.
    ========================= */
 
-// catálogo de padrões (você pode ampliar com o tempo)
+// catálogo de padrões
 const PATTERNS = [
-  // Lipídios (resultado atual)
   {key:"Colesterol Total", unit:"mg/dL", re:/Colesterol\s*Total:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
   {key:"HDL", unit:"mg/dL", re:/Colesterol\s*H\s*D\s*L:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
   {key:"LDL", unit:"mg/dL", re:/Colesterol\s*L\s*D\s*L:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
@@ -468,7 +497,6 @@ const PATTERNS = [
   {key:"Não-HDL", unit:"mg/dL", re:/Colesterol\s*N[aã]o-?HDL:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
   {key:"Lipídios Totais", unit:"mg/dL", re:/Lipid(?:i|í)os\s*Totais:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
 
-  // Hemograma (linha pontilhada)
   {key:"Hemácias", unit:"milh./mm³", re:/Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i},
   {key:"Hemoglobina", unit:"g/dL", re:/Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d[l1]/i},
   {key:"Hematócrito", unit:"%", re:/Hematocrito\.*\s*([0-9\.,]+)\s*%/i},
@@ -480,7 +508,6 @@ const PATTERNS = [
   {key:"Plaquetas", unit:"/mm³", re:/Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)\s*(?:mm|\/)?/i},
   {key:"VPM", unit:"fL", re:/Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i},
 
-  // Série branca em formato "% abs" (ex: Segmentados 71 4.409)
   {key:"Segmentados (%)", unit:"%", re:/Segmentados\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
   {key:"Segmentados (abs)", unit:"/mm³", re:/Segmentados\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
 
@@ -493,33 +520,24 @@ const PATTERNS = [
   {key:"Monócitos (%)", unit:"%", re:/Monocitos\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
   {key:"Monócitos (abs)", unit:"/mm³", re:/Monocitos\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
 
-  // Bioquímica (Resultado:)
   {key:"Glicose", unit:"mg/dL", re:/Glicose[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
-
-  // Ferro / Ferritina (Resultado:)
   {key:"Ferro sérico", unit:"µg/dL", re:/Ferro\s*s[eé]rico[^]*?Resultado:\.*\s*([0-9\.,]+)\s*(?:u|µ)g\/dL/i},
   {key:"Ferritina", unit:"ng/mL", re:/Ferritina[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
-
-  // Vitaminas
   {key:"Vitamina B12", unit:"pg/mL", re:/Vitamina\s*B12[^]*?Resultado:\.*\s*([0-9\.,]+)\s*pg\/mL/i},
   {key:"Vitamina D (25-OH)", unit:"ng/mL", re:/Vitamina\s*D[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
-
-  // Zinco
   {key:"Zinco", unit:"mcg/dL", re:/Zinco[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mcg\/dL/i},
 
-  // Hormônios
   {key:"DHT", unit:"pg/mL", re:/Dehidrotestosterona[^]*?Resultado:\.*\s*([0-9\.,]+)\s*pg\/mL/i},
   {key:"LH", unit:"mUI/mL", re:/LH[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mUI\/mL/i},
   {key:"Prolactina", unit:"ng/mL", re:/Prolactina[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
   {key:"FSH", unit:"mUI/mL", re:/FSH[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mUI\/mL/i},
 
-  // Testosterona / SHBG (no seu PDF vem como "RESULTADO:" em caps)
   {key:"SHBG", unit:"nmol/L", re:/SHBG[^]*?RESULTADO:\s*([0-9\.,]+)\s*nmol\/L/i},
   {key:"Testosterona Total", unit:"ng/dL", re:/TESTOSTERONA\s*TOTAL[^]*?RESULTADO:\s*([0-9\.,]+)\s*ng\/dL/i},
   {key:"Testosterona Livre (calc.)", unit:"ng/dL", re:/TESTOSTERONA\s*LIVRE[^]*?RESULTADO:\s*([0-9\.,]+)\s*ng\/dL/i},
 ];
 
-// referencia padrão mínima/máxima (você pode ajustar, e também sobrescrever manualmente no app)
+// referências default
 const DEFAULT_REFS = [
   {key:"Colesterol Total", min:null, max:190, unit:"mg/dL"},
   {key:"HDL", min:40, max:null, unit:"mg/dL"},
@@ -529,7 +547,6 @@ const DEFAULT_REFS = [
   {key:"Não-HDL", min:null, max:145, unit:"mg/dL"},
   {key:"Lipídios Totais", min:400, max:1000, unit:"mg/dL", note:"O próprio laudo costuma citar 400–1000 como referência."},
 
-  // hemograma (homem) – se quiser, você pode deixar isso por sexo ou só usar manual
   {key:"Hemácias", min:4.50, max:6.00, unit:"milh./mm³"},
   {key:"Hemoglobina", min:13.00, max:18.60, unit:"g/dL"},
   {key:"Hematócrito", min:40, max:56, unit:"%"},
@@ -550,7 +567,6 @@ const DEFAULT_REFS = [
   {key:"Monócitos (%)", min:1, max:8, unit:"%"},
   {key:"Monócitos (abs)", min:45, max:800, unit:"/mm³"},
 
-  // alguns aqui variam por lab/método, então default é “melhor esforço”
   {key:"Glicose", min:70, max:99, unit:"mg/dL"},
   {key:"Ferro sérico", min:65, max:175, unit:"µg/dL"},
   {key:"Ferritina", min:30, max:400, unit:"ng/mL"},
@@ -569,7 +585,6 @@ const DEFAULT_REFS = [
 function getDefaultRef(key){
   return DEFAULT_REFS.find(r=>normKey(r.key)===normKey(key)) || {key, min:null, max:null, unit:"", note:""};
 }
-
 function getRef(key){
   const custom = loadCustomRefs();
   const k = normKey(key);
@@ -577,7 +592,6 @@ function getRef(key){
   const d = getDefaultRef(key);
   return { key, min:d.min ?? null, max:d.max ?? null, unit:d.unit || "", note:d.note || "" };
 }
-
 function statusFor(value, ref){
   if (value==null || !Number.isFinite(value)) return {label:"—", cls:"warn"};
   if (ref.min!=null && value < ref.min) return {label:"Fora", cls:"bad"};
@@ -585,7 +599,6 @@ function statusFor(value, ref){
   if (ref.min==null && ref.max==null) return {label:"Sem ref.", cls:"warn"};
   return {label:"Dentro", cls:"ok"};
 }
-
 function formatRefLine(ref){
   const unit = ref.unit ? ` ${ref.unit}` : "";
   const parts=[];
@@ -600,23 +613,12 @@ function formatRefLine(ref){
    PARSE VALUES
    ========================= */
 function stripHistoricSections(text){
-  // remove blocos de "Data anterior..." em diante para reduzir colisão de regex
-  // (mantém o resultado atual do perfil lipídico acima disso)
-  return text.replace(/Data\s+anterior[\s\S]*$/i, (m)=> {
-    // mas NÃO remove se tiver outros exames depois. Aqui usamos "melhor esforço":
-    // corta apenas o trecho da tabela lipídica (que é o que bagunça HDL/LDL).
-    // Como no seu PDF essa tabela vem após o perfil lipídico, isso resolve.
-    return "\n\n[HISTORICO_INTERNO_REMOVIDO]\n";
-  });
+  return text.replace(/Data\s+anterior[\s\S]*$/i, ()=> "\n\n[HISTORICO_INTERNO_REMOVIDO]\n");
 }
-
 function parseValues(fullText){
-  // importante: não misturar histórico interno do laudo (Data anterior)
   const text = stripHistoricSections(fullText);
-
   const out = {};
-  const units = {}; // guarda unidade detectada pelo padrão
-
+  const units = {};
   for (const p of PATTERNS){
     const m = text.match(p.re);
     if (!m) continue;
@@ -626,7 +628,6 @@ function parseValues(fullText){
     out[p.key] = v;
     if (p.unit) units[p.key] = p.unit;
   }
-
   return { values: out, units };
 }
 
@@ -640,7 +641,7 @@ const SERIES = [
   {name:"Plaquetas", icon:"🧫", keys:["Plaquetas","VPM"]},
   {name:"Glicose", icon:"🍬", keys:["Glicose"]},
   {name:"Hormônios / Vitaminas / Ferro", icon:"🧪", keys:["Ferro sérico","Ferritina","Zinco","Vitamina B12","Vitamina D (25-OH)","DHT","LH","FSH","Prolactina","SHBG","Testosterona Total","Testosterona Livre (calc.)"]},
-  {name:"Outros", icon:"📌", keys:[]}, // sobra
+  {name:"Outros", icon:"📌", keys:[]},
 ];
 
 /* =========================
@@ -661,7 +662,6 @@ function destroyCharts(){
 }
 
 function computeSeries(history){
-  // map var -> [{iso, val}]
   const series = new Map();
   for (const h of history){
     const iso = ddmmyyyyToISO(h.date);
@@ -674,11 +674,9 @@ function computeSeries(history){
   for (const arr of series.values()) arr.sort((a,b)=>a.x.localeCompare(b.x));
   return series;
 }
-
 function uniqueDates(history){
   return new Set(history.map(h=>h.date));
 }
-
 function latestPointForVar(seriesArr){
   if (!seriesArr || !seriesArr.length) return null;
   return seriesArr[seriesArr.length-1];
@@ -696,7 +694,7 @@ function renderSummary(seriesMap){
     const st = statusFor(last.y, ref);
     items.push({key, last, ref, st});
   }
-  // ordena: fora primeiro, depois dentro
+
   items.sort((a,b)=>{
     const pa = (a.st.cls==="bad"?0:(a.st.cls==="ok"?1:2));
     const pb = (b.st.cls==="bad"?0:(b.st.cls==="ok"?1:2));
@@ -710,11 +708,7 @@ function renderSummary(seriesMap){
     chip.className = "chip " + (it.st.cls==="bad" ? "bad" : (it.st.cls==="ok" ? "ok" : ""));
     chip.innerHTML = `<b>${escapeHtml(it.key)}</b> <span class="mono">${it.last.y}${unit}</span> <span class="muted">(${isoToLabel(it.last.x)})</span>`;
     if (it.st.cls==="bad") elSumBad.appendChild(chip);
-    else if (it.st.cls==="ok") elSumOk.appendChild(chip);
-    else {
-      // sem ref vai pro "dentro" mas visual neutro
-      elSumOk.appendChild(chip);
-    }
+    else elSumOk.appendChild(chip);
   }
 
   if (!items.length){
@@ -758,9 +752,42 @@ function renderHistory(history){
   elHistory.appendChild(list);
 }
 
-function applyYAxisPadding(values, ref){
-  // garante que refs e pontos ficam visíveis
-  const nums = values.filter(v=>Number.isFinite(v));
+/* =========================
+   ✅ REFERÊNCIA SEMPRE VISÍVEL (mesmo com 1 ponto)
+   cria linha com 2 pontos (x inicial e x final)
+   ========================= */
+function addDaysISO(iso, days){
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function buildRefDataset(refValue, pointsISO, label){
+  if (refValue == null || !Number.isFinite(Number(refValue))) return null;
+
+  const sorted = (pointsISO || []).slice().sort();
+  let minX = sorted[0] || new Date().toISOString().slice(0,10);
+  let maxX = sorted[sorted.length-1] || minX;
+
+  if (minX === maxX){
+    maxX = addDaysISO(minX, 1); // ✅ garante linha aparecendo
+  }
+
+  return {
+    label,
+    data: [
+      { x: minX, y: Number(refValue) },
+      { x: maxX, y: Number(refValue) }
+    ],
+    parsing: false,
+    borderDash:[6,6],
+    pointRadius:0,
+    borderWidth:2,
+    tension:0
+  };
+}
+
+function applyYAxisPadding(valuesY, ref){
+  const nums = valuesY.filter(v=>Number.isFinite(v));
   if (ref.min!=null) nums.push(ref.min);
   if (ref.max!=null) nums.push(ref.max);
 
@@ -770,7 +797,6 @@ function applyYAxisPadding(values, ref){
   let max = Math.max(...nums);
 
   if (min===max){
-    // 1 ponto só
     const pad = (min===0 ? 1 : Math.abs(min)*0.2);
     min = min - pad;
     max = max + pad;
@@ -787,7 +813,6 @@ function renderSeries(seriesMap){
   destroyCharts();
   elSeries.innerHTML = "";
 
-  // KPIs
   const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
   const dates = uniqueDates(hist);
   let pts = 0;
@@ -795,23 +820,18 @@ function renderSeries(seriesMap){
   elPoints.textContent = pts;
   elDates.textContent  = dates.size;
 
-  // resumo
   renderSummary(seriesMap);
 
-  // descobrir "sobras"
   const known = new Set();
   for (const s of SERIES){
     for (const k of s.keys) known.add(normKey(k));
   }
-
-  // construir cartões por série
   const allKeys = [...seriesMap.keys()];
   const leftovers = allKeys.filter(k=> !known.has(normKey(k)));
 
   for (const s of SERIES){
     let keys = s.keys.filter(k=>seriesMap.has(k));
     if (s.name==="Outros") keys = leftovers;
-
     if (!keys.length) continue;
 
     const card = document.createElement("div");
@@ -837,8 +857,8 @@ function renderSeries(seriesMap){
       const st = statusFor(last?.y ?? null, ref);
 
       const unit = ref.unit ? ` ${ref.unit}` : "";
-      const labels = arr.map(p=> isoToLabel(p.x));
-      const values = arr.map(p=> p.y);
+      const valuesY = arr.map(p=>p.y);
+      const pointsISO = arr.map(p=>p.x);
 
       const varCard = document.createElement("div");
       varCard.className = "varCard";
@@ -901,7 +921,7 @@ function renderSeries(seriesMap){
         </div>
       `;
 
-      // preencher select datas
+      // select datas
       const sel = varCard.querySelector(".editDate");
       for (const p of arr){
         const opt = document.createElement("option");
@@ -910,45 +930,33 @@ function renderSeries(seriesMap){
         sel.appendChild(opt);
       }
 
-      // preencher inputs de ref
+      // ref inputs
       varCard.querySelector(".refMin").value = (ref.min!=null ? ref.min : "");
       varCard.querySelector(".refMax").value = (ref.max!=null ? ref.max : "");
       varCard.querySelector(".refUnit").value = (ref.unit || "");
 
-      // chart datasets
+      // datasets (time scale)
       const ds = [{
         label:"Valor",
-        data: values,
+        data: arr.map(p=>({x:p.x, y:p.y})),
+        parsing:false,
         tension:0.25,
         pointRadius:3,
         borderWidth:2
       }];
 
-      if (ref.min!=null){
-        ds.push({
-          label:"Ref. mínima",
-          data: labels.map(()=>ref.min),
-          borderDash:[6,6],
-          pointRadius:0,
-          borderWidth:2
-        });
-      }
-      if (ref.max!=null){
-        ds.push({
-          label:"Ref. máxima",
-          data: labels.map(()=>ref.max),
-          borderDash:[6,6],
-          pointRadius:0,
-          borderWidth:2
-        });
-      }
+      const refMinDS = buildRefDataset(ref.min, pointsISO, "Ref. mínima");
+      if (refMinDS) ds.push(refMinDS);
 
-      const yPad = applyYAxisPadding(values, ref);
+      const refMaxDS = buildRefDataset(ref.max, pointsISO, "Ref. máxima");
+      if (refMaxDS) ds.push(refMaxDS);
+
+      const yPad = applyYAxisPadding(valuesY, ref);
 
       const ctx = varCard.querySelector("canvas").getContext("2d");
       const ch = new Chart(ctx, {
         type:"line",
-        data:{ labels, datasets: ds },
+        data:{ datasets: ds },
         options:{
           responsive:true,
           maintainAspectRatio:false,
@@ -956,13 +964,17 @@ function renderSeries(seriesMap){
             legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
             tooltip:{
               callbacks:{
-                title:(items)=> items?.[0]?.label || "",
-                label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
+                title:(items)=> items?.[0]?.raw?.x ? isoToLabel(items[0].raw.x) : "",
+                label:(item)=> `${item.dataset.label}: ${item.raw?.y ?? item.formattedValue}`
               }
             }
           },
           scales:{
-            x:{ type:"category", ticks:{ maxTicksLimit:5 } },
+            x:{
+              type:"time",
+              time:{ unit:"day" },
+              ticks:{ maxTicksLimit:5, maxRotation:0 }
+            },
             y:{
               beginAtZero:false,
               suggestedMin: yPad.suggestedMin,
@@ -974,7 +986,7 @@ function renderSeries(seriesMap){
       });
       charts.set(varKey, ch);
 
-      // actions: fill/save/delete
+      // actions
       varCard.querySelector(".btnFill").addEventListener("click", ()=>{
         const iso = sel.value;
         const p = arr.find(x=>x.x===iso);
@@ -1047,8 +1059,6 @@ function updatePointValue(varKey, iso, newVal){
   const hist = loadHistory();
   const date = isoToLabel(iso);
 
-  // achar o registro da mesma data que contém essa variável
-  // se existir múltiplos, atualiza o primeiro que tiver
   for (const h of hist){
     if (h.date === date && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
       h.values[varKey] = newVal;
@@ -1058,7 +1068,6 @@ function updatePointValue(varKey, iso, newVal){
     }
   }
 
-  // se não existir, cria ponto manual nessa data
   const name = document.getElementById("name").value.trim() || "Sem nome";
   const age  = Number(document.getElementById("age").value || 0);
   const sex  = document.getElementById("sex").value;
@@ -1079,7 +1088,6 @@ function deletePoint(varKey, iso){
   const hist = loadHistory();
   const date = isoToLabel(iso);
 
-  // remove a variável daquele registro; se ficar vazio, remove o registro
   const newHist = [];
   for (const h of hist){
     if (h.date === date && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
@@ -1088,7 +1096,7 @@ function deletePoint(varKey, iso){
       const keys = Object.keys(nv);
       if (keys.length){
         newHist.push({...h, values:nv});
-      } // senão: some o registro todo
+      }
     } else {
       newHist.push(h);
     }
@@ -1178,7 +1186,6 @@ document.getElementById("btnManual").addEventListener("click", ()=>{
   });
   saveHistory(hist);
 
-  // se usuário digitou unidade, salva como ref custom (sem min/max)
   if (unit){
     const custom = loadCustomRefs();
     const k = normKey(varKey);
@@ -1225,17 +1232,17 @@ document.getElementById("btnRead").addEventListener("click", async ()=>{
     return;
   }
 
-  document.getElementById("btnRead").disabled = true;
-  document.getElementById("btnRead").textContent = "Lendo PDF...";
+  const btn = document.getElementById("btnRead");
+  btn.disabled = true;
+  btn.textContent = "Lendo PDF...";
 
   try{
     const text = await readPdfTextAllPages(file);
 
-    // debug (primeiros 30k)
     elRaw.value = text.slice(0, 30000);
 
     const date = parseDateFromFirstPage(text);
-    if (!date) throw new Error("Não consegui identificar a data do exame na 1ª página (Impressão/Coleta/Entrada).");
+    if (!date) throw new Error("Não consegui identificar a data do exame na 1ª página (coleta/realização/exame/entrada).");
 
     const parsed = parseValues(text);
     const values = parsed.values;
@@ -1244,7 +1251,7 @@ document.getElementById("btnRead").addEventListener("click", async ()=>{
       throw new Error("Li o texto do PDF, mas não consegui reconhecer valores. (Layout muito diferente / PDF escaneado).");
     }
 
-    // salvar unidades detectadas como custom (sem mexer em min/max), só pra mostrar bonitinho
+    // unidades detectadas
     const custom = loadCustomRefs();
     for (const [k,u] of Object.entries(parsed.units || {})){
       const nk = normKey(k);
@@ -1277,8 +1284,8 @@ document.getElementById("btnRead").addEventListener("click", async ()=>{
   }catch(e){
     alert("Erro: " + (e?.message || e));
   }finally{
-    document.getElementById("btnRead").disabled = false;
-    document.getElementById("btnRead").textContent = "Adicionar este PDF ao histórico";
+    btn.disabled = false;
+    btn.textContent = "Adicionar este PDF ao histórico";
   }
 });
 
