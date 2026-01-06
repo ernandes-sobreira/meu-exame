@@ -3,64 +3,200 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Leitor de Exames (PDF) — valor x referência + histórico</title>
+  <title>ExameView — Leitor de Exames (PDF) + Gráficos + Histórico</title>
+  <meta name="theme-color" content="#ffffff"/>
 
   <style>
     :root{
-      --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.12);
-      --txt:#eaf2ff; --muted:rgba(234,242,255,.72); --ok:#2dd4bf; --bad:#fb7185; --warn:#fbbf24;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --stroke:#e7e9f2;
+      --txt:#0f172a;
+      --muted:#475569;
+      --muted2:#64748b;
+      --accent:#2563eb;
+      --accent2:#14b8a6;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius: 18px;
     }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
-      background:linear-gradient(180deg,#0b1220,#050814); color:var(--txt);}
-    .wrap{max-width:1100px;margin:0 auto;padding:18px;}
-    h1{margin:0 0 6px;font-size:20px}
-    p{margin:6px 0;color:var(--muted);line-height:1.35}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
-    .card{background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:14px}
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.10), transparent 60%),
+                  radial-gradient(900px 500px at 110% 10%, rgba(20,184,166,.10), transparent 55%),
+                  var(--bg);
+      color:var(--txt);
+    }
+    .wrap{max-width:1150px;margin:0 auto;padding:18px}
+    .top{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      padding:14px 14px 6px;
+    }
+    .brand{
+      display:flex;gap:12px;align-items:center;
+    }
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(20,184,166,.18));
+      border:1px solid var(--stroke);
+      display:grid;place-items:center;
+      box-shadow: var(--shadow);
+    }
+    .logo svg{width:24px;height:24px}
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .sub{margin:4px 0 0;color:var(--muted2);font-size:13px;line-height:1.35}
+
+    .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--stroke);
+      background:rgba(255,255,255,.8);
+      box-shadow: 0 8px 18px rgba(15,23,42,.06);
+      font-size:12px;color:var(--muted);
+      max-width:100%;
+    }
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2)}
+    .dot.warn{background:var(--warn)}
+    .dot.bad{background:var(--bad)}
+    .chip b{color:var(--txt);font-weight:700}
+    .chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+
+    .grid{display:grid;grid-template-columns: 1.05fr .95fr; gap:14px}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .sectionTitle{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px
+    }
+    .sectionTitle h2{margin:0;font-size:14px}
+    .hint{font-size:12px;color:var(--muted2)}
+
     label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
     input,select,button,textarea{
-      width:100%; box-sizing:border-box; border-radius:12px; border:1px solid var(--stroke);
-      background:rgba(255,255,255,.05); color:var(--txt); padding:10px 12px; outline:none;
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      color:var(--txt);
+      padding:11px 12px;
+      outline:none;
     }
+    input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.45); box-shadow:0 0 0 4px rgba(37,99,235,.10)}
+    input[type="file"]{padding:9px 12px}
     input::file-selector-button{
-      border:1px solid var(--stroke); background:rgba(255,255,255,.07); color:var(--txt);
-      padding:8px 10px;border-radius:10px;margin-right:10px
+      border:1px solid var(--stroke);
+      background:#fff;
+      color:var(--txt);
+      padding:8px 10px;
+      border-radius:12px;
+      margin-right:10px;
+      cursor:pointer;
     }
+
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 520px){.row{grid-template-columns:1fr}}
+
     .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{cursor:pointer;font-weight:700}
-    button.primary{background:rgba(45,212,191,.14);border-color:rgba(45,212,191,.35)}
-    button.danger{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.35)}
-    button.ghost{background:transparent}
-    .small{font-size:12px;color:var(--muted)}
-    .pill{display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid var(--stroke);font-size:12px;color:var(--muted)}
-    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    @media (max-width: 600px){.kpi{grid-template-columns:1fr}}
-    .k{padding:10px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.04)}
-    .k b{display:block;font-size:14px}
-    .k span{font-size:12px;color:var(--muted)}
+    button{cursor:pointer;font-weight:800}
+    .primary{
+      background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(20,184,166,.92));
+      border:0;
+      color:#fff;
+      padding:11px 14px;
+    }
+    .ghost{
+      background:#fff;
+      border:1px solid var(--stroke);
+      color:var(--txt);
+      padding:11px 14px;
+    }
+    .danger{
+      background:#fff;
+      border:1px solid rgba(239,68,68,.35);
+      color:#b91c1c;
+      padding:11px 14px;
+    }
     .hr{height:1px;background:var(--stroke);margin:12px 0}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-    .warnbox{border:1px dashed rgba(251,191,36,.5); background:rgba(251,191,36,.08); padding:10px;border-radius:12px}
-    canvas{background:rgba(255,255,255,.02);border:1px solid var(--stroke);border-radius:12px;padding:8px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--stroke);padding:8px;text-align:left;font-size:13px}
-    th{color:var(--muted);font-weight:600}
-    .tag-ok{color:var(--ok)}
-    .tag-bad{color:var(--bad)}
-    .tag-warn{color:var(--warn)}
-    .toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media (max-width: 700px){.kpi{grid-template-columns:1fr}}
+    .k{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(20,184,166,.04));
+    }
+    .k b{display:block;font-size:18px}
+    .k span{font-size:12px;color:var(--muted2)}
+
+    canvas{
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:10px;
+    }
+
+    .tableWrap{
+      overflow:auto;max-height:310px;border:1px solid var(--stroke);border-radius:16px;
+      background:#fff
+    }
+    table{width:100%;border-collapse:collapse;min-width:520px}
+    th,td{border-bottom:1px solid var(--stroke);padding:10px;text-align:left;font-size:13px}
+    th{color:var(--muted2);font-weight:800;background: linear-gradient(180deg, #fff, rgba(2,6,23,.02))}
+    .tag-ok{color: #0f766e; font-weight:800}
+    .tag-bad{color: #b91c1c; font-weight:800}
+    .tag-warn{color: #92400e; font-weight:800}
+
+    textarea{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; resize:vertical}
+
+    .historyItem{
+      padding:10px 0;border-bottom:1px solid var(--stroke);
+      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:12px;
+    }
+    .historyItem b{font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; font-size:13px}
+    .filePill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 8px;border-radius:999px;border:1px solid var(--stroke);
+      background:#fff;color:var(--muted2);font-size:12px;margin-left:6px;
+      max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+
+    .note{
+      border:1px dashed rgba(37,99,235,.35);
+      background: rgba(37,99,235,.06);
+      border-radius:16px;
+      padding:12px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .footer{
+      margin-top:10px;
+      color:var(--muted2);
+      font-size:12px;
+      text-align:center;
+    }
   </style>
 
-  <!-- PDF.js (core) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+  <!-- ✅ PDF.js estável para GitHub Pages + Android -->
+  <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script>
-    // ✅ ESSENCIAL (GitHub Pages / mobile): define o worker do PDF.js
-    // Sem isso, é comum falhar e cair no "Não consegui ler o PDF".
+    // resolve o erro: "pdfjsLib is not defined"
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js";
+      "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
   </script>
 
   <!-- Chart.js -->
@@ -69,26 +205,38 @@
 
 <body>
   <div class="wrap">
-    <div class="toprow">
-      <div>
-        <h1>Leitor de Exames (PDF) — valor x referência + histórico</h1>
-        <p class="small">
-          Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor.
-          Ferramenta de visualização (não diagnóstico).
-        </p>
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M5 13c2-5 6-8 11-9 1 0 2 1 2 2-1 5-4 9-9 11-1 0-2-1-2-2 0-1 0-2-2-2z" stroke="rgba(37,99,235,.9)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6 17c2-1 4-2 6-4" stroke="rgba(20,184,166,.9)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>ExameView</h1>
+          <div class="sub">Leitor de exames em PDF → extrai valores, compara com referência e guarda histórico no seu navegador (localStorage). Nada é enviado.</div>
+        </div>
       </div>
-      <div class="meta">
-        <span class="pill" id="status">Aguardando PDF…</span>
-        <span class="pill" id="pdfType">PDF: —</span>
+
+      <div class="chips">
+        <div class="chip"><span class="dot" id="dotStatus"></span><b id="status">Pronto</b></div>
+        <div class="chip"><span class="dot warn" id="dotPdf"></span><span id="pdfInfo">PDF: nenhum</span></div>
       </div>
     </div>
 
     <div class="grid">
+      <!-- Painel esquerdo -->
       <div class="card">
+        <div class="sectionTitle">
+          <h2>1) Dados do paciente + Upload</h2>
+          <span class="hint">Roda 100% local</span>
+        </div>
+
         <div class="row">
           <div>
             <label>Nome</label>
-            <input id="nome" placeholder="Ex: Ernandes" />
+            <input id="nome" placeholder="Ex: Ernandes" autocomplete="name"/>
           </div>
           <div>
             <label>Idade (anos)</label>
@@ -118,24 +266,32 @@
 
         <div class="hr"></div>
 
-        <div class="warnbox small">
-          <b>Se der “não consegui ler”:</b><br/>
-          1) no celular, muitos PDFs são <b>escaneados</b> (imagem) → não existe texto para extrair.<br/>
-          2) este app mostra o erro real na tela (abaixo) e tenta identificar se o PDF tem texto.
+        <div class="note">
+          <b>Se o PDF for escaneado (imagem):</b> pode não ter texto para extrair.
+          O app indica “parece escaneado”. Nesse caso, a próxima evolução é adicionar OCR no navegador.
         </div>
 
         <div class="hr"></div>
 
+        <div class="sectionTitle">
+          <h2>2) Diagnóstico técnico (para ajustar)</h2>
+          <span class="hint">Você pode me mandar só esse texto</span>
+        </div>
+
         <label>Erro (se houver)</label>
-        <textarea id="errbox" rows="3" class="mono" placeholder="Aqui aparece o erro real…"></textarea>
+        <textarea id="errbox" rows="3" placeholder="Aqui aparece o erro real…"></textarea>
 
-        <div class="hr"></div>
-
-        <label>Texto extraído do PDF (para ajuste fino)</label>
-        <textarea id="raw" rows="10" class="mono" placeholder="Aqui vai aparecer o texto extraído…"></textarea>
+        <label>Texto extraído do PDF</label>
+        <textarea id="raw" rows="10" placeholder="Aqui vai aparecer o texto extraído…"></textarea>
       </div>
 
+      <!-- Painel direito -->
       <div class="card">
+        <div class="sectionTitle">
+          <h2>Resultados</h2>
+          <span class="hint" id="metaRun">—</span>
+        </div>
+
         <div class="kpi">
           <div class="k"><b id="k_exames">—</b><span>Exames detectados</span></div>
           <div class="k"><b id="k_ok">—</b><span>Dentro da referência</span></div>
@@ -148,8 +304,11 @@
 
         <div class="hr"></div>
 
-        <h3 style="margin:0 0 8px;font-size:16px">Tabela</h3>
-        <div style="overflow:auto;max-height:280px;border:1px solid var(--stroke);border-radius:12px">
+        <div class="sectionTitle">
+          <h2>Tabela</h2>
+          <span class="hint">valor x referência</span>
+        </div>
+        <div class="tableWrap">
           <table>
             <thead>
               <tr>
@@ -160,84 +319,79 @@
               </tr>
             </thead>
             <tbody id="tbody">
-              <tr><td colspan="4" class="small">Nenhum dado ainda.</td></tr>
+              <tr><td colspan="4" style="color:var(--muted2)">Nenhum dado ainda.</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="hr"></div>
 
-        <h3 style="margin:0 0 8px;font-size:16px">Histórico (localStorage)</h3>
-        <div id="hist" class="small">—</div>
+        <div class="sectionTitle">
+          <h2>Histórico</h2>
+          <span class="hint">salvo no localStorage</span>
+        </div>
+        <div id="hist" style="max-height:260px;overflow:auto;border:1px solid var(--stroke);border-radius:16px;padding:10px;background:#fff;">
+          —
+        </div>
       </div>
     </div>
+
+    <div class="footer">ExameView • Visualização local • Não substitui orientação médica.</div>
   </div>
 
 <script>
-/** ==========================================================
- *  REFERÊNCIAS (exemplo/simplificado)
- *  - na prática, LDL depende de RISCO cardiovascular.
- *  - aqui é para comparar e visualizar.
- *  ========================================================== */
+/* =========================
+   Referências (simplificadas)
+   - LDL depende do risco cardiovascular.
+   - Aqui é para visualização.
+   ========================= */
 const REF = {
-  "Colesterol Total": {
-    unit: "mg/dL",
-    ref: () => ({ min: 0, max: 190, text: "Desejável < 190" })
-  },
-  "HDL": {
-    unit: "mg/dL",
-    ref: ({sexo}) => sexo === "M"
-      ? ({ min: 40, max: 999, text: "Homens: ≥ 40" })
-      : ({ min: 50, max: 999, text: "Mulheres: ≥ 50" })
-  },
-  "LDL": {
-    unit: "mg/dL",
-    ref: () => ({ min: 0, max: 115, text: "Meta típica baixo risco < 115 (depende do risco)" })
-  },
-  "VLDL": {
-    unit: "mg/dL",
-    ref: () => ({ min: 0, max: 30, text: "Geral: 0–30" })
-  },
-  "Triglicerídeos": {
-    unit: "mg/dL",
-    ref: () => ({ min: 0, max: 150, text: "Desejável < 150" })
-  },
-  "TGO (AST)": {
-    unit: "U/L",
-    ref: () => ({ min: 0, max: 40, text: "Até 40" })
-  },
-  "TGP (ALT)": {
-    unit: "U/L",
-    ref: ({sexo}) => sexo === "M"
-      ? ({ min: 0, max: 50, text: "Homens: até 50" })
-      : ({ min: 0, max: 40, text: "Mulheres: até 40" })
-  }
+  "Colesterol Total": { unit:"mg/dL", ref:()=>({min:0,max:190,text:"Desejável < 190"}) },
+  "HDL": { unit:"mg/dL", ref:({sexo})=> sexo==="M" ? ({min:40,max:999,text:"Homens: ≥ 40"}) : ({min:50,max:999,text:"Mulheres: ≥ 50"}) },
+  "LDL": { unit:"mg/dL", ref:()=>({min:0,max:115,text:"Meta típica baixo risco < 115 (depende do risco)"}) },
+  "VLDL": { unit:"mg/dL", ref:()=>({min:0,max:30,text:"Geral: 0–30"}) },
+  "Triglicerídeos": { unit:"mg/dL", ref:()=>({min:0,max:150,text:"Desejável < 150"}) },
+  "TGO (AST)": { unit:"U/L", ref:()=>({min:0,max:40,text:"Até 40"}) },
+  "TGP (ALT)": { unit:"U/L", ref:({sexo})=> sexo==="M" ? ({min:0,max:50,text:"Homens: até 50"}) : ({min:0,max:40,text:"Mulheres: até 40"}) }
 };
 
-/** ==========================================================
- *  PADRÕES DE CAPTURA (regex)
- *  Ajuste aqui para o seu laboratório.
- *  ========================================================== */
+/* =========================
+   Padrões de captura (regex)
+   Ajuste fino conforme seu PDF.
+   ========================= */
 const PATTERNS = [
   { key:"Colesterol Total", re:/Colesterol\s*Total[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
   { key:"HDL",             re:/Colesterol\s*H\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
   { key:"LDL",             re:/Colesterol\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
   { key:"VLDL",            re:/Colesterol\s*V\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
-  { key:"Triglicerídeos",  re:/Triglicer[ií]deos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+  { key:"Triglicer[ií]deos",re:/Triglicer[ií]deos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i, name:"Triglicerídeos" },
 
-  // Enzimas hepáticas
+  // AST/ALT
   { key:"TGO (AST)",       re:/TGO[^]*?Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i },
   { key:"TGP (ALT)",       re:/TGP[^]*?Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i }
 ];
 
+const LS_KEY = "exameview_history_v1";
+
 function $(id){ return document.getElementById(id); }
-function setStatus(msg){ $("status").textContent = msg; }
-function setPdfType(msg){ $("pdfType").textContent = msg; }
+function setTopStatus(text, kind="ok"){
+  $("status").textContent = text;
+  const dot = $("dotStatus");
+  dot.classList.remove("warn","bad");
+  if (kind==="warn") dot.classList.add("warn");
+  if (kind==="bad") dot.classList.add("bad");
+}
+function setPdfInfo(text, kind="warn"){
+  $("pdfInfo").textContent = text;
+  const dot = $("dotPdf");
+  dot.classList.remove("warn","bad");
+  if (kind==="warn") dot.classList.add("warn");
+  if (kind==="bad") dot.classList.add("bad");
+  if (kind==="ok") {/* dot normal */}
+}
 function toNumber(x){ return Number(String(x).replace(",", ".")); }
 
 function isProbablyScanned(text){
-  // Heurística simples: texto muito curto tende a ser PDF escaneado
-  // (ou PDF protegido/incomum). Se tiver < 200 chars úteis, suspeita.
   const clean = (text || "").replace(/\s+/g," ").trim();
   return clean.length < 200;
 }
@@ -251,8 +405,7 @@ async function extractTextFromPdf(file){
   for (let i=1; i<=pdf.numPages; i++){
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const strings = content.items.map(it => it.str);
-    full += strings.join(" ") + "\n";
+    full += content.items.map(it=>it.str).join(" ") + "\n";
   }
   return full;
 }
@@ -261,11 +414,11 @@ function detectExams(text){
   const out = [];
   for (const p of PATTERNS){
     const m = text.match(p.re);
-    if (m && m[1] != null){
-      out.push({ name: p.key, value: toNumber(m[1]), unit: REF[p.key]?.unit || "" });
+    if (m && m[1]!=null){
+      const name = p.name || p.key;
+      out.push({ name, value: toNumber(m[1]), unit: REF[name]?.unit || "" });
     }
   }
-  // remove duplicados pelo nome
   const seen = new Set();
   return out.filter(e => (seen.has(e.name) ? false : (seen.add(e.name), true)));
 }
@@ -277,11 +430,11 @@ function statusFor(exam, ctx){
   return { label: ok ? "Dentro" : "Fora", cls: ok ? "tag-ok" : "tag-bad", refText: ref.text, min: ref.min, max: ref.max };
 }
 
+/* Chart */
 let chart = null;
 function renderChart(exams, ctx){
   const labels = exams.map(e=>e.name);
   const values = exams.map(e=>e.value);
-
   const minRef = exams.map(e => statusFor(e,ctx).min);
   const maxRef = exams.map(e => statusFor(e,ctx).max);
 
@@ -313,28 +466,27 @@ function renderTable(exams, ctx){
   let ok=0, out=0;
   for (const e of exams){
     const st = statusFor(e, ctx);
-    if (st.label === "Dentro") ok++;
-    if (st.label === "Fora") out++;
+    if (st.label==="Dentro") ok++;
+    if (st.label==="Fora") out++;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${e.name}</td>
       <td>${e.value} ${e.unit || ""}</td>
       <td>${st.refText || "—"}</td>
-      <td class="${st.cls}"><b>${st.label}</b></td>
+      <td class="${st.cls}">${st.label}</td>
     `;
     tb.appendChild(tr);
   }
+
   if (!exams.length){
-    tb.innerHTML = `<tr><td colspan="4" class="small">Nenhum exame detectado. Veja o texto extraído e ajuste os padrões.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="4" style="color:var(--muted2)">Nenhum exame detectado. Ajuste o texto/regex.</td></tr>`;
   }
 
   $("k_exames").textContent = exams.length;
   $("k_ok").textContent = ok;
   $("k_out").textContent = out;
 }
-
-const LS_KEY = "historico_exames_pdf_v2";
 
 function saveToLocal(entry){
   const list = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
@@ -349,21 +501,25 @@ function renderHistory(){
 
   if (!list.length){ box.textContent = "Sem histórico ainda."; return; }
 
-  box.innerHTML = list.slice(0,20).map(e => {
+  box.innerHTML = list.slice(0,25).map(e=>{
     const when = new Date(e.ts).toLocaleString();
-    const exams = (e.exams||[]).map(x => `${x.name}:${x.value}`).join(", ");
-    const file = e.nomeArquivo ? ` <span class="pill">${e.nomeArquivo}</span>` : "";
-    return `<div class="mono" style="padding:8px 0;border-bottom:1px solid var(--stroke)">
-      <b>${e.nome}</b> (${e.sexo}, ${e.idade}a) — ${when}${file}<br/>
-      <span style="color:var(--muted)">${exams || "—"}</span>
-    </div>`;
+    const exams = (e.exams||[]).map(x=>`${x.name}:${x.value}`).join(", ");
+    const file = e.nomeArquivo ? `<span class="filePill">📄 ${e.nomeArquivo}</span>` : "";
+    return `
+      <div class="historyItem">
+        <b>${e.nome}</b> (${e.sexo}, ${e.idade}a) — ${when} ${file}<br/>
+        <span style="color:var(--muted2)">${exams || "—"}</span>
+      </div>
+    `;
   }).join("");
 }
 
+/* Botões */
 $("btnClear").addEventListener("click", ()=>{
   if (!confirm("Apagar TODO o histórico local?")) return;
   localStorage.removeItem(LS_KEY);
   renderHistory();
+  setTopStatus("Histórico apagado", "warn");
 });
 
 $("btnExport").addEventListener("click", ()=>{
@@ -371,9 +527,10 @@ $("btnExport").addEventListener("click", ()=>{
   const blob = new Blob([list], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "historico_exames.json";
+  a.download = "exameview_historico.json";
   a.click();
   URL.revokeObjectURL(a.href);
+  setTopStatus("Histórico exportado", "ok");
 });
 
 $("btnLer").addEventListener("click", async ()=>{
@@ -387,15 +544,15 @@ $("btnLer").addEventListener("click", async ()=>{
 
   if (!file){ alert("Selecione um PDF."); return; }
 
-  setStatus("Lendo PDF…");
-  setPdfType(`PDF: ${file.name}`);
+  setTopStatus("Lendo PDF…", "warn");
+  setPdfInfo(`PDF: ${file.name}`, "warn");
 
   try{
     const text = await extractTextFromPdf(file);
     $("raw").value = text;
 
     const scanned = isProbablyScanned(text);
-    setPdfType(scanned ? `PDF: ${file.name} (parece escaneado)` : `PDF: ${file.name} (texto OK)`);
+    setPdfInfo(scanned ? `PDF: ${file.name} (parece escaneado)` : `PDF: ${file.name} (texto OK)`, scanned ? "warn" : "ok");
 
     const exams = detectExams(text);
     const ctx = { nome, idade, sexo };
@@ -403,24 +560,29 @@ $("btnLer").addEventListener("click", async ()=>{
     renderChart(exams, ctx);
     renderTable(exams, ctx);
 
+    const now = new Date();
+    $("metaRun").textContent = `${nome} • ${sexo} • ${idade} anos • ${now.toLocaleString()}`;
+
     saveToLocal({
       ts: Date.now(),
-      dataISO: new Date().toISOString(),
+      dataISO: now.toISOString(),
       nomeArquivo: file.name,
       nome, idade, sexo,
       exams
     });
 
-    setStatus(`OK — ${exams.length} exame(s) detectado(s)`);
-    if (scanned) {
-      setStatus(`PDF parece escaneado — texto muito curto (OCR pode ser necessário)`);
+    if (scanned){
+      setTopStatus("PDF parece escaneado (texto curto). Se precisar, adicionamos OCR.", "warn");
+    } else {
+      setTopStatus(`OK — ${exams.length} exame(s) detectado(s)`, exams.length ? "ok" : "warn");
     }
+
   }catch(err){
     console.error(err);
     const msg = (err && err.message) ? err.message : String(err);
     $("errbox").value = msg;
-
-    setStatus("Erro ao ler PDF");
+    setTopStatus("Erro ao ler PDF", "bad");
+    setPdfInfo(`PDF: erro`, "bad");
     alert("Erro ao ler PDF: " + msg);
   }
 });
