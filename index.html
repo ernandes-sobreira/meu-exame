@@ -489,4 +489,584 @@ function parseExamValues(text){
 
   // Lipídios (mais robusto, com/sem :)
   values["Colesterol Total"] = parseKeyValue(text, /Colesterol\s*Total[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
-  values["HDL"] = parseKeyValue(text, /(Colesterol\s*H\s*D\s*L|*
+  values["HDL"] = parseKeyValue(text, /(Colesterol\s*H\s*D\s*L|Colesterol\s*HDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*H\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+  values["LDL"] = parseKeyValue(text, /(Colesterol\s*L\s*D\s*L|Colesterol\s*LDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*L\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+  values["VLDL"] = parseKeyValue(text, /(Colesterol\s*V\s*L\s*D\s*L|Colesterol\s*VLDL)[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i) ?? parseKeyValue(text, /Colesterol\s*V\s*L\s*D\s*L[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+  values["Triglicérides"] = parseKeyValue(text, /Triglic[eé]rides[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+  values["Não-HDL"] = parseKeyValue(text, /Colesterol\s*N[aã]o-?HDL[^0-9]{0,25}([0-9\.,]+)\s*mg\/dL/i);
+
+  // TGO/TGP
+  values["TGO (AST)"] = parseKeyValue(text, /TGO[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
+  values["TGP (ALT)"] = parseKeyValue(text, /TGP[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
+
+  // Hemograma
+  values["Hemácias"] = parseKeyValue(text, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
+  values["Hemoglobina"] = parseKeyValue(text, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d[lL]/i);
+  values["Hematócrito"] = parseKeyValue(text, /Hemat[oó]crito\.*\s*([0-9\.,]+)\s*%/i);
+  values["VGM"] = parseKeyValue(text, /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i);
+  values["HGM"] = parseKeyValue(text, /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i);
+  values["CHCM"] = parseKeyValue(text, /C\.?H\.?C\.?M\.*\s*([0-9\.,]+)\s*%/i);
+  values["RDW"] = parseKeyValue(text, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
+
+  let mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
+  let mEos = text.match(/Eosin[oó]filos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mEos){ values["Eosinófilos (%)"]=parseNumberPt(mEos[1]); values["Eosinófilos (abs)"]=parseNumberPt(mEos[2]); }
+  let mLinf = text.match(/Linf[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mLinf){ values["Linfócitos (%)"]=parseNumberPt(mLinf[1]); values["Linfócitos (abs)"]=parseNumberPt(mLinf[2]); }
+  let mMono = text.match(/Mon[oó]citos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mMono){ values["Monócitos (%)"]=parseNumberPt(mMono[1]); values["Monócitos (abs)"]=parseNumberPt(mMono[2]); }
+
+  values["Leucócitos"] = parseKeyValue(text, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
+  values["Plaquetas"] = parseKeyValue(text, /(Contagem\s*de\s*plaquetas|Plaquetas)\.*\s*([0-9\.,]+)/i);
+  values["VPM"] = parseKeyValue(text, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
+
+  // Genéricos (Resultado:)
+  const genericTests = [
+    { key:"Ferro sérico", names:["Ferro sérico","Ferro"] },
+    { key:"Ferritina", names:["Ferritina"] },
+    { key:"Vitamina B12", names:["Vitamina B12","Vitamina B 12"] },
+    { key:"Vitamina D - 25 hidroxi", names:["Vitamina D - 25 hidroxi","Vitamina D 25","25(OH) Vitamina D","25 OH Vitamina D"] },
+    { key:"Testosterona Total", names:["Testosterona Total","Testosterona"] },
+    { key:"DHT", names:["Dihidrotestosterona","DHT"] },
+    { key:"FSH", names:["FSH - Hormônio Folículo Estimulante","FSH"] },
+  ];
+
+  for (const t of genericTests){
+    if (values[t.key]!=null) continue;
+    for (const nm of t.names){
+      const block = pickResultBlock(text, nm);
+      const r = parseResultFromBlock(block);
+      if (r && r.value!=null){ values[t.key] = r.value; break; }
+    }
+  }
+
+  Object.keys(values).forEach(k=>{
+    if (values[k]==null || Number.isNaN(values[k])) delete values[k];
+  });
+  return values;
+}
+
+function parseLipidHistory(text){
+  const mDates = text.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
+  if (!mDates) return [];
+  const dates = (mDates[1].match(/\d{2}\/\d{2}\/\d{4}/g) || []);
+  if (!dates.length) return [];
+
+  function rowValues(label){
+    const re = new RegExp(label + "[^0-9]*([0-9\\s\\.,]+)", "i");
+    const m = text.match(re);
+    if (!m) return [];
+    return (m[1].match(/[0-9\.,]+/g) || []).map(parseNumberPt).filter(n=>n!=null);
+  }
+
+  const rows = {
+    "Colesterol Total": rowValues("Colesterol\\s*Total"),
+    "HDL": rowValues("Colesterol\\s*HDL"),
+    "LDL": rowValues("Colesterol\\s*LDL"),
+    "VLDL": rowValues("Colesterol\\s*VLDL"),
+    "Triglicérides": rowValues("Triglic[eé]rides"),
+    "Não-HDL": rowValues("Colesterol\\s*N[aã]o-?HDL")
+  };
+
+  const points=[];
+  for (let i=0;i<dates.length;i++){
+    const values={}
+    for (const k of Object.keys(rows)){
+      if (rows[k][i]!=null) values[k]=rows[k][i];
+    }
+    if (Object.keys(values).length){
+      points.push({ date: dates[i], values, source:"Tabela (PDF)" });
+    }
+  }
+  return points;
+}
+
+/* =========================
+   REFERÊNCIAS / STATUS
+   ========================= */
+function refMinMax(varKey, sex){
+  const meta = getVarMeta(varKey);
+  const r = meta.ref || {type:"none"};
+  if (r.type==="range") return {min:r.min, max:r.max, note:r.note};
+  if (r.type==="max") return {min:null, max:r.getMax(sex), note:r.note};
+  if (r.type==="minBySex") return {min:r.getMin(sex), max:null, note:r.note};
+  if (r.type==="maxBySex") return {min:null, max:r.getMax(sex), note:r.note};
+  if (r.type==="rangeBySex"){
+    const rr = r[sex] || r.M;
+    return {min:rr?.min ?? null, max:rr?.max ?? null, note:r.note};
+  }
+  return {min:null, max:null, note:r.note};
+}
+function statusFor(value, ref){
+  const {min,max} = ref;
+  if (value==null) return {label:"—", cls:"na"};
+  if (min!=null && value < min) return {label:"Fora", cls:"bad"};
+  if (max!=null && value > max) return {label:"Fora", cls:"bad"};
+  return {label:"Dentro", cls:"ok"};
+}
+
+/* =========================
+   DATA
+   ========================= */
+function ddmmyyyyToISO(d){
+  const [dd,mm,yyyy]=d.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function isoToLabel(iso){
+  const [y,m,d]=iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+/* =========================
+   UI
+   ========================= */
+const manualVar = document.getElementById('manualVar');
+VARS.forEach(v=>{
+  const opt=document.createElement('option');
+  opt.value=v.key;
+  opt.textContent=`${v.key} (${v.unit || "-"})`;
+  manualVar.appendChild(opt);
+});
+
+const elPoints = document.getElementById('kpiPoints');
+const elDates  = document.getElementById('kpiDates');
+const elGroups = document.getElementById('groups');
+const elHist   = document.getElementById('history');
+const elResume = document.getElementById('resume');
+const elRaw    = document.getElementById('raw');
+const errBox   = document.getElementById('errBox');
+const okBox    = document.getElementById('okBox');
+
+let charts = new Map();
+function destroyCharts(){ for (const c of charts.values()) c.destroy(); charts.clear(); }
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+function hashKey(s){
+  let h=0;
+  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
+function formatRefLine(ref, meta){
+  const unit = meta.unit ? ` ${meta.unit}` : "";
+  const parts=[];
+  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
+  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
+  if (!parts.length) parts.push("referência: —");
+  if (ref.note) parts.push(`• ${ref.note}`);
+  return parts.join("  |  ");
+}
+
+/* Força linhas pontilhadas a aparecerem mesmo com 1 ponto */
+function normalizeSinglePoint(labels, values){
+  if (labels.length !== 1) return {labels, values};
+  const lbl = labels[0];
+  return {labels: [lbl, lbl + " "], values: [values[0], values[0]]};
+}
+
+function rebuild(){
+  const sex = document.getElementById('sex').value;
+  const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
+
+  const allDates = new Set(hist.map(h=>h.date));
+  let points=0; hist.forEach(h=> points += Object.keys(h.values||{}).length);
+  elPoints.textContent = points;
+  elDates.textContent = allDates.size;
+
+  // histórico bruto
+  elHist.innerHTML="";
+  hist.slice().reverse().forEach(h=>{
+    const div=document.createElement('div');
+    div.className="item";
+    div.innerHTML = `
+      <div class="itemTop">
+        <div class="itemTitle">${escapeHtml(h.name||"Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
+        <div class="muted">${escapeHtml(h.source||"PDF")}</div>
+      </div>
+      <div class="mono muted" style="margin-top:8px">${escapeHtml(Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  "))}</div>
+    `;
+    elHist.appendChild(div);
+  });
+
+  // series por variável
+  const series = new Map();
+  hist.forEach(h=>{
+    const iso = ddmmyyyyToISO(h.date);
+    for (const [k,v] of Object.entries(h.values||{})){
+      if (!series.has(k)) series.set(k, []);
+      series.get(k).push({x: iso, y: v});
+    }
+  });
+  for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
+
+  destroyCharts();
+  elGroups.innerHTML="";
+  elResume.innerHTML="";
+
+  const lastRows = [];
+
+  function renderVarCard(varKey, container){
+    const meta = getVarMeta(varKey);
+    const ref  = refMinMax(varKey, sex);
+    const unit = meta.unit ? ` ${meta.unit}` : "";
+    const data = series.get(varKey) || [];
+    const last = data[data.length-1];
+    const lastVal = last?.y ?? null;
+    const st = statusFor(lastVal, ref);
+
+    lastRows.push({ key: varKey, meta, ref, last, lastVal, st });
+
+    const card=document.createElement('div');
+    card.className="varCard";
+    card.innerHTML = `
+      <div class="varHead">
+        <div>
+          <div class="varName">${escapeHtml(varKey)}</div>
+          <div class="varRef">${formatRefLine(ref, meta)}</div>
+        </div>
+        <span class="status ${st.cls}">${st.label}</span>
+      </div>
+
+      <div style="height:150px;margin-top:10px">
+        <canvas id="c_${hashKey(varKey)}"></canvas>
+      </div>
+
+      <div class="varMeta">
+        <div class="small"><b>Último:</b> ${lastVal!=null ? lastVal + unit : "—"} <span class="muted">em ${last?.x ? isoToLabel(last.x) : "—"}</span></div>
+      </div>
+
+      <div class="editRow">
+        <select class="edDate"></select>
+        <input class="edValue" type="number" step="any" placeholder="digite novo valor" />
+        <button class="edSave" type="button">Salvar</button>
+      </div>
+    `;
+    container.appendChild(card);
+
+    // labels/valores (normaliza se só tiver 1 ponto)
+    let labels = data.map(p => isoToLabel(p.x));
+    let values = data.map(p => p.y);
+    const norm = normalizeSinglePoint(labels, values);
+    labels = norm.labels;
+    values = norm.values;
+
+    const ds = [{
+      label:"Valor",
+      data: values,
+      tension: 0.25,
+      pointRadius: labels.length===2 && labels[0].trim()===labels[1].trim() ? 3 : 3,
+      borderWidth: 2
+    }];
+
+    if (ref.min!=null){
+      ds.push({
+        label:"Ref. mínima",
+        data: labels.map(()=>ref.min),
+        borderDash:[6,6],
+        pointRadius:0,
+        borderWidth:2
+      });
+    }
+    if (ref.max!=null){
+      ds.push({
+        label:"Ref. máxima",
+        data: labels.map(()=>ref.max),
+        borderDash:[6,6],
+        pointRadius:0,
+        borderWidth:2
+      });
+    }
+
+    const ctx = card.querySelector("canvas").getContext("2d");
+    const ch = new Chart(ctx, {
+      type:"line",
+      data:{ labels, datasets: ds },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } }
+        },
+        scales:{
+          x:{ type:"category", ticks:{ maxTicksLimit:5 } },
+          y:{ beginAtZero:false, ticks:{ maxTicksLimit:5 } }
+        }
+      }
+    });
+    charts.set(varKey, ch);
+
+    // editor
+    const sel = card.querySelector(".edDate");
+    data.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.x;
+      o.textContent=isoToLabel(p.x);
+      sel.appendChild(o);
+    });
+
+    const inp = card.querySelector(".edValue");
+    const btn = card.querySelector(".edSave");
+    btn.addEventListener('click', ()=>{
+      const iso = sel.value;
+      const val = Number(inp.value);
+      if (!iso || !Number.isFinite(val)){
+        alert("Escolha a data e informe um valor numérico.");
+        return;
+      }
+      const dateBR = isoToLabel(iso);
+      const histNow = loadHistory();
+      let changed=false;
+
+      for(const h of histNow){
+        if (h.date===dateBR && h.values && h.values[varKey]!=null){
+          h.values[varKey] = val;
+          changed=true;
+        }
+      }
+      if (!changed){
+        alert("Não encontrei esse ponto para edição.");
+        return;
+      }
+      saveHistory(histNow);
+      okBox.style.display="block";
+      okBox.textContent="Valor editado e salvo no histórico.";
+      errBox.style.display="none";
+      rebuild();
+    });
+  }
+
+  // grupos
+  Object.entries(GROUPS).forEach(([gname, keys])=>{
+    const g=document.createElement('div');
+    g.className="group";
+    g.innerHTML=`<h3>${escapeHtml(gname)}</h3><div class="cardsVar"></div>`;
+    const holder = g.querySelector(".cardsVar");
+    keys.forEach(k => { if(series.has(k)) renderVarCard(k, holder); });
+    if (holder.children.length) elGroups.appendChild(g);
+  });
+
+  if (!elGroups.children.length){
+    elGroups.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
+  }
+
+  // relatório
+  const out = lastRows.filter(r=>r.st.cls==="bad").sort((a,b)=>a.key.localeCompare(b.key,"pt-BR"));
+  const ok  = lastRows.filter(r=>r.st.cls==="ok").sort((a,b)=>a.key.localeCompare(b.key,"pt-BR"));
+
+  function makeReportBox(title, arr){
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML = `<div class="itemTitle">${escapeHtml(title)}</div>`;
+    if(!arr.length){
+      div.innerHTML += `<div class="muted">—</div>`;
+      return div;
+    }
+    const list = document.createElement("div");
+    list.style.marginTop="8px";
+    list.className="mono muted";
+    list.innerHTML = arr.map(r=>{
+      const unit = r.meta.unit ? ` ${r.meta.unit}` : "";
+      const refTxt = [];
+      if (r.ref.min!=null) refTxt.push(`min ${r.ref.min}${unit}`);
+      if (r.ref.max!=null) refTxt.push(`max ${r.ref.max}${unit}`);
+      const d = r.last?.x ? isoToLabel(r.last.x) : "—";
+      return `• <b>${escapeHtml(r.key)}</b>: ${r.lastVal ?? "—"}${unit} | ${refTxt.join(" / ") || "ref —"} | ${d}`;
+    }).join("<br/>");
+    div.appendChild(list);
+    return div;
+  }
+
+  elResume.appendChild(makeReportBox("Fora do intervalo (último valor)", out));
+  elResume.appendChild(makeReportBox("Dentro do intervalo (último valor)", ok));
+}
+
+/* =========================
+   AÇÕES
+   ========================= */
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  if (!confirm("Zerar o histórico do dispositivo?")) return;
+  localStorage.removeItem(LS_KEY);
+  rebuild();
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const data = loadHistory();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download="historico-exames.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnExportTxt').addEventListener('click', ()=>{
+  const name = document.getElementById('name').value.trim() || "Sem nome";
+  const age  = document.getElementById('age').value || "—";
+  const sex  = document.getElementById('sex').value;
+
+  const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
+  const series = new Map();
+  hist.forEach(h=>{
+    const iso = ddmmyyyyToISO(h.date);
+    for (const [k,v] of Object.entries(h.values||{})){
+      if (!series.has(k)) series.set(k, []);
+      series.get(k).push({x: iso, y: v});
+    }
+  });
+  for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
+
+  const lines=[];
+  lines.push(`RELATÓRIO — ExameView`);
+  lines.push(`Paciente: ${name}`);
+  lines.push(`Idade: ${age} | Sexo: ${sex}`);
+  lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
+  lines.push(``);
+
+  for (const [k, arr] of [...series.entries()].sort((a,b)=>a[0].localeCompare(b[0],"pt-BR"))){
+    const meta = getVarMeta(k);
+    const ref  = refMinMax(k, sex);
+    const last = arr[arr.length-1];
+    const st   = statusFor(last?.y ?? null, ref);
+    const unit = meta.unit ? ` ${meta.unit}` : "";
+    const refTxt = [];
+    if (ref.min!=null) refTxt.push(`min ${ref.min}${unit}`);
+    if (ref.max!=null) refTxt.push(`max ${ref.max}${unit}`);
+    lines.push(`${k}: ${last?.y ?? "—"}${unit} | ${st.label} | ${refTxt.join(" / ") || "ref —"} | ${last?.x ? isoToLabel(last.x) : "—"}`);
+  }
+
+  const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download="relatorio-exames.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnManual').addEventListener('click', ()=>{
+  const name = document.getElementById('name').value.trim() || "Sem nome";
+  const age  = Number(document.getElementById('age').value || 0);
+  const sex  = document.getElementById('sex').value;
+
+  const varKey  = document.getElementById('manualVar').value;
+  const dateISO = document.getElementById('manualDate').value;
+  const value   = Number(document.getElementById('manualValue').value);
+
+  if (!dateISO || !Number.isFinite(value)){
+    alert("Preencha data e valor numérico.");
+    return;
+  }
+  const date = isoToLabel(dateISO);
+  const hist = loadHistory();
+  hist.push({
+    id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+    createdAt: nowIso(),
+    source: "Manual",
+    name, age, sex,
+    date,
+    values: { [varKey]: value }
+  });
+  saveHistory(hist);
+  okBox.style.display="block";
+  okBox.textContent="Valor manual adicionado ao histórico.";
+  errBox.style.display="none";
+  rebuild();
+});
+
+document.getElementById('btnRead').addEventListener('click', async ()=>{
+  const file = document.getElementById('pdf').files?.[0];
+  if (!file){ alert("Escolha um PDF."); return; }
+
+  errBox.style.display="none";
+  okBox.style.display="none";
+  elRaw.value="Lendo PDF...";
+
+  try{
+    const readFull = document.getElementById('chkFull').checked;
+    const maxPages = readFull ? 9999 : 3;
+
+    const {full, firstPage, pagesRead, totalPages} = await readPdfTextPages(file, maxPages);
+    elRaw.value = full.slice(0, 30000);
+
+    const date = parseCollectionDateRobust(firstPage, full);
+    if (!date) throw new Error("Não consegui identificar a data do exame (Coleta/Entrada).");
+
+    const valuesNow   = parseExamValues(full);
+    const lipidPoints = parseLipidHistory(full);
+
+    const name = document.getElementById('name').value.trim() || "Sem nome";
+    const age  = Number(document.getElementById('age').value || 0);
+    const sex  = document.getElementById('sex').value;
+
+    if (!Object.keys(valuesNow).length){
+      throw new Error("Li o PDF, mas não achei valores reconhecíveis (layout diferente / páginas não lidas / PDF escaneado).");
+    }
+
+    const hist = loadHistory();
+
+    // evita duplicar coleta principal
+    const already = hist.some(h => h.date===date && JSON.stringify(h.values)===JSON.stringify(valuesNow));
+    if (!already){
+      hist.push({
+        id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+        createdAt: nowIso(),
+        source: file.name || "PDF",
+        name, age, sex,
+        date,
+        values: valuesNow
+      });
+    }
+
+    // resultados anteriores (sem duplicar)
+    for (const p of lipidPoints){
+      const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===JSON.stringify(p.values) && (h.source||"").includes("Tabela"));
+      if (!exists){
+        hist.push({
+          id:(crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+          createdAt: nowIso(),
+          source: "Tabela (Resultados anteriores do PDF)",
+          name, age, sex,
+          date: p.date,
+          values: p.values
+        });
+      }
+    }
+
+    saveHistory(hist);
+
+    okBox.style.display="block";
+    okBox.textContent =
+      `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date}). ` +
+      `Páginas lidas: ${pagesRead}/${totalPages}.` +
+      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela.` : "");
+    errBox.style.display="none";
+
+    document.getElementById('pdf').value = "";
+    rebuild();
+  }catch(err){
+    const msg = String(err?.message || err);
+    errBox.style.display="block";
+    errBox.textContent = msg;
+    okBox.style.display="none";
+    alert("Erro ao processar: " + msg);
+  }
+});
+
+document.getElementById('fabGo').addEventListener('click', ()=>{
+  document.getElementById('pdf').scrollIntoView({behavior:"smooth", block:"center"});
+  document.getElementById('pdf').focus();
+});
+
+rebuild();
+</script>
+</body>
+</html>
