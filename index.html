@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ExameView — Leitor de Exames (PDF) | Histórico + Séries + Relatório</title>
+  <title>ExameView — Leitor de Exames (PDF) | histórico + gráficos</title>
+  <meta name="theme-color" content="#0b5cff"/>
 
   <style>
     :root{
-      --bg:#f6f7fb;
+      --bg:#f5f7fb;
       --card:#ffffff;
-      --stroke:#e7e9f2;
+      --stroke:#e6e9f2;
       --txt:#0f172a;
       --muted:#64748b;
-      --brand:#2563eb;
+      --brand:#0b5cff;
       --ok:#16a34a;
       --bad:#dc2626;
       --warn:#b45309;
@@ -29,20 +30,21 @@
         var(--bg);
       color:var(--txt);
     }
-    .wrap{max-width:1180px;margin:26px auto;padding:0 16px 60px}
+    .wrap{max-width:1180px;margin:22px auto;padding:0 14px 70px}
     header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-    .title{display:flex;flex-direction:column;gap:6px}
-    h1{margin:0;font-size:22px;letter-spacing:-.02em}
-    .sub{margin:0;color:var(--muted);line-height:1.35}
+    h1{margin:0;font-size:20px;letter-spacing:-.02em}
+    .sub{margin:6px 0 0;color:var(--muted);line-height:1.35;font-size:13px}
     .pill{
       display:inline-flex;align-items:center;gap:8px;
       background:#fff;border:1px solid var(--stroke);
       padding:8px 12px;border-radius:999px;color:var(--muted);
       box-shadow: 0 6px 18px rgba(2,6,23,.05);
-      font-size:13px;
+      font-size:12px;
     }
-    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
-    @media(min-width:980px){ .grid{grid-template-columns: 460px 1fr} }
+
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    @media(min-width:980px){ .grid{grid-template-columns: 430px 1fr} }
+
     .card{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -50,139 +52,152 @@
       box-shadow:var(--shadow);
       padding:14px;
     }
-    .card h2{margin:0 0 10px;font-size:16px}
+    .card h2{margin:0 0 10px;font-size:15px}
     .row{display:grid;grid-template-columns:1fr;gap:10px}
     @media(min-width:520px){ .row{grid-template-columns:1fr 1fr} }
 
     label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
     input, select, button, textarea{
-      width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--stroke);
-      background:#fff;color:var(--txt);outline:none;
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      color:var(--txt);
+      outline:none;
       font-size:14px;
     }
-    input:focus, select:focus, textarea:focus{
-      border-color:#bcd1ff;box-shadow:0 0 0 4px rgba(37,99,235,.12)
-    }
+    input::placeholder{color:#94a3b8}
+    input:focus, select:focus, textarea:focus{border-color:#bcd1ff;box-shadow:0 0 0 4px rgba(11,92,255,.12)}
     button{
       cursor:pointer;border:none;background:var(--brand);color:#fff;
       font-weight:800;
+      padding:12px 14px;
     }
     button.secondary{background:#0f172a}
-    button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke)}
-    button.danger{background:var(--bad)}
+    button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke);font-weight:800}
+    button.danger{background:#dc2626}
     .btns{display:flex;gap:10px;flex-wrap:wrap}
     .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:8px}
-    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .kpi{background:#fbfcff;border:1px solid var(--stroke);border-radius:16px;padding:12px}
-    .kpi .n{font-size:26px;font-weight:900;letter-spacing:-.02em}
-    .kpi .t{font-size:12px;color:var(--muted)}
-    .status{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
-      border:1px solid var(--stroke);background:#fff;
-    }
-    .status.ok{color:var(--ok)}
-    .status.bad{color:var(--bad)}
-    .status.na{color:var(--muted)}
-    .status.warn{color:var(--warn)}
     .hr{height:1px;background:var(--stroke);margin:12px 0}
 
-    .seriesBlock{
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kpi{
+      background:#fbfcff;border:1px solid var(--stroke);border-radius:16px;padding:12px;
+    }
+    .kpi .n{font-size:24px;font-weight:900;letter-spacing:-.02em}
+    .kpi .t{font-size:12px;color:var(--muted)}
+
+    .sectionTitle{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin:6px 0 8px;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      border:1px solid var(--stroke);background:#fff;color:var(--muted);
+    }
+    .badge.ok{color:var(--ok)}
+    .badge.bad{color:var(--bad)}
+    .badge.warn{color:var(--warn)}
+
+    .seriesWrap{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+    .seriesCard{
+      border:1px solid var(--stroke);border-radius:18px;background:#fff;overflow:hidden;
+    }
+    .seriesHead{
+      display:flex;justify-content:space-between;gap:12px;align-items:center;
+      padding:12px 12px;border-bottom:1px solid var(--stroke);
+      background:linear-gradient(180deg,#ffffff, #fbfcff);
+    }
+    .seriesName{font-weight:900}
+    .seriesCount{font-size:12px;color:var(--muted)}
+    .varsGrid{display:grid;grid-template-columns:1fr;gap:12px;padding:12px}
+    @media(min-width:760px){ .varsGrid{grid-template-columns:1fr 1fr} }
+
+    .varCard{
       border:1px solid var(--stroke);
       border-radius:18px;
       padding:12px;
-      background:#fbfcff;
-      margin-top:12px;
+      background:#fff;
     }
-    .seriesHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .seriesTitle{display:flex;align-items:center;gap:10px;font-weight:950}
-    .seriesBadge{
-      font-size:12px;color:var(--muted);
-      border:1px dashed var(--stroke);
-      padding:6px 10px;border-radius:999px;background:#fff;
-    }
-
-    .cardsVar{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-    @media(min-width:760px){ .cardsVar{grid-template-columns: 1fr 1fr} }
-
-    .varCard{border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff}
     .varHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .varName{font-weight:950}
-    .varRef{font-size:12px;color:var(--muted);line-height:1.3}
+    .varName{font-weight:900}
+    .varRef{font-size:12px;color:var(--muted);line-height:1.25}
     .small{font-size:12px;color:var(--muted)}
-    .varMeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-
-    .editBar{
-      display:grid;
-      grid-template-columns: 160px 1fr 120px;
-      gap:10px;
+    .canvasBox{height:150px;margin-top:10px}
+    .controls{
       margin-top:10px;
-      align-items:center;
+      border-top:1px dashed var(--stroke);
+      padding-top:10px;
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap:10px;
+      align-items:end;
     }
-    @media(max-width:520px){ .editBar{grid-template-columns: 1fr; } }
-    .editLabel{font-size:12px;color:var(--muted);margin:6px 0 6px}
+    .controls .full{grid-column:1 / -1}
+    .controls button{border-radius:14px}
+    .controls input, .controls select{height:46px;font-weight:800}
+    .controls label{margin:0 0 6px}
+    .inlineBtns{display:flex;gap:10px;flex-wrap:wrap}
 
-    .list{display:flex;flex-direction:column;gap:10px}
-    .item{border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff}
-    .itemTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .itemTitle{font-weight:950}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    .muted{color:var(--muted)}
-    .okBox{
-      font-size:12px;color:#14532d;background:#ecfdf5;border:1px solid #bbf7d0;
-      padding:10px;border-radius:14px;display:none
+    .summaryGrid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:760px){ .summaryGrid{grid-template-columns:1fr 1fr} }
+    .summaryBox{
+      border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff
     }
-    .errBox{
-      white-space:pre-wrap;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size:12px;color:#991b1b;background:#fff1f2;border:1px solid #fecdd3;
-      padding:10px;border-radius:14px;display:none
-    }
-    details{border:1px solid var(--stroke);border-radius:16px;background:#fff;padding:10px}
-    details > summary{cursor:pointer;font-weight:850;color:var(--muted)}
-    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
-    .chipRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .summaryBox h3{margin:0 0 8px;font-size:14px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{
-      display:inline-flex;align-items:center;gap:8px;
-      border:1px solid var(--stroke);border-radius:999px;padding:6px 10px;background:#fff;
-      font-size:12px;color:var(--muted)
+      border:1px solid var(--stroke);
+      background:#fff;border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      display:inline-flex;gap:8px;align-items:center;
+      box-shadow: 0 6px 16px rgba(2,6,23,.04);
     }
-    .chip button{width:auto;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900}
-    .chip .x{background:#fff;border:1px solid var(--stroke);color:var(--txt)}
-    .reportGrid{display:grid;grid-template-columns:1fr;gap:10px}
-    @media(min-width:760px){ .reportGrid{grid-template-columns:1fr 1fr} }
-    .reportBox{border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff}
-    .reportBox h3{margin:0 0 8px;font-size:14px}
-    .reportLine{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--stroke)}
-    .reportLine:last-child{border-bottom:none}
-    .nowrap{white-space:nowrap}
+    .chip.ok{border-color:rgba(22,163,74,.35)}
+    .chip.bad{border-color:rgba(220,38,38,.35)}
+    .chip b{font-weight:900}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 
-    .miniTitle{font-weight:950;margin:10px 0 6px}
-    .twoCols{display:grid;grid-template-columns:1fr;gap:10px}
-    @media(min-width:520px){ .twoCols{grid-template-columns:1fr 1fr} }
+    details{
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    summary{cursor:pointer;font-weight:900;color:var(--txt)}
+    textarea{min-height:120px}
+
+    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
   </style>
 
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- PDF.js -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
 <body>
   <div class="wrap">
     <header>
-      <div class="title">
-        <h1>ExameView — histórico + mini-gráficos por série + relatório</h1>
+      <div>
+        <h1>ExameView — Leitor de Exames (PDF) • histórico + gráficos por variável</h1>
         <p class="sub">
-          Tudo roda <b>localmente</b>. Nada é enviado para servidor. Ferramenta de visualização (não diagnóstico).<br/>
+          Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor. (Visualização — não diagnóstico)
+          <br/>
           <b>Idealizado por Ernandes Sobreira</b> para fins de comparações de resultados médicos pessoais.
         </p>
       </div>
-      <div class="pill">📌 Dica: PDF “escaneado imagem” não tem texto → não dá pra extrair sem OCR.</div>
+      <div class="pill">✅ Datas: usa <b>apenas a data da 1ª página</b> do PDF (não mistura datas internas).</div>
     </header>
 
     <div class="grid">
+
       <!-- CONTROLES -->
       <section class="card">
-        <h2>1) Dados do usuário + upload (1 PDF por vez)</h2>
+        <h2>1) Dados + upload (um PDF por vez)</h2>
 
         <div class="row">
           <div>
@@ -207,100 +222,75 @@
         </div>
 
         <div class="btns" style="margin-top:10px">
-          <button id="btnRead">Adicionar esse PDF ao histórico</button>
-          <button id="btnExport" class="ghost" type="button">Exportar histórico (JSON)</button>
-          <button id="btnExportTxt" class="ghost" type="button">Exportar resumo (TXT)</button>
+          <button id="btnRead">Adicionar este PDF ao histórico</button>
+          <button id="btnExportJSON" class="ghost" type="button">Exportar histórico (JSON)</button>
+          <button id="btnExportTXT" class="ghost" type="button">Exportar relatório (TXT)</button>
           <button id="btnClear" class="secondary" type="button">Zerar histórico</button>
         </div>
 
         <div class="hint">
-          • A data usada é sempre a <b>data da 1ª página</b> (Coleta/Entrada/Impressão).<br/>
-          • Um PDF = uma data. Para série temporal, adicione vários PDFs (um por vez).<br/>
-          • Se o PDF for escaneado, pode não ter texto extraível.
+          • O app guarda tudo no <b>localStorage</b> do dispositivo.<br/>
+          • Se um PDF “não lê” no celular, normalmente é limitação de memória/worker; no PC costuma ir. (Aqui a leitura tenta fallback.)<br/>
+          • Se quiser incluir uma variável que o PDF não trouxe, use a entrada manual + referência manual abaixo.
         </div>
 
         <div class="hr"></div>
 
-        <h2>2) Entrada manual (opcional)</h2>
+        <h2>2) Entrada manual (variável + referência)</h2>
         <div class="row">
           <div>
             <label>Variável</label>
-            <select id="manualVar"></select>
+            <input id="mVar" placeholder="Ex: PCR, DHT, Vitamina B12..." />
           </div>
           <div>
             <label>Data</label>
-            <input id="manualDate" type="date" />
+            <input id="mDate" type="date" />
           </div>
           <div>
             <label>Valor</label>
-            <input id="manualValue" type="number" step="any" />
-          </div>
-          <div>
-            <label>Unidade (opcional)</label>
-            <input id="manualUnit" placeholder="mg/dL, U/L, %, ng/dL..." />
-          </div>
-        </div>
-        <div class="btns" style="margin-top:10px">
-          <button id="btnManual" class="ghost" type="button">Adicionar valor manual ao histórico</button>
-        </div>
-
-        <div class="hr"></div>
-
-        <h2>3) Gerenciar variáveis (criar + referência)</h2>
-        <div class="hint">Você pode criar variáveis novas e definir referência mínima/máxima. Isso fica salvo neste dispositivo.</div>
-
-        <div class="twoCols" style="margin-top:10px">
-          <div>
-            <label>Nome da variável</label>
-            <input id="newVarName" placeholder="Ex: Proteína C reativa" />
+            <input id="mValue" type="number" step="any" placeholder="Ex: 38.4" />
           </div>
           <div>
             <label>Unidade</label>
-            <input id="newVarUnit" placeholder="Ex: mg/L" />
-          </div>
-          <div>
-            <label>Referência mínima (opcional)</label>
-            <input id="newVarMin" type="number" step="any" placeholder="Ex: 0" />
-          </div>
-          <div>
-            <label>Referência máxima (opcional)</label>
-            <input id="newVarMax" type="number" step="any" placeholder="Ex: 5" />
-          </div>
-          <div>
-            <label>Série (grupo)</label>
-            <select id="newVarSeries"></select>
-          </div>
-          <div style="display:flex;align-items:flex-end;gap:10px">
-            <button id="btnAddVar" type="button">Criar variável</button>
+            <input id="mUnit" placeholder="mg/dL, ng/mL, pg/mL..." />
           </div>
         </div>
 
-        <div class="miniTitle">Variáveis personalizadas</div>
-        <div id="customVars" class="chipRow"></div>
-
-        <div class="hr"></div>
-
-        <h2>4) Arquivos importados</h2>
-        <div id="filesRow" class="chipRow"></div>
-
-        <div class="hr"></div>
-
-        <h2>5) Debug (opcional)</h2>
-        <details>
-          <summary>Ver texto extraído + erros (só pra ajustar regras quando o laboratório vem diferente)</summary>
-          <div style="margin-top:10px">
-            <div id="okBox" class="okBox"></div>
-            <div id="errBox" class="errBox"></div>
-
-            <label style="margin-top:10px">Texto extraído do PDF (até ~40k chars)</label>
-            <textarea id="raw" rows="9" placeholder="Aqui aparece o texto extraído..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Ref. mínima (opcional)</label>
+            <input id="mRefMin" type="number" step="any" placeholder="Ex: 40" />
           </div>
+          <div>
+            <label>Ref. máxima (opcional)</label>
+            <input id="mRefMax" type="number" step="any" placeholder="Ex: 60" />
+          </div>
+        </div>
+
+        <div class="btns" style="margin-top:10px">
+          <button id="btnManual" class="ghost" type="button">Adicionar ao histórico</button>
+          <button id="btnSaveCustomRef" class="ghost" type="button">Salvar referência dessa variável</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <details>
+          <summary>Debug opcional (texto extraído) — só pra quando algo não casa</summary>
+          <div class="hint" style="margin:8px 0 10px">
+            Isso serve só pra você ver “o que o PDF tem por dentro”. Se tudo estiver ok, ignora.
+          </div>
+          <label>Texto extraído (primeiros 30k chars)</label>
+          <textarea id="raw" placeholder="Aqui aparece o texto extraído do PDF..."></textarea>
         </details>
+
       </section>
 
       <!-- RESULTADOS -->
       <section class="card">
-        <h2>Painel</h2>
+        <div class="sectionTitle">
+          <h2 style="margin:0">Painel</h2>
+          <span class="badge">📌 Referências = linhas tracejadas (mín/máx). Eixo Y tem “folga” pra elas sempre aparecerem.</span>
+        </div>
 
         <div class="kpis">
           <div class="kpi">
@@ -315,31 +305,28 @@
 
         <div class="hr"></div>
 
-        <h2>Mini-gráficos por série</h2>
-        <div class="hint">Linhas tracejadas = referências (mín/máx). O eixo Y ganha “folga” para a referência nunca sumir.</div>
-
-        <div id="seriesContainer"></div>
-
-        <div class="hr"></div>
-
-        <h2>Resumo (últimos valores)</h2>
-        <div class="hint">Considera <b>somente o último valor de cada variável</b> (a leitura mais recente registrada).</div>
-        <div class="reportGrid">
-          <div class="reportBox">
-            <h3>Fora do intervalo</h3>
-            <div id="reportBad" class="small muted">—</div>
+        <h2 style="margin:0 0 8px">Resumo (último exame de cada variável)</h2>
+        <div class="summaryGrid">
+          <div class="summaryBox">
+            <h3>🔴 Fora do intervalo</h3>
+            <div id="sumBad" class="chips"></div>
           </div>
-          <div class="reportBox">
-            <h3>Dentro do intervalo</h3>
-            <div id="reportOk" class="small muted">—</div>
+          <div class="summaryBox">
+            <h3>🟢 Dentro do intervalo</h3>
+            <div id="sumOk" class="chips"></div>
           </div>
         </div>
 
         <div class="hr"></div>
 
-        <h2>Histórico bruto</h2>
-        <div class="hint">salvo no <b>localStorage</b> do dispositivo</div>
-        <div id="history" class="list"></div>
+        <h2 style="margin:0 0 8px">Mini-gráficos por série</h2>
+        <div id="series" class="seriesWrap"></div>
+
+        <div class="hr"></div>
+
+        <h2 style="margin:0 0 8px">Histórico bruto</h2>
+        <div class="hint">salvo no <b>localStorage</b> (neste dispositivo)</div>
+        <div id="history" style="margin-top:10px"></div>
 
         <footer>ExameView • Visualização local • Não substitui orientação médica.</footer>
       </section>
@@ -350,469 +337,333 @@
 /* =========================
    STORAGE
    ========================= */
-const LS_KEY = "exameview_history_v6";
-const LS_CUSTOM_VARS = "exameview_custom_vars_v1";
+const LS_HISTORY = "exameview_history_v7";
+const LS_CUSTOM  = "exameview_custom_refs_v7";
 
-function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch{ return []; } }
-function saveHistory(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(LS_HISTORY) || "[]"); } catch { return []; }
+}
+function saveHistory(arr){ localStorage.setItem(LS_HISTORY, JSON.stringify(arr)); }
+
+function loadCustomRefs(){
+  try{ return JSON.parse(localStorage.getItem(LS_CUSTOM) || "{}"); } catch { return {}; }
+}
+function saveCustomRefs(obj){ localStorage.setItem(LS_CUSTOM, JSON.stringify(obj)); }
+
+function uuid(){
+  return (crypto?.randomUUID ? crypto.randomUUID() : ("id_" + Math.random().toString(16).slice(2)));
+}
 function nowIso(){ return new Date().toISOString(); }
-function uid(){ return (crypto?.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)); }
 
-function loadCustomVars(){
-  try{ return JSON.parse(localStorage.getItem(LS_CUSTOM_VARS) || "[]"); } catch{ return []; }
-}
-function saveCustomVars(arr){
-  localStorage.setItem(LS_CUSTOM_VARS, JSON.stringify(arr));
+/* =========================
+   PDF.js CONFIG
+   ========================= */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+async function readPdfTextAllPages(file){
+  const ab = await file.arrayBuffer();
+  async function run(opts){
+    const doc = await pdfjsLib.getDocument(opts).promise;
+    let full = "";
+    for (let p=1; p<=doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const content = await page.getTextContent();
+      full += "\n\n[PAGE " + p + "] " + content.items.map(it => it.str).join(" ");
+    }
+    return full;
+  }
+  try{
+    return await run({ data: ab });
+  }catch(e){
+    // fallback (Android / worker issues)
+    return await run({ data: ab, disableWorker: true });
+  }
 }
 
 /* =========================
-   SÉRIES (grupos)
+   HELPERS
    ========================= */
-const SERIES = [
-  { key:"Série Vermelha", icon:"🩸", vars: ["Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"]},
-  { key:"Série Branca", icon:"🧬", vars: ["Leucócitos","Segmentados (%)","Segmentados (abs)","Linfócitos (%)","Linfócitos (abs)","Monócitos (%)","Monócitos (abs)","Eosinófilos (%)","Eosinófilos (abs)"]},
-  { key:"Plaquetas", icon:"🧫", vars: ["Plaquetas","VPM"] },
-  { key:"Perfil Lipídico", icon:"🫀", vars: ["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL"] },
-  { key:"Enzimas / Fígado", icon:"🧪", vars: ["TGO (AST)","TGP (ALT)"] },
-  { key:"Hormônios / Vitaminas / Ferro", icon:"💊", vars: ["Ferro sérico","Ferritina","Transferrina","Saturação de Transferrina","Vitamina B12","Vitamina D (25-OH)","Zinco","Testosterona Total","Testosterona Livre","DHT","FSH","LH","Prolactina","TSH","T4 Livre","T3 Livre"]},
-  { key:"Metabólico / Rim", icon:"⚙️", vars: ["Glicose","Hemoglobina Glicada (HbA1c)","Creatinina","Ureia","Ácido Úrico"]},
-];
-
-/* =========================
-   METADADOS (default) — você ainda pode criar mais no UI
-   ========================= */
-const DEFAULT_VARS = [
-  { key:"Colesterol Total", unit:"mg/dL", ref:{min:null,max:190} },
-  { key:"HDL", unit:"mg/dL", ref:{minBySex:true, M:40, F:50} },
-  { key:"LDL", unit:"mg/dL", ref:{min:null,max:115, note:"Meta típica baixo risco (<115). Depende do risco."} },
-  { key:"VLDL", unit:"mg/dL", ref:{min:0,max:30} },
-  { key:"Triglicérides", unit:"mg/dL", ref:{min:null,max:150} },
-  { key:"Não-HDL", unit:"mg/dL", ref:{min:null,max:145} },
-
-  { key:"TGO (AST)", unit:"U/L", ref:{min:null,max:40} },
-  { key:"TGP (ALT)", unit:"U/L", ref:{maxBySex:true, M:50, F:40} },
-
-  { key:"Hemácias", unit:"milh./mm³", ref:{rangeBySex:true, M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40}} },
-  { key:"Hemoglobina", unit:"g/dL", ref:{rangeBySex:true, M:{min:13.0,max:18.6}, F:{min:12.0,max:15.5}} },
-  { key:"Hematócrito", unit:"%", ref:{rangeBySex:true, M:{min:40,max:56}, F:{min:36,max:46}} },
-  { key:"VGM", unit:"fL", ref:{min:80,max:98} },
-  { key:"HGM", unit:"pg", ref:{min:27,max:33} },
-  { key:"CHCM", unit:"%", ref:{min:32,max:36} },
-  { key:"RDW", unit:"%", ref:{min:11,max:14} },
-
-  { key:"Leucócitos", unit:"/mm³", ref:{min:4500,max:10000} },
-  { key:"Segmentados (%)", unit:"%", ref:{min:49,max:75} },
-  { key:"Segmentados (abs)", unit:"/mm³", ref:{min:1500,max:7500} },
-  { key:"Eosinófilos (%)", unit:"%", ref:{min:0,max:6} },
-  { key:"Eosinófilos (abs)", unit:"/mm³", ref:{min:0,max:600} },
-  { key:"Linfócitos (%)", unit:"%", ref:{min:20,max:45} },
-  { key:"Linfócitos (abs)", unit:"/mm³", ref:{min:900,max:3500} },
-  { key:"Monócitos (%)", unit:"%", ref:{min:0,max:12} },
-  { key:"Monócitos (abs)", unit:"/mm³", ref:{min:0,max:1200} },
-
-  { key:"Plaquetas", unit:"/mm³", ref:{min:140000,max:400000} },
-  { key:"VPM", unit:"fL", ref:{min:9.4,max:12.4} },
-
-  { key:"Ferro sérico", unit:"µg/dL", ref:{min:65,max:175, note:"Varia por laboratório."} },
-  { key:"Ferritina", unit:"ng/mL", ref:{rangeBySex:true, M:{min:30,max:400}, F:{min:13,max:150}, note:"Varia por laboratório."} },
-  { key:"Transferrina", unit:"mg/dL", ref:{min:200,max:360, note:"Varia por laboratório."} },
-  { key:"Saturação de Transferrina", unit:"%", ref:{min:20,max:50, note:"Varia por laboratório."} },
-
-  { key:"Vitamina B12", unit:"pg/mL", ref:{min:200,max:900, note:"Varia por laboratório."} },
-  { key:"Vitamina D (25-OH)", unit:"ng/mL", ref:{min:30,max:100, note:"Varia por laboratório."} },
-  { key:"Zinco", unit:"µg/dL", ref:{min:60,max:120, note:"Varia por laboratório."} },
-
-  { key:"Testosterona Total", unit:"ng/dL", ref:{rangeBySex:true, M:{min:165,max:753}, F:{min:15,max:70}, note:"Varia por método/lab e idade."} },
-  { key:"Testosterona Livre", unit:"", ref:{none:true, note:"Referência varia muito por método."} },
-  { key:"DHT", unit:"", ref:{none:true, note:"Unidade e faixa variam por laboratório (ng/dL ou pg/mL)." } },
-  { key:"FSH", unit:"mUI/mL", ref:{none:true, note:"Varia por laboratório/sexo/fase."} },
-  { key:"LH", unit:"mUI/mL", ref:{none:true, note:"Varia por laboratório/sexo/fase."} },
-  { key:"Prolactina", unit:"ng/mL", ref:{none:true, note:"Varia por laboratório."} },
-  { key:"TSH", unit:"µUI/mL", ref:{min:0.4,max:4.0, note:"Varia por laboratório."} },
-  { key:"T4 Livre", unit:"ng/dL", ref:{none:true, note:"Varia por laboratório."} },
-  { key:"T3 Livre", unit:"pg/mL", ref:{none:true, note:"Varia por laboratório."} },
-
-  { key:"Glicose", unit:"mg/dL", ref:{min:70,max:99, note:"Jejum (geral)." } },
-  { key:"Hemoglobina Glicada (HbA1c)", unit:"%", ref:{min:null,max:5.6, note:"Depende do contexto clínico."} },
-  { key:"Creatinina", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório/sexo."} },
-  { key:"Ureia", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório."} },
-  { key:"Ácido Úrico", unit:"mg/dL", ref:{none:true, note:"Varia por laboratório/sexo."} },
-];
-
+function parseNumberPt(s){
+  if (s==null) return null;
+  let t = String(s).trim();
+  // milhar "222,000" ou "140.000" -> remove separadores
+  t = t.replace(/\.(?=\d{3}\b)/g, "");
+  t = t.replace(/,(?=\d{3}\b)/g, "");
+  // decimal vírgula -> ponto
+  t = t.replace(",", ".");
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+function ddmmyyyyToISO(d){
+  const [dd,mm,yyyy] = d.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function isoToLabel(iso){
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, m=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[m]));
+}
+function normKey(s){
+  return String(s||"")
+    .trim()
+    .replace(/\s+/g," ")
+    .toLowerCase();
 }
 function hashKey(s){
   let h=0;
   for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
   return h.toString(16);
 }
-function parseNumberPt(s){
-  if (s==null) return null;
-  let t = String(s).trim();
-  t = t.replace(/\.(?=\d{3}\b)/g, "");
-  t = t.replace(",", ".");
-  const n = Number(t);
-  return Number.isFinite(n) ? n : null;
-}
-function ddmmyyyyToISO(d){ const [dd,mm,yyyy]=d.split("/"); return `${yyyy}-${mm}-${dd}`; }
-function isoToLabel(iso){ const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
-
-function normalize(s){
-  return String(s||"")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/\s+/g," ")
-    .trim()
-    .toLowerCase();
-}
 
 /* =========================
-   PDF.js CONFIG + EXTRAÇÃO COM QUEBRA DE LINHA (IMPORTANTÍSSIMO)
+   DATE RULE (IMPORTANT)
+   - pega APENAS a data da 1ª página
+   - prioridade: Impressão > Coleta > Entrada > (fallback primeira data da 1ª página)
    ========================= */
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-
-async function readPdfTextByPage(file){
-  const ab = await file.arrayBuffer();
-  let doc;
-  try{ doc = await pdfjsLib.getDocument({ data: ab }).promise; }
-  catch{ doc = await pdfjsLib.getDocument({ data: ab, disableWorker: true }).promise; }
-
-  const pages = [];
-  for (let p=1; p<=doc.numPages; p++){
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-
-    // Reconstrói linhas usando hasEOL (melhor pra tabelas)
-    let out = "";
-    for (const it of content.items){
-      out += it.str;
-      if (it.hasEOL) out += "\n";
-      else out += " ";
-    }
-    pages.push(out);
-  }
-  return pages;
+function firstPageText(fullText){
+  // nós marcamos páginas como "[PAGE 1]"
+  const m = fullText.split(/\[PAGE 2\]/i);
+  return (m[0] || fullText);
 }
+function parseDateFromFirstPage(fullText){
+  const p1 = firstPageText(fullText);
 
-/* =========================
-   VAR META (default + custom)
-   ========================= */
-function getAllVarMeta(){
-  const custom = loadCustomVars();
-  const map = new Map();
-  for (const v of DEFAULT_VARS) map.set(v.key, v);
-  for (const v of custom) map.set(v.key, v);
-  return map;
-}
-function getVarMeta(key){
-  const m = getAllVarMeta();
-  return m.get(key) || {key, unit:"", ref:{none:true}};
-}
-function getAllVarKeysSorted(){
-  return [...getAllVarMeta().keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-}
+  const imp = p1.match(/Impress[aã]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (imp) return imp[1];
 
-/* =========================
-   REFERÊNCIA / STATUS
-   ========================= */
-function refMinMax(varKey, sex){
-  const meta = getVarMeta(varKey);
-  const r = meta.ref || {};
+  const coleta = p1.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (coleta) return coleta[1];
 
-  if (r.none) return {min:null,max:null,note:r.note};
-  if (r.minBySex) return {min: (sex==="M"? r.M : r.F), max:null, note:r.note};
-  if (r.maxBySex) return {min:null, max: (sex==="M"? r.M : r.F), note:r.note};
-  if (r.rangeBySex){
-    const rr = (sex==="M"? r.M : r.F) || r.M;
-    return {min: rr?.min ?? null, max: rr?.max ?? null, note:r.note};
-  }
-  return {min: (r.min ?? null), max: (r.max ?? null), note:r.note};
-}
-function statusFor(value, ref){
-  const {min,max} = ref;
-  if (value==null) return {label:"—", cls:"na"};
-  if (min!=null && value < min) return {label:"Fora", cls:"bad"};
-  if (max!=null && value > max) return {label:"Fora", cls:"bad"};
-  return {label:"Dentro", cls:"ok"};
-}
-function formatRefLine(ref, meta){
-  const unit = meta.unit ? ` ${meta.unit}` : "";
-  const parts=[];
-  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
-  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
-  if (!parts.length) parts.push(`referência: —`);
-  if (ref.note) parts.push(`• ${ref.note}`);
-  return parts.join("  |  ");
-}
+  const ent = p1.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (ent) return ent[1];
 
-/* =========================
-   DATA (somente 1ª página)
-   ========================= */
-function parseCollectionDateFirstPage(textPage1){
-  const t = textPage1;
-
-  const tries = [
-    /Data\s*e\s*Hora\s*de\s*Coleta[:\s]*([0-3]\d\/[01]\d\/\d{4})/i,
-    /Data\s*da\s*Coleta[:\s]*([0-3]\d\/[01]\d\/\d{4})/i,
-    /Coleta[:\s]*([0-3]\d\/[01]\d\/\d{4})/i,
-    /Data\s*de\s*Entrada[:\s]*([0-3]\d\/[01]\d\/\d{4})/i,
-    /Impress[aã]o[:\s]*([0-3]\d\/[01]\d\/\d{4})/i,
-  ];
-  for (const re of tries){
-    const m = t.match(re);
-    if (m) return m[1];
-  }
-
-  // fallback: primeira data que NÃO esteja perto de "Data Nasc"
-  const all = [...t.matchAll(/([0-3]\d\/[01]\d\/\d{4})/g)].map(x=>x[1]);
+  const all = [...p1.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
   for (const d of all){
-    const idx = t.indexOf(d);
-    const ctx = t.slice(Math.max(0, idx-30), idx+30);
+    const idx = p1.indexOf(d);
+    const ctx = p1.slice(Math.max(0, idx-30), idx+30);
     if (!/Data\s*Nasc/i.test(ctx)) return d;
   }
   return null;
 }
 
 /* =========================
-   PARSER DE VALORES (mais robusto)
-   - usa linhas (muito melhor pra tabelas)
-   - procura sinônimos
+   VARIABLE PARSING (ROBUST)
+   - ignora "Data anterior" e "Resultado anterior"
+   - foca em linhas "Resultado:" ou "Colesterol ...: 147 mg/dL" etc.
    ========================= */
-function pickFirstNumberAfter(line, startIndex){
-  const tail = line.slice(startIndex);
-  const m = tail.match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
-  if (!m) return null;
-  return parseNumberPt(m[0]);
+
+// catálogo de padrões (você pode ampliar com o tempo)
+const PATTERNS = [
+  // Lipídios (resultado atual)
+  {key:"Colesterol Total", unit:"mg/dL", re:/Colesterol\s*Total:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"HDL", unit:"mg/dL", re:/Colesterol\s*H\s*D\s*L:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"LDL", unit:"mg/dL", re:/Colesterol\s*L\s*D\s*L:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"VLDL", unit:"mg/dL", re:/Colesterol\s*V\s*L\s*D\s*L:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"Triglicérides", unit:"mg/dL", re:/Triglic[eé]rides:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"Não-HDL", unit:"mg/dL", re:/Colesterol\s*N[aã]o-?HDL:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+  {key:"Lipídios Totais", unit:"mg/dL", re:/Lipid(?:i|í)os\s*Totais:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+
+  // Hemograma (linha pontilhada)
+  {key:"Hemácias", unit:"milh./mm³", re:/Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i},
+  {key:"Hemoglobina", unit:"g/dL", re:/Hemoglobina\.*\s*([0-9\.,]+)\s*g\/d[l1]/i},
+  {key:"Hematócrito", unit:"%", re:/Hematocrito\.*\s*([0-9\.,]+)\s*%/i},
+  {key:"VGM", unit:"fL", re:/V\.?G\.?M\.*\s*([0-9\.,]+)\b/i},
+  {key:"HGM", unit:"pg", re:/H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i},
+  {key:"CHCM", unit:"%", re:/C\.?H\.?G\.?M\.*\s*([0-9\.,]+)\s*%/i},
+  {key:"RDW", unit:"%", re:/R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i},
+  {key:"Leucócitos", unit:"/mm³", re:/Leuc[oó]citos\.*\s*([0-9\.,]+)/i},
+  {key:"Plaquetas", unit:"/mm³", re:/Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)\s*(?:mm|\/)?/i},
+  {key:"VPM", unit:"fL", re:/Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i},
+
+  // Série branca em formato "% abs" (ex: Segmentados 71 4.409)
+  {key:"Segmentados (%)", unit:"%", re:/Segmentados\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
+  {key:"Segmentados (abs)", unit:"/mm³", re:/Segmentados\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
+
+  {key:"Eosinófilos (%)", unit:"%", re:/Eosinofilos\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
+  {key:"Eosinófilos (abs)", unit:"/mm³", re:/Eosinofilos\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
+
+  {key:"Linfócitos (%)", unit:"%", re:/Linfocitos\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
+  {key:"Linfócitos (abs)", unit:"/mm³", re:/Linfocitos\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
+
+  {key:"Monócitos (%)", unit:"%", re:/Monocitos\.*\s*([0-9\.,]+)\s+[0-9\.,]+/i, group:1},
+  {key:"Monócitos (abs)", unit:"/mm³", re:/Monocitos\.*\s*[0-9\.,]+\s+([0-9\.,]+)/i, group:1},
+
+  // Bioquímica (Resultado:)
+  {key:"Glicose", unit:"mg/dL", re:/Glicose[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mg\/dL/i},
+
+  // Ferro / Ferritina (Resultado:)
+  {key:"Ferro sérico", unit:"µg/dL", re:/Ferro\s*s[eé]rico[^]*?Resultado:\.*\s*([0-9\.,]+)\s*(?:u|µ)g\/dL/i},
+  {key:"Ferritina", unit:"ng/mL", re:/Ferritina[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
+
+  // Vitaminas
+  {key:"Vitamina B12", unit:"pg/mL", re:/Vitamina\s*B12[^]*?Resultado:\.*\s*([0-9\.,]+)\s*pg\/mL/i},
+  {key:"Vitamina D (25-OH)", unit:"ng/mL", re:/Vitamina\s*D[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
+
+  // Zinco
+  {key:"Zinco", unit:"mcg/dL", re:/Zinco[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mcg\/dL/i},
+
+  // Hormônios
+  {key:"DHT", unit:"pg/mL", re:/Dehidrotestosterona[^]*?Resultado:\.*\s*([0-9\.,]+)\s*pg\/mL/i},
+  {key:"LH", unit:"mUI/mL", re:/LH[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mUI\/mL/i},
+  {key:"Prolactina", unit:"ng/mL", re:/Prolactina[^]*?Resultado:\.*\s*([0-9\.,]+)\s*ng\/mL/i},
+  {key:"FSH", unit:"mUI/mL", re:/FSH[^]*?Resultado:\.*\s*([0-9\.,]+)\s*mUI\/mL/i},
+
+  // Testosterona / SHBG (no seu PDF vem como "RESULTADO:" em caps)
+  {key:"SHBG", unit:"nmol/L", re:/SHBG[^]*?RESULTADO:\s*([0-9\.,]+)\s*nmol\/L/i},
+  {key:"Testosterona Total", unit:"ng/dL", re:/TESTOSTERONA\s*TOTAL[^]*?RESULTADO:\s*([0-9\.,]+)\s*ng\/dL/i},
+  {key:"Testosterona Livre (calc.)", unit:"ng/dL", re:/TESTOSTERONA\s*LIVRE[^]*?RESULTADO:\s*([0-9\.,]+)\s*ng\/dL/i},
+];
+
+// referencia padrão mínima/máxima (você pode ajustar, e também sobrescrever manualmente no app)
+const DEFAULT_REFS = [
+  {key:"Colesterol Total", min:null, max:190, unit:"mg/dL"},
+  {key:"HDL", min:40, max:null, unit:"mg/dL"},
+  {key:"LDL", min:null, max:115, unit:"mg/dL", note:"Meta típica baixo risco (<115). Depende do risco."},
+  {key:"VLDL", min:0, max:30, unit:"mg/dL"},
+  {key:"Triglicérides", min:null, max:150, unit:"mg/dL"},
+  {key:"Não-HDL", min:null, max:145, unit:"mg/dL"},
+  {key:"Lipídios Totais", min:400, max:1000, unit:"mg/dL", note:"O próprio laudo costuma citar 400–1000 como referência."},
+
+  // hemograma (homem) – se quiser, você pode deixar isso por sexo ou só usar manual
+  {key:"Hemácias", min:4.50, max:6.00, unit:"milh./mm³"},
+  {key:"Hemoglobina", min:13.00, max:18.60, unit:"g/dL"},
+  {key:"Hematócrito", min:40, max:56, unit:"%"},
+  {key:"VGM", min:80, max:98, unit:"fL"},
+  {key:"HGM", min:28, max:32, unit:"pg"},
+  {key:"CHCM", min:32, max:36, unit:"%"},
+  {key:"RDW", min:11, max:14, unit:"%"},
+  {key:"Leucócitos", min:4500, max:10000, unit:"/mm³"},
+  {key:"Plaquetas", min:140000, max:400000, unit:"/mm³"},
+  {key:"VPM", min:9.4, max:12.4, unit:"fL"},
+
+  {key:"Segmentados (%)", min:49, max:64, unit:"%"},
+  {key:"Segmentados (abs)", min:2205, max:7000, unit:"/mm³"},
+  {key:"Eosinófilos (%)", min:1, max:4, unit:"%"},
+  {key:"Eosinófilos (abs)", min:45, max:400, unit:"/mm³"},
+  {key:"Linfócitos (%)", min:20, max:35, unit:"%"},
+  {key:"Linfócitos (abs)", min:900, max:3500, unit:"/mm³"},
+  {key:"Monócitos (%)", min:1, max:8, unit:"%"},
+  {key:"Monócitos (abs)", min:45, max:800, unit:"/mm³"},
+
+  // alguns aqui variam por lab/método, então default é “melhor esforço”
+  {key:"Glicose", min:70, max:99, unit:"mg/dL"},
+  {key:"Ferro sérico", min:65, max:175, unit:"µg/dL"},
+  {key:"Ferritina", min:30, max:400, unit:"ng/mL"},
+  {key:"Vitamina B12", min:172, max:890, unit:"pg/mL"},
+  {key:"Vitamina D (25-OH)", min:20, max:60, unit:"ng/mL", note:"Adequado população geral (20–60)."},
+  {key:"Zinco", min:60, max:120, unit:"mcg/dL"},
+  {key:"DHT", min:143, max:842, unit:"pg/mL"},
+  {key:"LH", min:1.50, max:9.30, unit:"mUI/mL"},
+  {key:"Prolactina", min:2.1, max:17.7, unit:"ng/mL"},
+  {key:"FSH", min:1.40, max:18.10, unit:"mUI/mL"},
+  {key:"SHBG", min:14.6, max:94.6, unit:"nmol/L"},
+  {key:"Testosterona Total", min:165, max:753, unit:"ng/dL"},
+  {key:"Testosterona Livre (calc.)", min:3.03, max:14.80, unit:"ng/dL"},
+];
+
+function getDefaultRef(key){
+  return DEFAULT_REFS.find(r=>normKey(r.key)===normKey(key)) || {key, min:null, max:null, unit:"", note:""};
 }
 
-function findInLines(linesNorm, rawLines, patterns){
-  // patterns: array de regex (em texto NORMALIZADO)
-  for (let i=0;i<linesNorm.length;i++){
-    const ln = linesNorm[i];
-    for (const re of patterns){
-      const m = ln.match(re);
-      if (m){
-        // tenta pegar número depois do match
-        const idx = m.index + m[0].length;
-        const val = pickFirstNumberAfter(rawLines[i], idx);
-        if (val!=null) return val;
-
-        // fallback: pega o primeiro número da linha toda
-        const m2 = rawLines[i].match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
-        if (m2) return parseNumberPt(m2[0]);
-
-        // fallback 2: olha na próxima linha (às vezes valor cai na linha abaixo)
-        if (i+1 < rawLines.length){
-          const m3 = rawLines[i+1].match(/([0-9]{1,3}(\.[0-9]{3})*(,[0-9]+)?|[0-9]+(,[0-9]+)?)/);
-          if (m3) return parseNumberPt(m3[0]);
-        }
-      }
-    }
-  }
-  return null;
+function getRef(key){
+  const custom = loadCustomRefs();
+  const k = normKey(key);
+  if (custom[k]) return custom[k];
+  const d = getDefaultRef(key);
+  return { key, min:d.min ?? null, max:d.max ?? null, unit:d.unit || "", note:d.note || "" };
 }
 
-function parseExamValues(textFull){
-  const rawLines = textFull.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const linesNorm = rawLines.map(x=>normalize(x));
+function statusFor(value, ref){
+  if (value==null || !Number.isFinite(value)) return {label:"—", cls:"warn"};
+  if (ref.min!=null && value < ref.min) return {label:"Fora", cls:"bad"};
+  if (ref.max!=null && value > ref.max) return {label:"Fora", cls:"bad"};
+  if (ref.min==null && ref.max==null) return {label:"Sem ref.", cls:"warn"};
+  return {label:"Dentro", cls:"ok"};
+}
+
+function formatRefLine(ref){
+  const unit = ref.unit ? ` ${ref.unit}` : "";
+  const parts=[];
+  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
+  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
+  if (!parts.length) parts.push("referência: —");
+  if (ref.note) parts.push(`• ${ref.note}`);
+  return parts.join("  |  ");
+}
+
+/* =========================
+   PARSE VALUES
+   ========================= */
+function stripHistoricSections(text){
+  // remove blocos de "Data anterior..." em diante para reduzir colisão de regex
+  // (mantém o resultado atual do perfil lipídico acima disso)
+  return text.replace(/Data\s+anterior[\s\S]*$/i, (m)=> {
+    // mas NÃO remove se tiver outros exames depois. Aqui usamos "melhor esforço":
+    // corta apenas o trecho da tabela lipídica (que é o que bagunça HDL/LDL).
+    // Como no seu PDF essa tabela vem após o perfil lipídico, isso resolve.
+    return "\n\n[HISTORICO_INTERNO_REMOVIDO]\n";
+  });
+}
+
+function parseValues(fullText){
+  // importante: não misturar histórico interno do laudo (Data anterior)
+  const text = stripHistoricSections(fullText);
 
   const out = {};
+  const units = {}; // guarda unidade detectada pelo padrão
 
-  // ==== PERFIL LIPÍDICO (muito comum falhar se não tiver linhas!)
-  out["Colesterol Total"] = findInLines(linesNorm, rawLines, [
-    /\bcolesterol\s*total\b/,
-    /\bcolesterol\b.*\btotal\b/
-  ]);
-
-  out["HDL"] = findInLines(linesNorm, rawLines, [
-    /\bhdl\b/,
-    /\bcolesterol\b.*\bhdl\b/,
-    /\bc[-\s]?hdl\b/
-  ]);
-
-  out["LDL"] = findInLines(linesNorm, rawLines, [
-    /\bldl\b/,
-    /\bcolesterol\b.*\bldl\b/,
-    /\bc[-\s]?ldl\b/
-  ]);
-
-  out["VLDL"] = findInLines(linesNorm, rawLines, [
-    /\bvldl\b/,
-    /\bcolesterol\b.*\bvldl\b/
-  ]);
-
-  out["Triglicérides"] = findInLines(linesNorm, rawLines, [
-    /\btriglicerid/,
-    /\btriglicerides\b/,
-    /\btrigliceride\b/
-  ]);
-
-  out["Não-HDL"] = findInLines(linesNorm, rawLines, [
-    /\bnao[-\s]?hdl\b/,
-    /\bcolesterol\b.*\bnao[-\s]?hdl\b/
-  ]);
-
-  // ==== HORMÔNIOS / VITAMINAS / MINERAIS
-  out["Vitamina B12"] = findInLines(linesNorm, rawLines, [
-    /\bvitamina\s*b\s*12\b/,
-    /\bcobalamina\b/,
-    /\bb12\b/
-  ]);
-
-  out["Vitamina D (25-OH)"] = findInLines(linesNorm, rawLines, [
-    /\bvitamina\s*d\b/,
-    /\b25\s*oh\b/,
-    /\b25[-\s]?oh\b/,
-    /\b25oh\b/
-  ]);
-
-  out["Zinco"] = findInLines(linesNorm, rawLines, [
-    /\bzinco\b/,
-    /\bzn\b/
-  ]);
-
-  out["Ferro sérico"] = findInLines(linesNorm, rawLines, [
-    /\bferro\b.*\bseric/,
-    /\bferro\s*seric/
-  ]);
-
-  out["Ferritina"] = findInLines(linesNorm, rawLines, [
-    /\bferritina\b/
-  ]);
-
-  out["Testosterona Total"] = findInLines(linesNorm, rawLines, [
-    /\btestosterona\b.*\btotal\b/,
-    /\btestosterona\s*total\b/,
-    /\btesto\b.*\btotal\b/
-  ]);
-
-  out["Testosterona Livre"] = findInLines(linesNorm, rawLines, [
-    /\btestosterona\b.*\blivre\b/,
-    /\btestosterona\s*livre\b/
-  ]);
-
-  out["DHT"] = findInLines(linesNorm, rawLines, [
-    /\bdht\b/,
-    /\bdihidrotestosteron/
-  ]);
-
-  out["FSH"] = findInLines(linesNorm, rawLines, [
-    /\bfsh\b/,
-    /\bhormonio\s*foliculo\s*estimulante\b/
-  ]);
-
-  out["LH"] = findInLines(linesNorm, rawLines, [
-    /\blh\b/,
-    /\bhormonio\s*luteinizante\b/
-  ]);
-
-  out["Prolactina"] = findInLines(linesNorm, rawLines, [
-    /\bprolactina\b/
-  ]);
-
-  out["TSH"] = findInLines(linesNorm, rawLines, [
-    /\btsh\b/
-  ]);
-
-  out["T4 Livre"] = findInLines(linesNorm, rawLines, [
-    /\bt4\b.*\blivre\b/,
-    /\btiroxina\b.*\blivre\b/
-  ]);
-
-  out["T3 Livre"] = findInLines(linesNorm, rawLines, [
-    /\bt3\b.*\blivre\b/,
-    /\btriiodotironina\b.*\blivre\b/
-  ]);
-
-  // ==== ENZIMAS
-  out["TGO (AST)"] = findInLines(linesNorm, rawLines, [
-    /\btgo\b/,
-    /\bast\b/
-  ]);
-
-  out["TGP (ALT)"] = findInLines(linesNorm, rawLines, [
-    /\btgp\b/,
-    /\balt\b/
-  ]);
-
-  // ==== HEMOGRAMA (alguns labs mudam formato; pegamos os mais comuns)
-  out["Hemácias"] = findInLines(linesNorm, rawLines, [/\bhemaci/]);
-  out["Hemoglobina"] = findInLines(linesNorm, rawLines, [/\bhemoglobin/]);
-  out["Hematócrito"] = findInLines(linesNorm, rawLines, [/\bhematocrit/]);
-  out["VGM"] = findInLines(linesNorm, rawLines, [/\bvgm\b/]);
-  out["HGM"] = findInLines(linesNorm, rawLines, [/\bhgm\b/]);
-  out["CHCM"] = findInLines(linesNorm, rawLines, [/\bchcm\b/]);
-  out["RDW"] = findInLines(linesNorm, rawLines, [/\brdw\b/]);
-
-  out["Leucócitos"] = findInLines(linesNorm, rawLines, [/\bleucocit/, /\bleucocitos\b/]);
-  out["Plaquetas"] = findInLines(linesNorm, rawLines, [/\bplaquet/]);
-  out["VPM"] = findInLines(linesNorm, rawLines, [/\bvpm\b/, /\bvolume\s*plaquet/]);
-
-  // diferencial: às vezes vem “Segmentados 72 4133”
-  // a gente tenta pegar % e abs se achar dois números na mesma linha
-  function parsePctAbs(keyPct, keyAbs, label){
-    for (let i=0;i<linesNorm.length;i++){
-      if (!linesNorm[i].includes(label)) continue;
-      const nums = rawLines[i].match(/([0-9]+(,[0-9]+)?)/g);
-      if (nums && nums.length>=2){
-        out[keyPct] = parseNumberPt(nums[0]);
-        out[keyAbs] = parseNumberPt(nums[1]);
-        return;
-      }
-    }
+  for (const p of PATTERNS){
+    const m = text.match(p.re);
+    if (!m) continue;
+    const idx = p.group ? Number(p.group) : 1;
+    const v = parseNumberPt(m[idx]);
+    if (v==null) continue;
+    out[p.key] = v;
+    if (p.unit) units[p.key] = p.unit;
   }
-  parsePctAbs("Segmentados (%)","Segmentados (abs)","segmentad");
-  parsePctAbs("Linfócitos (%)","Linfócitos (abs)","linfocit");
-  parsePctAbs("Monócitos (%)","Monócitos (abs)","monocit");
-  parsePctAbs("Eosinófilos (%)","Eosinófilos (abs)","eosinofil");
 
-  // remove null/NaN (SEM CRIAR ZERO!)
-  Object.keys(out).forEach(k=>{
-    if (out[k]==null || Number.isNaN(out[k])) delete out[k];
-  });
-
-  return out;
+  return { values: out, units };
 }
 
 /* =========================
-   CHARTS (eixo com folga pra ref aparecer sempre)
+   SERIES GROUPING
    ========================= */
+const SERIES = [
+  {name:"Perfil lipídico", icon:"🫀", keys:["Colesterol Total","HDL","LDL","VLDL","Triglicérides","Não-HDL","Lipídios Totais"]},
+  {name:"Série Vermelha", icon:"🩸", keys:["Hemácias","Hemoglobina","Hematócrito","VGM","HGM","CHCM","RDW"]},
+  {name:"Série Branca", icon:"🧬", keys:["Leucócitos","Segmentados (%)","Segmentados (abs)","Linfócitos (%)","Linfócitos (abs)","Monócitos (%)","Monócitos (abs)","Eosinófilos (%)","Eosinófilos (abs)"]},
+  {name:"Plaquetas", icon:"🧫", keys:["Plaquetas","VPM"]},
+  {name:"Glicose", icon:"🍬", keys:["Glicose"]},
+  {name:"Hormônios / Vitaminas / Ferro", icon:"🧪", keys:["Ferro sérico","Ferritina","Zinco","Vitamina B12","Vitamina D (25-OH)","DHT","LH","FSH","Prolactina","SHBG","Testosterona Total","Testosterona Livre (calc.)"]},
+  {name:"Outros", icon:"📌", keys:[]}, // sobra
+];
+
+/* =========================
+   UI
+   ========================= */
+const elSeries = document.getElementById("series");
+const elHistory = document.getElementById("history");
+const elPoints = document.getElementById("kpiPoints");
+const elDates  = document.getElementById("kpiDates");
+const elRaw    = document.getElementById("raw");
+const elSumBad = document.getElementById("sumBad");
+const elSumOk  = document.getElementById("sumOk");
+
 let charts = new Map();
 function destroyCharts(){
-  for (const c of charts.values()) c.destroy();
+  for (const ch of charts.values()) ch.destroy();
   charts.clear();
 }
-function computeSuggestedY(dataVals, ref){
-  // garante que referência não cole no eixo
-  const vals = [...dataVals].filter(v=>Number.isFinite(v));
-  if (ref.min!=null) vals.push(ref.min);
-  if (ref.max!=null) vals.push(ref.max);
 
-  if (!vals.length) return {sMin: undefined, sMax: undefined};
-
-  let min = Math.min(...vals);
-  let max = Math.max(...vals);
-
-  if (min === max){
-    // único valor: cria faixa
-    const pad = (min===0) ? 1 : Math.abs(min)*0.15;
-    return {sMin: min - pad, sMax: max + pad};
-  }
-
-  const range = max - min;
-  const pad = range * 0.12;
-  return {sMin: min - pad, sMax: max + pad};
-}
-
-/* =========================
-   HIST -> SERIES
-   ========================= */
-function getAllSeriesData(hist){
+function computeSeries(history){
+  // map var -> [{iso, val}]
   const series = new Map();
-  for (const h of hist){
+  for (const h of history){
     const iso = ddmmyyyyToISO(h.date);
     for (const [k,v] of Object.entries(h.values||{})){
       if (v==null || !Number.isFinite(v)) continue;
@@ -820,259 +671,257 @@ function getAllSeriesData(hist){
       series.get(k).push({x: iso, y: v});
     }
   }
-  for (const arr of series.values()) arr.sort((a,b)=> a.x.localeCompare(b.x));
+  for (const arr of series.values()) arr.sort((a,b)=>a.x.localeCompare(b.x));
   return series;
 }
 
-/* =========================
-   UI ELEMENTS
-   ========================= */
-const elPoints = document.getElementById('kpiPoints');
-const elDates = document.getElementById('kpiDates');
-const elSeries = document.getElementById('seriesContainer');
-const elHist = document.getElementById('history');
-const elRaw = document.getElementById('raw');
-const errBox = document.getElementById('errBox');
-const okBox = document.getElementById('okBox');
-const filesRow = document.getElementById('filesRow');
-const reportBad = document.getElementById('reportBad');
-const reportOk = document.getElementById('reportOk');
-
-const manualVar = document.getElementById('manualVar');
-const customVarsEl = document.getElementById('customVars');
-
-function refreshVarSelects(){
-  manualVar.innerHTML="";
-  for (const k of getAllVarKeysSorted()){
-    const meta = getVarMeta(k);
-    const opt=document.createElement('option');
-    opt.value=k;
-    opt.textContent=`${k} (${meta.unit || "-"})`;
-    manualVar.appendChild(opt);
-  }
-}
-function refreshSeriesSelect(){
-  const s = document.getElementById("newVarSeries");
-  s.innerHTML = "";
-  for (const g of SERIES){
-    const opt=document.createElement("option");
-    opt.value = g.key;
-    opt.textContent = g.key;
-    s.appendChild(opt);
-  }
-}
-refreshVarSelects();
-refreshSeriesSelect();
-
-function renderCustomVarsChips(){
-  const arr = loadCustomVars();
-  customVarsEl.innerHTML = "";
-  if (!arr.length){
-    customVarsEl.innerHTML = `<div class="small muted">—</div>`;
-    return;
-  }
-  for (const v of arr){
-    const chip = document.createElement("div");
-    chip.className="chip";
-    const ref = v.ref || {};
-    const parts=[];
-    if (ref.min!=null) parts.push(`min ${ref.min}`);
-    if (ref.max!=null) parts.push(`max ${ref.max}`);
-    chip.innerHTML = `<span>🧩 ${escapeHtml(v.key)} <span class="muted">(${escapeHtml(v.unit||"-")}${parts.length? ", "+parts.join(" / "):""})</span></span>`;
-    const b = document.createElement("button");
-    b.className="x";
-    b.type="button";
-    b.textContent="Remover";
-    b.addEventListener("click", ()=>{
-      if (!confirm(`Remover a variável personalizada "${v.key}"?`)) return;
-      const left = loadCustomVars().filter(x=>x.key!==v.key);
-      saveCustomVars(left);
-      refreshVarSelects();
-      renderCustomVarsChips();
-      rebuild();
-    });
-    chip.appendChild(b);
-    customVarsEl.appendChild(chip);
-  }
+function uniqueDates(history){
+  return new Set(history.map(h=>h.date));
 }
 
-/* =========================
-   REBUILD
-   ========================= */
-function rebuild(){
-  const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
-  const allDates = new Set(hist.map(h=>h.date));
-  let points=0;
-  hist.forEach(h=> points += Object.keys(h.values||{}).length);
-  elPoints.textContent = points;
-  elDates.textContent = allDates.size;
+function latestPointForVar(seriesArr){
+  if (!seriesArr || !seriesArr.length) return null;
+  return seriesArr[seriesArr.length-1];
+}
 
-  // Arquivos
-  filesRow.innerHTML = "";
-  const files = [...new Set(hist.map(h=>h.source).filter(Boolean))];
-  if (!files.length){
-    filesRow.innerHTML = `<div class="small muted">—</div>`;
-  } else {
-    for (const f of files){
-      const chip = document.createElement("div");
-      chip.className = "chip";
-      chip.innerHTML = `<span>📄 ${escapeHtml(f)}</span>`;
-      const b = document.createElement("button");
-      b.className = "x";
-      b.type="button";
-      b.textContent = "Remover";
-      b.addEventListener("click", ()=>{
-        if (!confirm(`Remover do histórico tudo que veio do arquivo:\n\n${f}\n\n(sem afetar outros PDFs)`)) return;
-        const keep = loadHistory().filter(x => x.source !== f);
-        saveHistory(keep);
-        rebuild();
-      });
-      chip.appendChild(b);
-      filesRow.appendChild(chip);
-    }
+function renderSummary(seriesMap){
+  elSumBad.innerHTML = "";
+  elSumOk.innerHTML = "";
+
+  const items = [];
+  for (const [key, arr] of seriesMap.entries()){
+    const last = latestPointForVar(arr);
+    if (!last) continue;
+    const ref = getRef(key);
+    const st = statusFor(last.y, ref);
+    items.push({key, last, ref, st});
   }
-
-  // Histórico bruto
-  elHist.innerHTML="";
-  hist.slice().reverse().forEach(h=>{
-    const div=document.createElement('div');
-    div.className="item";
-    div.innerHTML = `
-      <div class="itemTop">
-        <div class="itemTitle">${escapeHtml(h.name || "Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
-        <div class="muted">${escapeHtml(h.source || "PDF")}</div>
-      </div>
-      <div class="mono muted" style="margin-top:8px">${escapeHtml(Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  "))}</div>
-    `;
-    elHist.appendChild(div);
+  // ordena: fora primeiro, depois dentro
+  items.sort((a,b)=>{
+    const pa = (a.st.cls==="bad"?0:(a.st.cls==="ok"?1:2));
+    const pb = (b.st.cls==="bad"?0:(b.st.cls==="ok"?1:2));
+    if (pa!==pb) return pa-pb;
+    return a.key.localeCompare(b.key, "pt-BR");
   });
 
-  // Séries
-  const series = getAllSeriesData(hist);
-  destroyCharts();
-  elSeries.innerHTML="";
-
-  const sex = document.getElementById('sex').value;
-
-  // Relatório (últimos valores)
-  const lastByVar = [];
-  for (const [varKey, data] of series.entries()){
-    if (!data.length) continue;
-    const last = data[data.length-1];
-    const meta = getVarMeta(varKey);
-    const ref = refMinMax(varKey, sex);
-    const st = statusFor(last.y, ref);
-    lastByVar.push({varKey, last, meta, ref, st});
-  }
-  lastByVar.sort((a,b)=> a.varKey.localeCompare(b.varKey,"pt-BR"));
-
-  const bad = lastByVar.filter(x=>x.st.cls==="bad");
-  const ok = lastByVar.filter(x=>x.st.cls==="ok");
-
-  function renderReport(list){
-    if (!list.length) return `<div class="small muted">—</div>`;
-    return list.map(x=>{
-      const unit = x.meta.unit ? ` ${x.meta.unit}` : "";
-      return `
-        <div class="reportLine">
-          <div><b>${escapeHtml(x.varKey)}</b> <span class="muted">(${escapeHtml(x.st.label)})</span></div>
-          <div class="nowrap"><span class="mono">${x.last.y}${unit}</span> <span class="muted">em ${isoToLabel(x.last.x)}</span></div>
-        </div>
-      `;
-    }).join("");
-  }
-  reportBad.innerHTML = renderReport(bad);
-  reportOk.innerHTML = renderReport(ok);
-
-  // Render por série (inclui variáveis custom na série escolhida)
-  // cria mapa série->lista variáveis (default + custom)
-  const seriesMap = new Map(SERIES.map(s=>[s.key, new Set(s.vars)]));
-  for (const cv of loadCustomVars()){
-    if (cv.series && seriesMap.has(cv.series)){
-      seriesMap.get(cv.series).add(cv.key);
+  for (const it of items){
+    const unit = it.ref.unit ? ` ${it.ref.unit}` : "";
+    const chip = document.createElement("div");
+    chip.className = "chip " + (it.st.cls==="bad" ? "bad" : (it.st.cls==="ok" ? "ok" : ""));
+    chip.innerHTML = `<b>${escapeHtml(it.key)}</b> <span class="mono">${it.last.y}${unit}</span> <span class="muted">(${isoToLabel(it.last.x)})</span>`;
+    if (it.st.cls==="bad") elSumBad.appendChild(chip);
+    else if (it.st.cls==="ok") elSumOk.appendChild(chip);
+    else {
+      // sem ref vai pro "dentro" mas visual neutro
+      elSumOk.appendChild(chip);
     }
   }
 
-  const presentKeys = new Set(series.keys());
-  let renderedSomething = false;
+  if (!items.length){
+    elSumBad.innerHTML = `<span class="small">—</span>`;
+    elSumOk.innerHTML  = `<span class="small">—</span>`;
+  }
+}
 
-  for (const sBlock of SERIES){
-    const varsInGroup = [...(seriesMap.get(sBlock.key) || new Set())];
-    const keysInThis = varsInGroup.filter(v=>presentKeys.has(v));
-    if (!keysInThis.length) continue;
-    renderedSomething = true;
+function renderHistory(history){
+  elHistory.innerHTML = "";
+  if (!history.length){
+    elHistory.innerHTML = `<div class="hint">Ainda não há dados.</div>`;
+    return;
+  }
+  const list = document.createElement("div");
+  list.style.display = "flex";
+  list.style.flexDirection = "column";
+  list.style.gap = "10px";
 
-    const block = document.createElement("div");
-    block.className = "seriesBlock";
-    block.innerHTML = `
-      <div class="seriesHead">
-        <div class="seriesTitle">${sBlock.icon} ${escapeHtml(sBlock.key)}</div>
-        <div class="seriesBadge">${keysInThis.length} variáveis</div>
+  [...history].slice().reverse().forEach(h=>{
+    const div = document.createElement("div");
+    div.style.border = "1px solid var(--stroke)";
+    div.style.borderRadius = "16px";
+    div.style.padding = "12px";
+    div.style.background = "#fff";
+
+    const title = `<b>${escapeHtml(h.name||"Sem nome")}</b> <span class="small">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span>`;
+    const src = `<span class="small">${escapeHtml(h.source||"PDF")}</span>`;
+    const body = Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  ");
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>${title}</div>
+        <div>${src}</div>
       </div>
-      <div class="cardsVar" id="grid_${hashKey(sBlock.key)}"></div>
+      <div class="mono" style="color:var(--muted);margin-top:8px;white-space:pre-wrap">${escapeHtml(body)}</div>
     `;
-    elSeries.appendChild(block);
+    list.appendChild(div);
+  });
 
-    const grid = block.querySelector(`#grid_${hashKey(sBlock.key)}`);
+  elHistory.appendChild(list);
+}
 
-    for (const varKey of keysInThis){
-      const meta = getVarMeta(varKey);
-      const ref = refMinMax(varKey, sex);
+function applyYAxisPadding(values, ref){
+  // garante que refs e pontos ficam visíveis
+  const nums = values.filter(v=>Number.isFinite(v));
+  if (ref.min!=null) nums.push(ref.min);
+  if (ref.max!=null) nums.push(ref.max);
 
-      const data = series.get(varKey) || [];
-      const last = data[data.length-1];
-      const lastVal = last?.y ?? null;
-      const st = statusFor(lastVal, ref);
-      const unit = meta.unit ? ` ${meta.unit}` : "";
+  if (!nums.length) return {suggestedMin: undefined, suggestedMax: undefined};
 
-      const card=document.createElement('div');
-      card.className="varCard";
-      const canvasId = `c_${hashKey(sBlock.key + "_" + varKey)}`;
+  let min = Math.min(...nums);
+  let max = Math.max(...nums);
 
-      const dateOptions = data.map(p=>`<option value="${p.x}">${isoToLabel(p.x)}</option>`).join("");
-      const defaultDate = last?.x || "";
+  if (min===max){
+    // 1 ponto só
+    const pad = (min===0 ? 1 : Math.abs(min)*0.2);
+    min = min - pad;
+    max = max + pad;
+  }else{
+    const range = max-min;
+    const pad = range*0.18;
+    min = min - pad;
+    max = max + pad;
+  }
+  return { suggestedMin: min, suggestedMax: max };
+}
 
-      card.innerHTML = `
+function renderSeries(seriesMap){
+  destroyCharts();
+  elSeries.innerHTML = "";
+
+  // KPIs
+  const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
+  const dates = uniqueDates(hist);
+  let pts = 0;
+  hist.forEach(h=> pts += Object.keys(h.values||{}).length);
+  elPoints.textContent = pts;
+  elDates.textContent  = dates.size;
+
+  // resumo
+  renderSummary(seriesMap);
+
+  // descobrir "sobras"
+  const known = new Set();
+  for (const s of SERIES){
+    for (const k of s.keys) known.add(normKey(k));
+  }
+
+  // construir cartões por série
+  const allKeys = [...seriesMap.keys()];
+  const leftovers = allKeys.filter(k=> !known.has(normKey(k)));
+
+  for (const s of SERIES){
+    let keys = s.keys.filter(k=>seriesMap.has(k));
+    if (s.name==="Outros") keys = leftovers;
+
+    if (!keys.length) continue;
+
+    const card = document.createElement("div");
+    card.className = "seriesCard";
+
+    const head = document.createElement("div");
+    head.className = "seriesHead";
+    head.innerHTML = `
+      <div class="seriesName">${s.icon} ${escapeHtml(s.name)}</div>
+      <div class="seriesCount">${keys.length} variáveis</div>
+    `;
+    card.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "varsGrid";
+
+    keys.sort((a,b)=>a.localeCompare(b,"pt-BR"));
+
+    for (const varKey of keys){
+      const arr = seriesMap.get(varKey) || [];
+      const last = latestPointForVar(arr);
+      const ref = getRef(varKey);
+      const st = statusFor(last?.y ?? null, ref);
+
+      const unit = ref.unit ? ` ${ref.unit}` : "";
+      const labels = arr.map(p=> isoToLabel(p.x));
+      const values = arr.map(p=> p.y);
+
+      const varCard = document.createElement("div");
+      varCard.className = "varCard";
+      varCard.innerHTML = `
         <div class="varHead">
           <div>
             <div class="varName">${escapeHtml(varKey)}</div>
-            <div class="varRef">${formatRefLine(ref, meta)}</div>
+            <div class="varRef">${escapeHtml(formatRefLine(ref))}</div>
           </div>
-          <span class="status ${st.cls}">${st.label}</span>
+          <span class="badge ${st.cls}">${st.label}</span>
         </div>
 
-        <div style="height:150px;margin-top:10px">
-          <canvas id="${canvasId}"></canvas>
+        <div class="canvasBox">
+          <canvas id="c_${hashKey(varKey)}"></canvas>
         </div>
 
-        <div class="varMeta">
-          <div class="small"><b>Último:</b> ${lastVal!=null ? (lastVal + unit) : "—"} <span class="muted">em ${last?.x ? isoToLabel(last.x) : "—"}</span></div>
+        <div class="small">
+          <b>Último:</b> ${last ? `${last.y}${unit} <span class="muted">em ${isoToLabel(last.x)}</span>` : "—"}
         </div>
 
-        <div class="editLabel">Editar / adicionar valor nessa variável</div>
-        <div class="editBar">
-          <select data-role="dateSel">${dateOptions}</select>
-          <input data-role="valInp" type="number" step="any" placeholder="Digite um valor (ex: 50)" />
-          <button data-role="saveBtn" type="button">Salvar</button>
-        </div>
+        <div class="controls">
+          <div>
+            <label>Data</label>
+            <select class="editDate"></select>
+          </div>
+          <div>
+            <label>Novo valor</label>
+            <input class="editValue" type="number" step="any" placeholder="Digite..." />
+          </div>
+          <div>
+            <button class="btnSave">Salvar</button>
+          </div>
 
-        <div class="btns" style="margin-top:10px">
-          <button class="ghost" data-role="fillBtn" type="button">Preencher com valor do ponto</button>
-          <button class="danger" data-role="delBtn" type="button">Excluir ponto</button>
+          <div class="full inlineBtns">
+            <button class="ghost btnFill">Preencher com valor do ponto</button>
+            <button class="danger btnDelete">Excluir ponto</button>
+          </div>
+
+          <div class="full" style="border-top:1px dashed var(--stroke);padding-top:10px">
+            <div class="row">
+              <div>
+                <label>Ref. mínima</label>
+                <input class="refMin" type="number" step="any" placeholder="(opcional)" />
+              </div>
+              <div>
+                <label>Ref. máxima</label>
+                <input class="refMax" type="number" step="any" placeholder="(opcional)" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <div>
+                <label>Unidade</label>
+                <input class="refUnit" placeholder="mg/dL, ng/mL..." />
+              </div>
+              <div style="display:flex;align-items:end;gap:10px">
+                <button class="ghost btnSaveRef" type="button">Salvar referência</button>
+              </div>
+            </div>
+          </div>
         </div>
       `;
 
-      grid.appendChild(card);
+      // preencher select datas
+      const sel = varCard.querySelector(".editDate");
+      for (const p of arr){
+        const opt = document.createElement("option");
+        opt.value = p.x;
+        opt.textContent = isoToLabel(p.x);
+        sel.appendChild(opt);
+      }
 
-      const labels = data.map(p => isoToLabel(p.x));
-      const values = data.map(p => p.y);
+      // preencher inputs de ref
+      varCard.querySelector(".refMin").value = (ref.min!=null ? ref.min : "");
+      varCard.querySelector(".refMax").value = (ref.max!=null ? ref.max : "");
+      varCard.querySelector(".refUnit").value = (ref.unit || "");
 
+      // chart datasets
       const ds = [{
-        label: "Valor",
+        label:"Valor",
         data: values,
-        tension: 0.25,
-        pointRadius: 3,
-        borderWidth: 2,
+        tension:0.25,
+        pointRadius:3,
+        borderWidth:2
       }];
 
       if (ref.min!=null){
@@ -1094,9 +943,9 @@ function rebuild(){
         });
       }
 
-      const ctx = card.querySelector("canvas").getContext("2d");
-      const {sMin, sMax} = computeSuggestedY(values, ref);
+      const yPad = applyYAxisPadding(values, ref);
 
+      const ctx = varCard.querySelector("canvas").getContext("2d");
       const ch = new Chart(ctx, {
         type:"line",
         data:{ labels, datasets: ds },
@@ -1107,12 +956,8 @@ function rebuild(){
             legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
             tooltip:{
               callbacks:{
-                label:(item)=>{
-                  if (item.dataset.label !== "Valor") return `${item.dataset.label}: ${item.formattedValue}`;
-                  const v = Number(item.raw);
-                  const st2 = statusFor(v, ref);
-                  return `Valor: ${item.formattedValue} (${st2.label})`;
-                }
+                title:(items)=> items?.[0]?.label || "",
+                label:(item)=> `${item.dataset.label}: ${item.formattedValue}`
               }
             }
           },
@@ -1120,300 +965,324 @@ function rebuild(){
             x:{ type:"category", ticks:{ maxTicksLimit:5 } },
             y:{
               beginAtZero:false,
-              suggestedMin: sMin,
-              suggestedMax: sMax,
+              suggestedMin: yPad.suggestedMin,
+              suggestedMax: yPad.suggestedMax,
               ticks:{ maxTicksLimit:5 }
             }
           }
         }
       });
-      charts.set(varKey + "|" + sBlock.key, ch);
+      charts.set(varKey, ch);
 
-      const dateSel = card.querySelector('[data-role="dateSel"]');
-      const valInp  = card.querySelector('[data-role="valInp"]');
-      const saveBtn = card.querySelector('[data-role="saveBtn"]');
-      const fillBtn = card.querySelector('[data-role="fillBtn"]');
-      const delBtn  = card.querySelector('[data-role="delBtn"]');
-
-      if (defaultDate) dateSel.value = defaultDate;
-
-      fillBtn.addEventListener("click", ()=>{
-        const iso = dateSel.value;
-        const point = data.find(p=>p.x===iso);
-        if (!point){ alert("Selecione uma data válida."); return; }
-        valInp.value = String(point.y);
-        valInp.focus();
+      // actions: fill/save/delete
+      varCard.querySelector(".btnFill").addEventListener("click", ()=>{
+        const iso = sel.value;
+        const p = arr.find(x=>x.x===iso);
+        if (!p) return;
+        varCard.querySelector(".editValue").value = p.y;
       });
 
-      saveBtn.addEventListener("click", ()=>{
-        const iso = dateSel.value;
-        const newVal = Number(valInp.value);
-        if (!iso){ alert("Selecione uma data."); return; }
-        if (!Number.isFinite(newVal)){ alert("Digite um valor numérico."); return; }
-
-        const hist2 = loadHistory();
-        const targetDate = isoToLabel(iso);
-        let updated = false;
-
-        for (const h of hist2){
-          if (h.date !== targetDate) continue;
-          if (h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
-            h.values[varKey] = newVal;
-            updated = true;
-          }
+      varCard.querySelector(".btnSave").addEventListener("click", ()=>{
+        const iso = sel.value;
+        const v = parseFloat(varCard.querySelector(".editValue").value);
+        if (!Number.isFinite(v)){
+          alert("Digite um valor numérico.");
+          return;
         }
+        updatePointValue(varKey, iso, v);
+      });
 
-        if (!updated){
-          const name = document.getElementById('name').value.trim() || "Sem nome";
-          const age = Number(document.getElementById('age').value || 0);
-          const sexv = document.getElementById('sex').value;
-          hist2.push({
-            id: uid(),
-            createdAt: nowIso(),
-            source: "Manual",
-            name, age, sex: sexv,
-            date: targetDate,
-            values: { [varKey]: newVal }
-          });
-        }
+      varCard.querySelector(".btnDelete").addEventListener("click", ()=>{
+        const iso = sel.value;
+        if (!confirm(`Excluir o ponto ${isoToLabel(iso)} de "${varKey}"?`)) return;
+        deletePoint(varKey, iso);
+      });
 
-        saveHistory(hist2);
+      varCard.querySelector(".btnSaveRef").addEventListener("click", ()=>{
+        const minRaw = varCard.querySelector(".refMin").value.trim();
+        const maxRaw = varCard.querySelector(".refMax").value.trim();
+        const unitRaw = varCard.querySelector(".refUnit").value.trim();
+
+        const ref = getRef(varKey);
+        const custom = loadCustomRefs();
+        const k = normKey(varKey);
+
+        custom[k] = {
+          key: varKey,
+          min: (minRaw==="" ? null : Number(minRaw)),
+          max: (maxRaw==="" ? null : Number(maxRaw)),
+          unit: unitRaw || ref.unit || "",
+          note: ref.note || ""
+        };
+        if (custom[k].min!=null && !Number.isFinite(custom[k].min)) custom[k].min = null;
+        if (custom[k].max!=null && !Number.isFinite(custom[k].max)) custom[k].max = null;
+
+        saveCustomRefs(custom);
         rebuild();
       });
 
-      delBtn.addEventListener("click", ()=>{
-        const iso = dateSel.value;
-        if (!iso){ alert("Selecione uma data."); return; }
-        const targetDate = isoToLabel(iso);
-        if (!confirm(`Excluir o ponto de "${varKey}" em ${targetDate}?`)) return;
-
-        const hist2 = loadHistory();
-        for (const h of hist2){
-          if (h.date !== targetDate) continue;
-          if (h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
-            delete h.values[varKey];
-          }
-        }
-        const cleaned = hist2.filter(h => h.values && Object.keys(h.values).length>0);
-        saveHistory(cleaned);
-        rebuild();
-      });
+      grid.appendChild(varCard);
     }
+
+    card.appendChild(grid);
+    elSeries.appendChild(card);
   }
 
-  if (!renderedSomething){
-    elSeries.innerHTML = `<div class="hint">Ainda não há dados reconhecíveis. Faça upload de um PDF válido ou adicione manualmente.</div>`;
+  if (!elSeries.children.length){
+    elSeries.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF ou adicione manualmente.</div>`;
   }
 }
 
+function rebuild(){
+  const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
+  renderHistory(hist);
+  const seriesMap = computeSeries(hist);
+  renderSeries(seriesMap);
+}
+
 /* =========================
-   AÇÕES
+   UPDATE / DELETE POINTS
    ========================= */
-document.getElementById('btnClear').addEventListener('click', ()=>{
-  if (!confirm("Zerar o histórico do dispositivo?")) return;
-  localStorage.removeItem(LS_KEY);
+function updatePointValue(varKey, iso, newVal){
+  const hist = loadHistory();
+  const date = isoToLabel(iso);
+
+  // achar o registro da mesma data que contém essa variável
+  // se existir múltiplos, atualiza o primeiro que tiver
+  for (const h of hist){
+    if (h.date === date && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
+      h.values[varKey] = newVal;
+      saveHistory(hist);
+      rebuild();
+      return;
+    }
+  }
+
+  // se não existir, cria ponto manual nessa data
+  const name = document.getElementById("name").value.trim() || "Sem nome";
+  const age  = Number(document.getElementById("age").value || 0);
+  const sex  = document.getElementById("sex").value;
+
+  hist.push({
+    id: uuid(),
+    createdAt: nowIso(),
+    source: "Manual (edição)",
+    name, age, sex,
+    date,
+    values: { [varKey]: newVal }
+  });
+  saveHistory(hist);
+  rebuild();
+}
+
+function deletePoint(varKey, iso){
+  const hist = loadHistory();
+  const date = isoToLabel(iso);
+
+  // remove a variável daquele registro; se ficar vazio, remove o registro
+  const newHist = [];
+  for (const h of hist){
+    if (h.date === date && h.values && Object.prototype.hasOwnProperty.call(h.values, varKey)){
+      const nv = {...h.values};
+      delete nv[varKey];
+      const keys = Object.keys(nv);
+      if (keys.length){
+        newHist.push({...h, values:nv});
+      } // senão: some o registro todo
+    } else {
+      newHist.push(h);
+    }
+  }
+  saveHistory(newHist);
+  rebuild();
+}
+
+/* =========================
+   ACTIONS
+   ========================= */
+document.getElementById("btnClear").addEventListener("click", ()=>{
+  if (!confirm("Zerar o histórico deste dispositivo?")) return;
+  localStorage.removeItem(LS_HISTORY);
   rebuild();
 });
 
-document.getElementById('btnExport').addEventListener('click', ()=>{
+document.getElementById("btnExportJSON").addEventListener("click", ()=>{
   const data = loadHistory();
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
-  const a=document.createElement('a');
+  const a=document.createElement("a");
   a.href=url;
-  a.download="historico-exames.json";
+  a.download="exameview-historico.json";
   document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.click(); a.remove();
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('btnExportTxt').addEventListener('click', ()=>{
+document.getElementById("btnExportTXT").addEventListener("click", ()=>{
   const hist = loadHistory().sort((a,b)=> ddmmyyyyToISO(a.date).localeCompare(ddmmyyyyToISO(b.date)));
-  const sex = document.getElementById('sex').value;
-  const name = document.getElementById('name').value.trim() || "Sem nome";
-  const series = getAllSeriesData(hist);
+  const seriesMap = computeSeries(hist);
 
   const lines = [];
-  lines.push(`ExameView — Resumo`);
-  lines.push(`Nome: ${name}`);
-  lines.push(`Gerado em: ${new Date().toLocaleString("pt-BR")}`);
-  lines.push(`Total de datas: ${new Set(hist.map(h=>h.date)).size}`);
-  lines.push(`Total de pontos: ${hist.reduce((acc,h)=>acc+Object.keys(h.values||{}).length,0)}`);
-  lines.push(``);
-  lines.push(`== Últimos valores por variável (mais recente no histórico) ==`);
+  lines.push("EXAMEVIEW — RELATÓRIO (último valor de cada variável)");
+  lines.push("Idealizado por Ernandes Sobreira para comparações pessoais.");
+  lines.push("------------------------------------------------------------");
 
   const items = [];
-  for (const [varKey, data] of series.entries()){
-    if (!data.length) continue;
-    const last = data[data.length-1];
-    const meta = getVarMeta(varKey);
-    const ref = refMinMax(varKey, sex);
+  for (const [key, arr] of seriesMap.entries()){
+    const last = latestPointForVar(arr);
+    if (!last) continue;
+    const ref = getRef(key);
     const st = statusFor(last.y, ref);
-    const unit = meta.unit ? ` ${meta.unit}` : "";
-    items.push({varKey,last,unit,ref,st});
+    items.push({key,last,ref,st});
   }
-  items.sort((a,b)=>a.varKey.localeCompare(b.varKey,"pt-BR"));
+  items.sort((a,b)=> a.key.localeCompare(b.key,"pt-BR"));
 
   for (const it of items){
-    lines.push(`- ${it.varKey}: ${it.last.y}${it.unit} em ${isoToLabel(it.last.x)}  [${it.st.label}]`);
-    if (it.ref.min!=null || it.ref.max!=null){
-      const r = [];
-      if (it.ref.min!=null) r.push(`min=${it.ref.min}${it.unit}`);
-      if (it.ref.max!=null) r.push(`max=${it.ref.max}${it.unit}`);
-      lines.push(`  ref: ${r.join(" | ")}`);
-    }
-    if (it.ref.note) lines.push(`  obs: ${it.ref.note}`);
+    const u = it.ref.unit ? ` ${it.ref.unit}` : "";
+    lines.push(`${it.key}: ${it.last.y}${u} em ${isoToLabel(it.last.x)} — ${it.st.label} | ${formatRefLine(it.ref)}`);
   }
-
-  const files = [...new Set(hist.map(h=>h.source).filter(Boolean))];
-  lines.push(``);
-  lines.push(`== Arquivos importados ==`);
-  for (const f of files) lines.push(`• ${f}`);
 
   const blob = new Blob([lines.join("\n")], {type:"text/plain;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const a=document.createElement("a");
   a.href=url;
-  a.download="resumo-exames.txt";
+  a.download="exameview-relatorio.txt";
   document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.click(); a.remove();
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('btnManual').addEventListener('click', ()=>{
-  const name = document.getElementById('name').value.trim() || "Sem nome";
-  const age = Number(document.getElementById('age').value || 0);
-  const sex = document.getElementById('sex').value;
+document.getElementById("btnManual").addEventListener("click", ()=>{
+  const varKey = (document.getElementById("mVar").value || "").trim();
+  const dateISO = document.getElementById("mDate").value;
+  const val = parseFloat(document.getElementById("mValue").value);
+  const unit = (document.getElementById("mUnit").value || "").trim();
 
-  const varKey = document.getElementById('manualVar').value;
-  const dateISO = document.getElementById('manualDate').value;
-  const value = Number(document.getElementById('manualValue').value);
-
-  if (!dateISO || !Number.isFinite(value)){
-    alert("Preencha data e valor numérico.");
+  if (!varKey || !dateISO || !Number.isFinite(val)){
+    alert("Preencha: variável, data e valor numérico.");
     return;
   }
 
-  const date = isoToLabel(dateISO);
+  const name = document.getElementById("name").value.trim() || "Sem nome";
+  const age  = Number(document.getElementById("age").value || 0);
+  const sex  = document.getElementById("sex").value;
+
   const hist = loadHistory();
   hist.push({
-    id: uid(),
+    id: uuid(),
     createdAt: nowIso(),
     source: "Manual",
     name, age, sex,
-    date,
-    values: { [varKey]: value }
+    date: isoToLabel(dateISO),
+    values: { [varKey]: val }
   });
   saveHistory(hist);
 
-  okBox.style.display="block";
-  okBox.textContent = "Valor manual adicionado ao histórico.";
-  errBox.style.display="none";
-  rebuild();
-});
-
-document.getElementById("btnAddVar").addEventListener("click", ()=>{
-  const key = document.getElementById("newVarName").value.trim();
-  if (!key){ alert("Digite o nome da variável."); return; }
-
-  const unit = document.getElementById("newVarUnit").value.trim();
-  const minRaw = document.getElementById("newVarMin").value;
-  const maxRaw = document.getElementById("newVarMax").value;
-  const series = document.getElementById("newVarSeries").value;
-
-  const min = (minRaw==="" ? null : Number(minRaw));
-  const max = (maxRaw==="" ? null : Number(maxRaw));
-  if (min!=null && !Number.isFinite(min)) { alert("Ref mínima inválida."); return; }
-  if (max!=null && !Number.isFinite(max)) { alert("Ref máxima inválida."); return; }
-
-  const arr = loadCustomVars();
-  if (arr.some(v=>v.key.toLowerCase()===key.toLowerCase())){
-    alert("Já existe uma variável personalizada com esse nome.");
-    return;
+  // se usuário digitou unidade, salva como ref custom (sem min/max)
+  if (unit){
+    const custom = loadCustomRefs();
+    const k = normKey(varKey);
+    const base = getRef(varKey);
+    custom[k] = { key: varKey, min: base.min, max: base.max, unit, note: base.note || "" };
+    saveCustomRefs(custom);
   }
 
-  arr.push({
-    key,
-    unit,
-    series,
-    ref: { min, max }
-  });
-  saveCustomVars(arr);
-
-  document.getElementById("newVarName").value="";
-  document.getElementById("newVarUnit").value="";
-  document.getElementById("newVarMin").value="";
-  document.getElementById("newVarMax").value="";
-
-  refreshVarSelects();
-  renderCustomVarsChips();
   rebuild();
 });
 
-document.getElementById('btnRead').addEventListener('click', async ()=>{
-  const fileInput = document.getElementById('pdf');
-  const file = fileInput.files?.[0];
+document.getElementById("btnSaveCustomRef").addEventListener("click", ()=>{
+  const varKey = (document.getElementById("mVar").value || "").trim();
+  if (!varKey){
+    alert("Digite o nome da variável para salvar referência.");
+    return;
+  }
+  const minRaw = document.getElementById("mRefMin").value.trim();
+  const maxRaw = document.getElementById("mRefMax").value.trim();
+  const unitRaw = document.getElementById("mUnit").value.trim();
+
+  const custom = loadCustomRefs();
+  const k = normKey(varKey);
+  const base = getRef(varKey);
+
+  custom[k] = {
+    key: varKey,
+    min: (minRaw==="" ? null : Number(minRaw)),
+    max: (maxRaw==="" ? null : Number(maxRaw)),
+    unit: unitRaw || base.unit || "",
+    note: base.note || ""
+  };
+  if (custom[k].min!=null && !Number.isFinite(custom[k].min)) custom[k].min = null;
+  if (custom[k].max!=null && !Number.isFinite(custom[k].max)) custom[k].max = null;
+
+  saveCustomRefs(custom);
+  rebuild();
+});
+
+document.getElementById("btnRead").addEventListener("click", async ()=>{
+  const file = document.getElementById("pdf").files?.[0];
   if (!file){
     alert("Escolha um PDF.");
     return;
   }
 
-  errBox.style.display="none";
-  okBox.style.display="none";
-  elRaw.value="Lendo PDF...";
+  document.getElementById("btnRead").disabled = true;
+  document.getElementById("btnRead").textContent = "Lendo PDF...";
 
   try{
-    const pages = await readPdfTextByPage(file);
-    const page1 = pages[0] || "";
-    const fullText = pages.join("\n");
+    const text = await readPdfTextAllPages(file);
 
-    elRaw.value = (fullText || "").slice(0, 40000);
+    // debug (primeiros 30k)
+    elRaw.value = text.slice(0, 30000);
 
-    const date = parseCollectionDateFirstPage(page1);
-    if (!date){
-      throw new Error("Não consegui identificar a data do exame na 1ª página (Coleta/Entrada/Impressão).");
+    const date = parseDateFromFirstPage(text);
+    if (!date) throw new Error("Não consegui identificar a data do exame na 1ª página (Impressão/Coleta/Entrada).");
+
+    const parsed = parseValues(text);
+    const values = parsed.values;
+
+    if (!Object.keys(values).length){
+      throw new Error("Li o texto do PDF, mas não consegui reconhecer valores. (Layout muito diferente / PDF escaneado).");
     }
 
-    const valuesNow = parseExamValues(fullText);
-    if (!Object.keys(valuesNow).length){
-      throw new Error("Li o texto do PDF, mas não achei valores reconhecíveis. Possível layout muito diferente ou PDF escaneado (imagem).");
+    // salvar unidades detectadas como custom (sem mexer em min/max), só pra mostrar bonitinho
+    const custom = loadCustomRefs();
+    for (const [k,u] of Object.entries(parsed.units || {})){
+      const nk = normKey(k);
+      const base = getRef(k);
+      if (!custom[nk]){
+        custom[nk] = { key:k, min: base.min, max: base.max, unit:u || base.unit || "", note: base.note || "" };
+      } else {
+        custom[nk].unit = custom[nk].unit || u;
+      }
     }
+    saveCustomRefs(custom);
 
-    const name = document.getElementById('name').value.trim() || "Sem nome";
-    const age = Number(document.getElementById('age').value || 0);
-    const sex = document.getElementById('sex').value;
+    const name = document.getElementById("name").value.trim() || "Sem nome";
+    const age  = Number(document.getElementById("age").value || 0);
+    const sex  = document.getElementById("sex").value;
 
     const hist = loadHistory();
     hist.push({
-      id: uid(),
+      id: uuid(),
       createdAt: nowIso(),
       source: file.name || "PDF",
       name, age, sex,
       date,
-      values: valuesNow
+      values
     });
     saveHistory(hist);
 
-    okBox.style.display="block";
-    okBox.textContent = `OK: adicionei ${Object.keys(valuesNow).length} medidas com a data ${date} (data da 1ª página).`;
-    errBox.style.display="none";
-
-    fileInput.value = "";
     rebuild();
-  }catch(err){
-    const msg = String(err?.message || err);
-    errBox.style.display="block";
-    errBox.textContent = msg;
-    okBox.style.display="none";
-    alert("Erro ao processar: " + msg);
+    alert(`OK: adicionei ${Object.keys(values).length} variáveis com a data ${date}.`);
+  }catch(e){
+    alert("Erro: " + (e?.message || e));
+  }finally{
+    document.getElementById("btnRead").disabled = false;
+    document.getElementById("btnRead").textContent = "Adicionar este PDF ao histórico";
   }
 });
 
 // init
-renderCustomVarsChips();
-refreshVarSelects();
 rebuild();
 </script>
 </body>
