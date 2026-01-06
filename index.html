@@ -1,919 +1,859 @@
-<!doctype html>
+ <!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ExameView — Séries temporais de exames (PDF) + Referências + Histórico</title>
-  <meta name="theme-color" content="#ffffff"/>
+  <title>Leitor de Exames (PDF) — histórico + gráficos por variável</title>
 
+  <!-- UI branca/limpa -->
   <style>
     :root{
       --bg:#f6f7fb;
       --card:#ffffff;
       --stroke:#e7e9f2;
       --txt:#0f172a;
-      --muted:#475569;
-      --muted2:#64748b;
-      --accent:#2563eb;
-      --accent2:#14b8a6;
-      --bad:#ef4444;
+      --muted:#64748b;
+      --brand:#2563eb;
+      --ok:#16a34a;
+      --bad:#dc2626;
       --warn:#f59e0b;
-      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
       --radius: 18px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
-      background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.10), transparent 60%),
-        radial-gradient(900px 500px at 110% 10%, rgba(20,184,166,.10), transparent 55%),
-        var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, #eaf1ff 0%, transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, #e9fff6 0%, transparent 55%),
+                  var(--bg);
       color:var(--txt);
     }
-    .wrap{max-width:1200px;margin:0 auto;padding:18px}
-    .top{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      padding:14px 14px 6px;
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px 60px}
+    header{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+    .title{
+      display:flex;flex-direction:column;gap:6px;
     }
-    .brand{display:flex;gap:12px;align-items:center}
-    .logo{
-      width:44px;height:44px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(20,184,166,.18));
-      border:1px solid var(--stroke);
-      display:grid;place-items:center;
-      box-shadow: var(--shadow);
-    }
-    .logo svg{width:24px;height:24px}
-    h1{margin:0;font-size:18px;letter-spacing:.2px}
-    .sub{margin:4px 0 0;color:var(--muted2);font-size:13px;line-height:1.35}
-
-    .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .chip{
+    h1{margin:0;font-size:22px;letter-spacing:-.02em}
+    .sub{margin:0;color:var(--muted);line-height:1.35}
+    .pill{
       display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;border:1px solid var(--stroke);
-      background:rgba(255,255,255,.9);
-      box-shadow: 0 8px 18px rgba(15,23,42,.06);
-      font-size:12px;color:var(--muted);
-      max-width:100%;
+      background:#fff;border:1px solid var(--stroke);
+      padding:8px 12px;border-radius:999px;color:var(--muted);
+      box-shadow: 0 6px 18px rgba(2,6,23,.05);
+      font-size:13px;
     }
-    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2)}
-    .dot.warn{background:var(--warn)}
-    .dot.bad{background:var(--bad)}
-    .chip b{color:var(--txt);font-weight:800}
-    .chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
-
-    .grid{display:grid;grid-template-columns: 1.0fr 1.0fr; gap:14px}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+    @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr} }
     .card{
       background:var(--card);
       border:1px solid var(--stroke);
       border-radius:var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow:var(--shadow);
       padding:14px;
     }
-    .sectionTitle{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px
+    .card h2{margin:0 0 10px;font-size:16px}
+    .row{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:520px){ .row{grid-template-columns:1fr 1fr} }
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input, select, button, textarea{
+      width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--stroke);
+      background:#fff;color:var(--txt);outline:none;
+      font-size:14px;
     }
-    .sectionTitle h2{margin:0;font-size:14px}
-    .hint{font-size:12px;color:var(--muted2)}
-    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input,select,button,textarea{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--stroke);
-      background:#fff;
-      color:var(--txt);
-      padding:11px 12px;
-      outline:none;
+    input:focus, select:focus, textarea:focus{border-color:#bcd1ff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+    button{
+      cursor:pointer;border:none;background:var(--brand);color:#fff;
+      font-weight:700;
     }
-    input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.45); box-shadow:0 0 0 4px rgba(37,99,235,.10)}
-    input[type="file"]{padding:9px 12px}
-    input::file-selector-button{
-      border:1px solid var(--stroke);
-      background:#fff;
-      color:var(--txt);
-      padding:8px 10px;
-      border-radius:12px;
-      margin-right:10px;
-      cursor:pointer;
+    button.secondary{background:#0f172a}
+    button.ghost{background:#fff;color:var(--txt);border:1px solid var(--stroke)}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:8px}
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kpi{
+      background:#fbfcff;border:1px solid var(--stroke);border-radius:16px;padding:12px;
     }
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width: 520px){.row{grid-template-columns:1fr}}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{cursor:pointer;font-weight:900}
-    .primary{
-      background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(20,184,166,.92));
-      border:0;
-      color:#fff;
-      padding:11px 14px;
+    .kpi .n{font-size:26px;font-weight:900;letter-spacing:-.02em}
+    .kpi .t{font-size:12px;color:var(--muted)}
+    .status{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;
+      border:1px solid var(--stroke);background:#fff;
     }
-    .ghost{
-      background:#fff;
-      border:1px solid var(--stroke);
-      color:var(--txt);
-      padding:11px 14px;
+    .status.ok{color:var(--ok)}
+    .status.bad{color:var(--bad)}
+    .status.na{color:var(--muted)}
+    .bigChart{height:280px}
+    .cardsVar{
+      display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px
     }
-    .danger{
-      background:#fff;
-      border:1px solid rgba(239,68,68,.35);
-      color:#b91c1c;
-      padding:11px 14px;
+    @media(min-width:760px){ .cardsVar{grid-template-columns: 1fr 1fr} }
+    .varCard{
+      border:1px solid var(--stroke);border-radius:18px;padding:12px;background:#fff
     }
+    .varHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .varName{font-weight:900}
+    .varRef{font-size:12px;color:var(--muted)}
+    .varMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .small{font-size:12px;color:var(--muted)}
     .hr{height:1px;background:var(--stroke);margin:12px 0}
-
-    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    @media (max-width: 700px){.kpi{grid-template-columns:1fr}}
-    .k{
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      padding:12px;
-      background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(20,184,166,.04));
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid var(--stroke);border-radius:16px;padding:12px;background:#fff
     }
-    .k b{display:block;font-size:18px}
-    .k span{font-size:12px;color:var(--muted2)}
-
-    canvas{
-      background:#fff;
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      padding:10px;
+    .itemTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .itemTitle{font-weight:900}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .muted{color:var(--muted)}
+    .danger{color:var(--bad);font-weight:800}
+    .okText{color:var(--ok);font-weight:800}
+    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+    .errBox{
+      white-space:pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;color:#991b1b;background:#fff1f2;border:1px solid #fecdd3;
+      padding:10px;border-radius:14px;display:none
     }
-
-    .note{
-      border:1px dashed rgba(37,99,235,.35);
-      background: rgba(37,99,235,.06);
-      border-radius:16px;
-      padding:12px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-    }
-
-    .miniGrid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-    }
-    @media (max-width: 1100px){.miniGrid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width: 680px){.miniGrid{grid-template-columns:1fr}}
-
-    .miniCard{
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      padding:10px;
-      background:#fff;
-    }
-    .miniTop{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-      margin-bottom:6px;
-    }
-    .miniTop b{font-size:13px}
-    .miniTop span{font-size:12px;color:var(--muted2)}
-    .miniBottom{
-      margin-top:6px;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      font-size:12px;color:var(--muted2)
-    }
-    .badge{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:4px 8px;border-radius:999px;border:1px solid var(--stroke);
-      background:#fff;color:var(--muted2);font-size:12px;
-      max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
-    .ok{color:#0f766e;font-weight:900}
-    .bad{color:#b91c1c;font-weight:900}
-    .warn{color:#92400e;font-weight:900}
-
-    textarea{
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      resize:vertical
-    }
-    .historyItem{
-      padding:10px 0;border-bottom:1px solid var(--stroke);
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size:12px;
-    }
-    .historyItem b{
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
-      font-size:13px
-    }
-
-    .footer{
-      margin-top:10px;
-      color:var(--muted2);
-      font-size:12px;
-      text-align:center;
+    .okBox{
+      font-size:12px;color:#14532d;background:#ecfdf5;border:1px solid #bbf7d0;
+      padding:10px;border-radius:14px;display:none
     }
   </style>
 
-  <!-- ✅ PDF.js estável para GitHub Pages + Android -->
-  <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-  <script>
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-  </script>
-
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- PDF.js (v3 legacy) -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M5 13c2-5 6-8 11-9 1 0 2 1 2 2-1 5-4 9-9 11-1 0-2-1-2-2 0-1 0-2-2-2z" stroke="rgba(37,99,235,.9)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M6 17c2-1 4-2 6-4" stroke="rgba(20,184,166,.9)" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <h1>ExameView — Séries temporais</h1>
-          <div class="sub">Importe PDFs de exames e veja <b>tendências ao longo do tempo</b> por variável, com faixas de referência. Histórico fica no seu navegador.</div>
-        </div>
+    <header>
+      <div class="title">
+        <h1>Leitor de Exames (PDF) — histórico + gráficos por variável</h1>
+        <p class="sub">
+          Tudo roda <b>localmente</b> no seu navegador. Nada é enviado para servidor.
+          Ferramenta de visualização (não diagnóstico).
+        </p>
       </div>
-
-      <div class="chips">
-        <div class="chip"><span class="dot" id="dotStatus"></span><b id="status">Pronto</b></div>
-        <div class="chip"><span class="dot warn" id="dotPdf"></span><span id="pdfInfo">PDF: nenhum</span></div>
-      </div>
-    </div>
+      <div class="pill">📌 Dica: se der erro, abra “inspecionar/console” ou veja o bloco “Erro técnico” aqui.</div>
+    </header>
 
     <div class="grid">
-      <!-- ESQUERDA -->
-      <div class="card">
-        <div class="sectionTitle">
-          <h2>1) Paciente + Data + Upload</h2>
-          <span class="hint">Dica: se o PDF não tiver data “legível”, selecione aqui</span>
-        </div>
+      <!-- CONTROLES -->
+      <section class="card">
+        <h2>1) Dados do usuário + upload</h2>
 
         <div class="row">
           <div>
             <label>Nome</label>
-            <input id="nome" placeholder="Ex: Ernandes" autocomplete="name"/>
+            <input id="name" placeholder="Ex: Ernandes" />
           </div>
           <div>
             <label>Idade (anos)</label>
-            <input id="idade" type="number" min="0" max="120" placeholder="Ex: 39" />
+            <input id="age" type="number" min="0" step="1" value="39" />
           </div>
-        </div>
-
-        <div class="row">
           <div>
             <label>Sexo</label>
-            <select id="sexo">
+            <select id="sex">
               <option value="M">Masculino</option>
               <option value="F">Feminino</option>
             </select>
           </div>
           <div>
-            <label>Data do exame (fallback)</label>
-            <input id="dataExame" type="date" />
+            <label>PDF do exame</label>
+            <input id="pdf" type="file" accept="application/pdf" />
           </div>
         </div>
 
-        <label>PDF do exame</label>
-        <input id="pdf" type="file" accept="application/pdf" />
+        <div class="btns" style="margin-top:10px">
+          <button id="btnRead">Ler PDF e adicionar ao histórico</button>
+          <button id="btnExport" class="ghost" type="button">Exportar histórico (JSON)</button>
+          <button id="btnClear" class="secondary" type="button">Zerar histórico</button>
+        </div>
 
-        <div class="btns">
-          <button class="primary" id="btnImportar">Importar e atualizar séries</button>
-          <button class="ghost" id="btnExport">Exportar histórico (JSON)</button>
-          <button class="danger" id="btnClear">Apagar histórico</button>
+        <div class="hint">
+          • A data usada para o eixo do tempo é sempre: <b>Data e Hora de Coleta</b> (quando existir).<br/>
+          • Se o PDF for “escaneado imagem”, pode não ter texto extraível sem OCR.
         </div>
 
         <div class="hr"></div>
 
-        <div class="note">
-          <b>Importante (referências):</b> hemograma e metas podem variar por laboratório e contexto clínico.
-          Aqui é visualização. Se você quiser 100% fiel ao “valor de referência do laudo”, dá pra evoluir
-          para extrair as referências do próprio PDF (mais regex).
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="sectionTitle">
-          <h2>2) Diagnóstico técnico</h2>
-          <span class="hint">Se algum item não reconhecer, me mande o texto extraído</span>
-        </div>
-
-        <label>Erro (se houver)</label>
-        <textarea id="errbox" rows="3" placeholder="Aqui aparece o erro real…"></textarea>
-
-        <label>Texto extraído do PDF</label>
-        <textarea id="raw" rows="10" placeholder="Aqui vai aparecer o texto extraído…"></textarea>
-      </div>
-
-      <!-- DIREITA -->
-      <div class="card">
-        <div class="sectionTitle">
-          <h2>Visão geral (série temporal)</h2>
-          <span class="hint" id="metaRun">—</span>
-        </div>
-
+        <h2>2) Entrada manual (opcional)</h2>
         <div class="row">
           <div>
-            <label>Variável para o gráfico grande</label>
-            <select id="varSelect"></select>
+            <label>Variável</label>
+            <select id="manualVar"></select>
           </div>
           <div>
-            <label>Escala</label>
-            <select id="scaleSelect">
-              <option value="auto" selected>Automática</option>
-              <option value="ref">Focar na referência</option>
-            </select>
+            <label>Data</label>
+            <input id="manualDate" type="date" />
+          </div>
+          <div>
+            <label>Valor</label>
+            <input id="manualValue" type="number" step="any" />
+          </div>
+          <div>
+            <label>Unidade (opcional)</label>
+            <input id="manualUnit" placeholder="mg/dL, U/L, %, fL..." />
+          </div>
+        </div>
+        <div class="btns" style="margin-top:10px">
+          <button id="btnManual" class="ghost" type="button">Adicionar valor manual ao histórico</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2>3) Diagnóstico técnico (para ajustar)</h2>
+        <div id="okBox" class="okBox"></div>
+        <div id="errBox" class="errBox"></div>
+        <label style="margin-top:10px">Texto extraído do PDF (debug)</label>
+        <textarea id="raw" rows="7" placeholder="Aqui vai aparecer o texto extraído..."></textarea>
+      </section>
+
+      <!-- RESULTADOS -->
+      <section class="card">
+        <h2>Painel</h2>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="n" id="kpiPoints">0</div>
+            <div class="t">Pontos (medidas)</div>
+          </div>
+          <div class="kpi">
+            <div class="n" id="kpiDates">0</div>
+            <div class="t">Datas registradas</div>
           </div>
         </div>
 
-        <div class="kpi" style="margin-top:10px">
-          <div class="k"><b id="k_vars">—</b><span>Variáveis no histórico</span></div>
-          <div class="k"><b id="k_points">—</b><span>Pontos (medidas)</span></div>
-          <div class="k"><b id="k_dates">—</b><span>Datas registradas</span></div>
-        </div>
+        <div class="hr"></div>
+
+        <h2>Tendência por variável (mini-gráficos)</h2>
+        <div class="hint">Cada card é uma variável. As referências aparecem como linhas tracejadas (mín/máx).</div>
+        <div id="vars" class="cardsVar"></div>
 
         <div class="hr"></div>
 
-        <canvas id="bigChart" height="260"></canvas>
+        <h2>Histórico bruto</h2>
+        <div class="hint">salvo no <b>localStorage</b> do seu dispositivo</div>
+        <div id="history" class="list"></div>
 
-        <div class="hr"></div>
-
-        <div class="sectionTitle">
-          <h2>Mini-gráficos por variável</h2>
-          <span class="hint">um card por variável (tendência)</span>
-        </div>
-        <div id="miniGrid" class="miniGrid"></div>
-
-        <div class="hr"></div>
-
-        <div class="sectionTitle">
-          <h2>Histórico bruto</h2>
-          <span class="hint">salvo no localStorage</span>
-        </div>
-        <div id="hist" style="max-height:220px;overflow:auto;border:1px solid var(--stroke);border-radius:16px;padding:10px;background:#fff;">
-          —
-        </div>
-      </div>
+        <footer>ExameView • Visualização local • Não substitui orientação médica.</footer>
+      </section>
     </div>
-
-    <div class="footer">ExameView • Visualização local • Não substitui orientação médica.</div>
   </div>
 
 <script>
 /* =========================
-   Referências (adulto, simplificado)
-   - HDL: só mínimo (sem máximo)
-   - LDL: depende do risco. Aqui: alvo baixo risco <115 (como no seu relatório)
-   - Hemograma: faixas comuns (podem variar por lab).
+   CONFIG / “CATÁLOGO” DE VARIÁVEIS
    ========================= */
-function refs(ctx){
-  const sexo = ctx.sexo;
+const VARS = [
+  // Lipídios / enzimas
+  { key:"Colesterol Total", unit:"mg/dL", ref: { type:"max", getMax: ()=>190 } },
+  { key:"HDL", unit:"mg/dL", ref: { type:"minBySex", getMin: (sex)=> sex==="M" ? 40 : 50 } },
+  // LDL depende de risco; como não temos, deixamos “meta típica baixo risco” como max 115
+  { key:"LDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>115, note:"Meta típica baixo risco (<115). Depende do risco." } },
+  { key:"VLDL", unit:"mg/dL", ref: { type:"range", min:0, max:30 } },
+  { key:"Triglicérides", unit:"mg/dL", ref: { type:"max", getMax: ()=>150 } },
+  { key:"Não-HDL", unit:"mg/dL", ref: { type:"max", getMax: ()=>145 } },
 
-  const HGB = (sexo==="M") ? {min:13.0, max:18.0, text:"Homens: 13–18 g/dL"} : {min:12.0, max:16.0, text:"Mulheres: 12–16 g/dL"};
-  const HCT = (sexo==="M") ? {min:40, max:54, text:"Homens: 40–54 %"} : {min:36, max:48, text:"Mulheres: 36–48 %"};
-  const RBC = (sexo==="M") ? {min:4.5, max:6.0, text:"Homens: 4,5–6,0 mi/mm³"} : {min:4.0, max:5.4, text:"Mulheres: 4,0–5,4 mi/mm³"};
+  { key:"TGO (AST)", unit:"U/L", ref: { type:"max", getMax: ()=>40 } },
+  { key:"TGP (ALT)", unit:"U/L", ref: { type:"maxBySex", getMax: (sex)=> sex==="M" ? 50 : 40 } },
 
-  return {
-    "Colesterol Total": {unit:"mg/dL", min:0, max:190, text:"Desejável < 190"},
-    "HDL": {unit:"mg/dL", min:(sexo==="M"?40:50), max:null, text:(sexo==="M"?"Homens: ≥ 40":"Mulheres: ≥ 50")},
-    "LDL": {unit:"mg/dL", min:0, max:115, text:"Meta típica baixo risco < 115 (depende do risco)"},
-    "VLDL": {unit:"mg/dL", min:0, max:30, text:"Geral: 0–30"},
-    "Triglicerídeos": {unit:"mg/dL", min:0, max:150, text:"Desejável < 150"},
-    "TGO (AST)": {unit:"U/L", min:0, max:40, text:"Até 40"},
-    "TGP (ALT)": {unit:"U/L", min:0, max:(sexo==="M"?50:40), text:(sexo==="M"?"Homens: até 50":"Mulheres: até 40")},
+  // Hemograma (principais)
+  { key:"Hemácias", unit:"milh./mm³", ref: { type:"rangeBySex", M:{min:4.50,max:6.00}, F:{min:4.20,max:5.40} } },
+  { key:"Hemoglobina", unit:"g/dL", ref: { type:"rangeBySex", M:{min:13.00,max:18.60}, F:{min:12.00,max:15.50} } },
+  { key:"Hematócrito", unit:"%", ref: { type:"rangeBySex", M:{min:40,max:56}, F:{min:36,max:46} } },
+  { key:"VGM", unit:"fL", ref: { type:"range", min:80, max:98 } },
+  { key:"HGM", unit:"pg", ref: { type:"rangeBySex", M:{min:28,max:32}, F:{min:27,max:31} } },
+  { key:"CHCM", unit:"%", ref: { type:"range", min:32, max:36 } },
+  { key:"RDW", unit:"%", ref: { type:"range", min:11, max:14 } },
 
-    // Hemograma (básico)
-    "Hemácias": {unit:"mi/mm³", ...RBC},
-    "Hemoglobina": {unit:"g/dL", ...HGB},
-    "Hematócrito": {unit:"%", ...HCT},
-    "VCM": {unit:"fL", min:80, max:100, text:"80–100 fL"},
-    "HCM": {unit:"pg", min:27, max:33, text:"27–33 pg"},
-    "CHCM": {unit:"g/dL", min:32, max:36, text:"32–36 g/dL"},
-    "RDW": {unit:"%", min:11, max:15, text:"11–15 %"},
-    "Leucócitos": {unit:"/mm³", min:4000, max:11000, text:"4.000–11.000 /mm³"},
-    "Plaquetas": {unit:"/mm³", min:140000, max:450000, text:"140.000–450.000 /mm³"},
-    "VPM": {unit:"fL", min:7.5, max:12.5, text:"7,5–12,5 fL"},
+  { key:"Leucócitos", unit:"/mm³", ref: { type:"range", min:4500, max:10000 } },
+  { key:"Segmentados (%)", unit:"%", ref: { type:"range", min:49, max:64 } },
+  { key:"Segmentados (abs)", unit:"/mm³", ref: { type:"range", min:2205, max:7000 } },
+  { key:"Eosinófilos (%)", unit:"%", ref: { type:"range", min:1, max:4 } },
+  { key:"Eosinófilos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:400 } },
+  { key:"Linfócitos (%)", unit:"%", ref: { type:"range", min:20, max:35 } },
+  { key:"Linfócitos (abs)", unit:"/mm³", ref: { type:"range", min:900, max:3500 } },
+  { key:"Monócitos (%)", unit:"%", ref: { type:"range", min:1, max:8 } },
+  { key:"Monócitos (abs)", unit:"/mm³", ref: { type:"range", min:45, max:800 } },
 
-    // Diferencial (%) — valores típicos adultos
-    "Neutrófilos (%)": {unit:"%", min:40, max:74, text:"40–74 %"},
-    "Linfócitos (%)": {unit:"%", min:20, max:45, text:"20–45 %"},
-    "Monócitos (%)": {unit:"%", min:2, max:10, text:"2–10 %"},
-    "Eosinófilos (%)": {unit:"%", min:0, max:6, text:"0–6 %"},
-    "Basófilos (%)": {unit:"%", min:0, max:2, text:"0–2 %"},
-  };
+  { key:"Plaquetas", unit:"/mm³", ref: { type:"range", min:140000, max:400000 } },
+  { key:"VPM", unit:"fL", ref: { type:"range", min:9.4, max:12.4 } },
+];
+
+// preenchimento do select manual
+const manualVar = document.getElementById('manualVar');
+VARS.forEach(v=>{
+  const opt=document.createElement('option');
+  opt.value=v.key;
+  opt.textContent=`${v.key} (${v.unit || "-"})`;
+  manualVar.appendChild(opt);
+});
+
+function getVarMeta(key){
+  return VARS.find(v=>v.key===key) || {key, unit:"", ref:{type:"none"}};
 }
 
 /* =========================
-   Regex: captura valores
-   - Ajuste conforme seu PDF se precisar
+   STORAGE
    ========================= */
-const PATTERNS = [
-  // Lipídios
-  { name:"Colesterol Total", re:/Colesterol\s*Total[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
-  { name:"HDL",             re:/Colesterol\s*H\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
-  { name:"LDL",             re:/Colesterol\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
-  { name:"VLDL",            re:/Colesterol\s*V\s*L\s*D\s*L[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
-  { name:"Triglicerídeos",  re:/Triglicer[ií]deos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*mg\/dL/i },
+const LS_KEY = "exameview_history_v2";
 
-  // Enzimas
-  { name:"TGO (AST)",       re:/TGO[^]*?Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i },
-  { name:"TGP (ALT)",       re:/TGP[^]*?Resultado[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*U\/L/i },
-
-  // Hemograma (vários labs mudam pontuação; aqui está flexível)
-  { name:"Hemácias",        re:/Hem[aá]cias[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*(?:milh|mi)?/i },
-  { name:"Hemoglobina",     re:/Hemoglobina[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i },
-  { name:"Hematócrito",     re:/Hemat[oó]crito[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-  { name:"VCM",             re:/V\.?\s*G\.?\s*M\.?[^0-9]*([0-9]+(?:[.,][0-9]+)?)|VCM[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i, pick:2 },
-  { name:"HCM",             re:/H\.?\s*G\.?\s*M\.?[^0-9]*([0-9]+(?:[.,][0-9]+)?)|HCM[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i, pick:2 },
-  { name:"CHCM",            re:/C\.?\s*H\.?\s*G\.?\s*M\.?[^0-9]*([0-9]+(?:[.,][0-9]+)?)|CHCM[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i, pick:2 },
-  { name:"RDW",             re:/R\.?\s*D\.?\s*W\.?[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%|RDW[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i, pick:2 },
-
-  { name:"Leucócitos",      re:/Leuc[oó]citos[^0-9]*([0-9]{1,3}(?:[.,]?[0-9]{3})*)/i },
-  { name:"Plaquetas",       re:/Plaquetas[^0-9]*([0-9]{1,3}(?:[.,]?[0-9]{3})*)/i },
-  { name:"VPM",             re:/Volume\s+plaquet[aá]rio\s+m[eé]dio[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*fL|VPM[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*fL/i, pick:2 },
-
-  // Diferencial (%) – tenta pegar o primeiro número após o nome
-  { name:"Neutrófilos (%)", re:/(?:Segmentados|Neutr[oó]filos)[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-  { name:"Linfócitos (%)",  re:/Linf[oó]citos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-  { name:"Monócitos (%)",   re:/Mon[oó]citos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-  { name:"Eosinófilos (%)", re:/Eosin[oó]filos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-  { name:"Basófilos (%)",   re:/Bas[oó]filos[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*%/i },
-];
-
-const LS_KEY = "exameview_timeseries_v1";
-
-function $(id){ return document.getElementById(id); }
-function toNumber(x){
-  if (x==null) return null;
-  // troca separador decimal e remove milhar
-  const s = String(x).trim().replace(/\./g,"").replace(",",".");
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+  catch{ return []; }
 }
-function setTopStatus(text, kind="ok"){
-  $("status").textContent = text;
-  const dot = $("dotStatus");
-  dot.classList.remove("warn","bad");
-  if (kind==="warn") dot.classList.add("warn");
-  if (kind==="bad") dot.classList.add("bad");
-}
-function setPdfInfo(text, kind="warn"){
-  $("pdfInfo").textContent = text;
-  const dot = $("dotPdf");
-  dot.classList.remove("warn","bad");
-  if (kind==="warn") dot.classList.add("warn");
-  if (kind==="bad") dot.classList.add("bad");
-}
-function fmtDateISO(iso){
-  try{
-    const d = new Date(iso);
-    return d.toLocaleDateString();
-  }catch{ return iso; }
+function saveHistory(arr){
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
 }
 
-async function extractTextFromPdf(file){
-  const data = new Uint8Array(await file.arrayBuffer());
-  const task = pdfjsLib.getDocument({ data });
-  const pdf = await task.promise;
+function nowIso(){
+  return new Date().toISOString();
+}
 
-  let full = "";
-  for (let i=1; i<=pdf.numPages; i++){
-    const page = await pdf.getPage(i);
+/* =========================
+   PDF EXTRACT
+   ========================= */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+async function readPdfText(file){
+  const ab = await file.arrayBuffer();
+  const doc = await pdfjsLib.getDocument({data: ab}).promise;
+  let full="";
+  for (let p=1; p<=doc.numPages; p++){
+    const page = await doc.getPage(p);
     const content = await page.getTextContent();
-    full += content.items.map(it=>it.str).join(" ") + "\n";
+    const strings = content.items.map(it => it.str);
+    full += "\n\n---PAGE " + p + "---\n" + strings.join(" ");
   }
   return full;
 }
 
-/* tenta achar data no texto: dd/mm/aaaa */
-function extractDateFromText(text){
-  // exemplos: "Impressão: 05/01/2026", "Data de Entrada: 04/07/2025"
-  const m = text.match(/\b([0-3]?\d)\/([01]?\d)\/(\d{4})\b/);
+// pega a data de coleta corretamente (e NÃO confunde com Data Nasc.)
+function parseCollectionDate(text){
+  // prioridade 1: Data e Hora de Coleta: DD/MM/YYYY
+  const m1 = text.match(/Data\s*e\s*Hora\s*de\s*Coleta:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m1) return m1[1];
+
+  // fallback 2: Data de Entrada
+  const m2 = text.match(/Data\s*de\s*Entrada:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m2) return m2[1];
+
+  // fallback 3: Impressão
+  const m3 = text.match(/Impress[aã]o:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m3) return m3[1];
+
+  // último fallback: primeira data que NÃO esteja colada em "Data Nasc"
+  const all = [...text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map(x=>x[1]);
+  for (const d of all){
+    const idx = text.indexOf(d);
+    const ctx = text.slice(Math.max(0, idx-20), idx+20);
+    if (!/Data\s*Nasc/i.test(ctx)) return d;
+  }
+  return null;
+}
+
+function parseNumberPt(s){
+  if (s==null) return null;
+  // 17,70 -> 17.70 ; 5.740 -> 5740 ; 216,000 -> 216000
+  let t = String(s).trim();
+  // remove separador de milhar "."
+  t = t.replace(/\.(?=\d{3}\b)/g, "");
+  // vírgula decimal -> ponto
+  t = t.replace(",", ".");
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+
+/* =========================
+   PARSERS (modelo São Matheus - parecido com seu PDF)
+   ========================= */
+function parseKeyValue(text, keyRegex){
+  const m = text.match(keyRegex);
   if (!m) return null;
-  const [_, dd, mm, yyyy] = m;
-  const iso = `${yyyy}-${String(mm).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
-  return iso;
+  return parseNumberPt(m[1]);
 }
 
-function detectMeasures(text, ctx){
-  const refMap = refs(ctx);
-  const measures = [];
+function parseExamValues(text){
+  const values = {};
 
-  for (const p of PATTERNS){
-    const m = text.match(p.re);
-    if (!m) continue;
+  // Lipídios (linha única)
+  values["Colesterol Total"] = parseKeyValue(text, /Colesterol\s*Total:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["HDL"] = parseKeyValue(text, /Colesterol\s*H\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["LDL"] = parseKeyValue(text, /Colesterol\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["VLDL"] = parseKeyValue(text, /Colesterol\s*V\s*L\s*D\s*L:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["Triglicérides"] = parseKeyValue(text, /Triglic[eé]rides:\s*([0-9\.,]+)\s*mg\/dL/i);
+  values["Não-HDL"] = parseKeyValue(text, /Colesterol\s*N[aã]o-?HDL:\s*([0-9\.,]+)\s*mg\/dL/i);
 
-    // alguns regex têm dois grupos alternativos -> pick
-    let raw = null;
-    if (p.pick === 2){
-      raw = m[1] ?? m[2];
-    } else {
-      raw = m[1];
-    }
+  // TGO/TGP
+  values["TGO (AST)"] = parseKeyValue(text, /TGO[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
+  values["TGP (ALT)"] = parseKeyValue(text, /TGP[^]*?Resultado:\s*([0-9\.,]+)\s*U\/L/i);
 
-    const value = toNumber(raw);
-    if (value==null) continue;
+  // Hemograma série vermelha
+  values["Hemácias"] = parseKeyValue(text, /Hem[aá]cias\.*\s*([0-9\.,]+)\s*milh/i);
+  values["Hemoglobina"] = parseKeyValue(text, /Hemoglobina\.*\s*([0-9\.,]+)\s*g\/dl/i);
+  values["Hematócrito"] = parseKeyValue(text, /Hematocrito\.*\s*([0-9\.,]+)\s*%/i);
+  values["VGM"] = parseKeyValue(text, /V\.?G\.?M\.*\s*([0-9\.,]+)\s*(u3|fL)?/i);
+  values["HGM"] = parseKeyValue(text, /H\.?G\.?M\.*\s*([0-9\.,]+)\s*pg/i);
+  values["CHCM"] = parseKeyValue(text, /C\.?H\.?G\.?M\.*\s*([0-9\.,]+)\s*%/i);
+  values["RDW"] = parseKeyValue(text, /R\.?D\.?W\.*\s*([0-9\.,]+)\s*%/i);
 
-    const ref = refMap[p.name];
-    measures.push({
-      name: p.name,
-      value,
-      unit: ref?.unit || ""
-    });
+  // Série branca (tem % e absoluto na mesma linha)
+  // Segmentados: "72 4.133"
+  let mSeg = text.match(/Segmentados\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mSeg){ values["Segmentados (%)"]=parseNumberPt(mSeg[1]); values["Segmentados (abs)"]=parseNumberPt(mSeg[2]); }
+
+  let mEos = text.match(/Eosinofilos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mEos){ values["Eosinófilos (%)"]=parseNumberPt(mEos[1]); values["Eosinófilos (abs)"]=parseNumberPt(mEos[2]); }
+
+  let mLinf = text.match(/Linfocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mLinf){ values["Linfócitos (%)"]=parseNumberPt(mLinf[1]); values["Linfócitos (abs)"]=parseNumberPt(mLinf[2]); }
+
+  let mMono = text.match(/Monocitos\.*\s*([0-9\.,]+)\s+([0-9\.,]+)/i);
+  if (mMono){ values["Monócitos (%)"]=parseNumberPt(mMono[1]); values["Monócitos (abs)"]=parseNumberPt(mMono[2]); }
+
+  values["Leucócitos"] = parseKeyValue(text, /Leuc[oó]citos\.*\s*([0-9\.,]+)/i);
+  values["Plaquetas"] = parseKeyValue(text, /Contagem\s*de\s*plaquetas\.*\s*([0-9\.,]+)/i);
+  values["VPM"] = parseKeyValue(text, /Volume\s*plaquet[aá]rio\s*m[eé]dio\.*\s*([0-9\.,]+)\s*fL/i);
+
+  // limpa nulls
+  Object.keys(values).forEach(k=>{
+    if (values[k]==null || Number.isNaN(values[k])) delete values[k];
+  });
+
+  return values;
+}
+
+/**
+ * BÔNUS: lê "Data Resultado anterior" de colesterol e cria pontos históricos para
+ * Colesterol Total/HDL/LDL/VLDL/Triglicérides/Não-HDL.
+ * Se não achar, retorna [].
+ */
+function parseLipidHistory(text){
+  // datas: "Data Resultado anterior...... 02/12/2025 04/07/2025 ..."
+  const mDates = text.match(/Data\s*Resultado\s*anterior[^0-9]*(.*)/i);
+  if (!mDates) return [];
+  const dates = (mDates[1].match(/\d{2}\/\d{2}\/\d{4}/g) || []);
+  if (!dates.length) return [];
+
+  function rowValues(label){
+    const re = new RegExp(label + "[^0-9]*([0-9\\s\\.,]+)", "i");
+    const m = text.match(re);
+    if (!m) return [];
+    const nums = (m[1].match(/[0-9\.,]+/g) || []).map(parseNumberPt).filter(n=>n!=null);
+    return nums;
   }
 
-  // remove duplicados (pega primeiro)
-  const seen = new Set();
-  return measures.filter(x => (seen.has(x.name) ? false : (seen.add(x.name), true)));
-}
-
-/* status vs referência */
-function statusFor(name, value, ctx){
-  const r = refs(ctx)[name];
-  if (!r) return {label:"sem ref.", cls:"warn", refText:"—", min:null, max:null};
-
-  const min = (typeof r.min === "number") ? r.min : null;
-  const max = (typeof r.max === "number") ? r.max : null;
-
-  let ok = true;
-  if (min!=null && value < min) ok = false;
-  if (max!=null && value > max) ok = false;
-
-  return {
-    label: ok ? "dentro" : "fora",
-    cls: ok ? "ok" : "bad",
-    refText: r.text || "—",
-    min, max, unit: r.unit || ""
+  const rows = {
+    "Colesterol Total": rowValues("Colesterol\\s*Total"),
+    "HDL": rowValues("Colesterol\\s*HDL"),
+    "LDL": rowValues("Colesterol\\s*LDL"),
+    "VLDL": rowValues("Colesterol\\s*VLDL"),
+    "Triglicérides": rowValues("Triglic[eé]rides"),
+    "Não-HDL": rowValues("Colesterol\\s*N[aã]o-?HDL")
   };
+
+  const points=[];
+  for (let i=0;i<dates.length;i++){
+    const values={}
+    for (const k of Object.keys(rows)){
+      if (rows[k][i]!=null) values[k]=rows[k][i];
+    }
+    if (Object.keys(values).length){
+      points.push({ date: dates[i], values, source:"Tabela de resultados anteriores" });
+    }
+  }
+  return points;
 }
 
 /* =========================
-   Persistência / modelagem
-   Armazenamento:
-   {
-     patient: {nome, sexo, idade},
-     series: {
-       "Hemoglobina": [ {dateISO, value, file} , ...],
-       ...
-     },
-     imports: [ {ts, dateISO, file, count}, ... ]
-   }
+   REF + STATUS
    ========================= */
-function loadDB(){
-  return JSON.parse(localStorage.getItem(LS_KEY) || '{"patient":null,"series":{},"imports":[]}');
+function refMinMax(varKey, sex){
+  const meta = getVarMeta(varKey);
+  const r = meta.ref || {type:"none"};
+
+  if (r.type==="range") return {min:r.min, max:r.max, note:r.note};
+  if (r.type==="max") return {min:null, max:r.getMax(sex), note:r.note};
+  if (r.type==="minBySex") return {min:r.getMin(sex), max:null, note:r.note};
+  if (r.type==="maxBySex") return {min:null, max:r.getMax(sex), note:r.note};
+  if (r.type==="rangeBySex"){
+    const rr = r[sex] || r.M;
+    return {min:rr?.min ?? null, max:rr?.max ?? null, note:r.note};
+  }
+  return {min:null, max:null, note:r.note};
 }
-function saveDB(db){
-  localStorage.setItem(LS_KEY, JSON.stringify(db));
-}
 
-/* merge por variável + data (se já existe, substitui valor) */
-function upsertMeasure(db, varName, point){
-  db.series[varName] = db.series[varName] || [];
-  const arr = db.series[varName];
-
-  const idx = arr.findIndex(p => p.dateISO === point.dateISO);
-  if (idx >= 0) arr[idx] = point;
-  else arr.push(point);
-
-  // ordena por data
-  arr.sort((a,b)=> a.dateISO.localeCompare(b.dateISO));
+function statusFor(value, ref){
+  const {min,max} = ref;
+  if (value==null) return {label:"—", cls:"na"};
+  if (min!=null && value < min) return {label:"Fora", cls:"bad"};
+  if (max!=null && value > max) return {label:"Fora", cls:"bad"};
+  return {label:"Dentro", cls:"ok"};
 }
 
 /* =========================
-   UI + Charts
+   RENDER
    ========================= */
-let bigChart = null;
-const miniCharts = new Map(); // varName -> Chart instance
+const elPoints = document.getElementById('kpiPoints');
+const elDates = document.getElementById('kpiDates');
+const elVars = document.getElementById('vars');
+const elHist = document.getElementById('history');
+const elRaw = document.getElementById('raw');
+const errBox = document.getElementById('errBox');
+const okBox = document.getElementById('okBox');
 
-function computeStats(db){
-  const vars = Object.keys(db.series);
-  const points = vars.reduce((acc,v)=>acc + (db.series[v]?.length || 0), 0);
-  const datesSet = new Set();
-  for (const v of vars){
-    for (const p of db.series[v] || []) datesSet.add(p.dateISO);
-  }
-  return {varsCount: vars.length, pointsCount: points, datesCount: datesSet.size};
+let charts = new Map(); // key -> Chart instance
+
+function destroyCharts(){
+  for (const c of charts.values()) c.destroy();
+  charts.clear();
 }
 
-function setMeta(patient){
-  const now = new Date();
-  $("metaRun").textContent = patient
-    ? `${patient.nome} • ${patient.sexo} • ${patient.idade} anos • atualizado ${now.toLocaleString()}`
-    : `—`;
+function ddmmyyyyToISO(d){
+  // "05/01/2026" -> "2026-01-05"
+  const [dd,mm,yyyy]=d.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function isoToLabel(iso){
+  // "2026-01-05" -> "05/01/2026"
+  const [y,m,d]=iso.split("-");
+  return `${d}/${m}/${y}`;
 }
 
-function rebuildVarSelect(db){
-  const sel = $("varSelect");
-  const vars = Object.keys(db.series).sort((a,b)=>a.localeCompare(b, "pt-BR"));
-  sel.innerHTML = vars.map(v => `<option value="${v}">${v}</option>`).join("");
+function rebuild(){
+  const hist = loadHistory().sort((a,b)=> (ddmmyyyyToISO(a.date) > ddmmyyyyToISO(b.date) ? 1 : -1));
 
-  // default: colesterol total se existir
-  if (vars.includes("Colesterol Total")) sel.value = "Colesterol Total";
-}
+  // KPIs
+  const allDates = new Set(hist.map(h=>h.date));
+  let points=0;
+  hist.forEach(h=> points += Object.keys(h.values||{}).length);
+  elPoints.textContent = points;
+  elDates.textContent = allDates.size;
 
-function makeBigChart(db, ctx){
-  const varName = $("varSelect").value;
-  const series = db.series[varName] || [];
-  const labels = series.map(p=>p.dateISO);
-  const values = series.map(p=>p.value);
+  // HISTÓRICO
+  elHist.innerHTML="";
+  hist.slice().reverse().forEach(h=>{
+    const div=document.createElement('div');
+    div.className="item";
+    const top=document.createElement('div');
+    top.className="itemTop";
+    top.innerHTML = `
+      <div class="itemTitle">${escapeHtml(h.name || "Sem nome")} <span class="muted">(${h.sex}, ${h.age}a)</span> — <span class="mono">${h.date}</span></div>
+      <div class="muted">${escapeHtml(h.source || "PDF")}</div>
+    `;
+    const body=document.createElement('div');
+    body.className="mono muted";
+    body.style.marginTop="8px";
+    body.textContent = Object.entries(h.values||{}).map(([k,v])=>`${k}:${v}`).join("  |  ");
+    div.appendChild(top); div.appendChild(body);
+    elHist.appendChild(div);
+  });
 
-  const st = (refs(ctx)[varName] || {});
-  const min = (typeof st.min === "number") ? st.min : null;
-  const max = (typeof st.max === "number") ? st.max : null;
-
-  const minLine = labels.map(()=>min);
-  const maxLine = labels.map(()=>max);
-
-  // escala
-  const mode = $("scaleSelect").value;
-  let suggestedMin = undefined, suggestedMax = undefined;
-
-  if (mode === "ref" && (min!=null || max!=null)){
-    const pad = 0.08;
-    const lo = (min!=null) ? min : Math.min(...values);
-    const hi = (max!=null) ? max : Math.max(...values);
-    const span = (hi-lo) || 1;
-    suggestedMin = lo - span*pad;
-    suggestedMax = hi + span*pad;
-  }
-
-  const c = $("bigChart").getContext("2d");
-  if (bigChart) bigChart.destroy();
-
-  const datasets = [
-    { label: varName, data: values, tension:.25 },
-  ];
-
-  // só plota ref se existir
-  if (min!=null) datasets.push({ label:"Ref. mínima", data:minLine, tension:0 });
-  if (max!=null) datasets.push({ label:"Ref. máxima", data:maxLine, tension:0 });
-
-  bigChart = new Chart(c, {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      responsive:true,
-      plugins:{
-        legend:{ position:"bottom" },
-        tooltip:{ callbacks:{
-          label:(ctx2)=>{
-            const lab = ctx2.dataset.label;
-            const v = ctx2.raw;
-            const unit = refs(ctx)[varName]?.unit || "";
-            return `${lab}: ${v}${unit?(" "+unit):""}`;
-          }
-        }}
-      },
-      scales:{
-        y:{
-          suggestedMin,
-          suggestedMax
-        }
-      }
+  // AGREGA por variável
+  const series = new Map(); // varKey -> [{dateISO,value}]
+  hist.forEach(h=>{
+    const iso = ddmmyyyyToISO(h.date);
+    for (const [k,v] of Object.entries(h.values||{})){
+      if (!series.has(k)) series.set(k, []);
+      series.get(k).push({x: iso, y: v, sex: h.sex});
     }
   });
-}
-
-function renderMiniGrid(db, ctx){
-  const grid = $("miniGrid");
-  grid.innerHTML = "";
-
-  const vars = Object.keys(db.series).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  if (!vars.length){
-    grid.innerHTML = `<div class="note">Ainda não há séries. Importe um PDF.</div>`;
-    return;
+  for (const arr of series.values()){
+    arr.sort((a,b)=> a.x.localeCompare(b.x));
   }
 
-  for (const v of vars){
-    const id = "mini_" + v.replace(/[^a-zA-Z0-9]+/g,"_");
-    const series = db.series[v] || [];
-    const last = series[series.length-1];
+  // RENDER VAR CARDS
+  destroyCharts();
+  elVars.innerHTML="";
 
-    const unit = refs(ctx)[v]?.unit || "";
-    const st = last ? statusFor(v, last.value, ctx) : null;
+  // lista ordenada por nome
+  const keys = [...series.keys()].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  keys.forEach(varKey=>{
+    const meta = getVarMeta(varKey);
+    const ref = refMinMax(varKey, document.getElementById('sex').value);
+    const unit = meta.unit ? ` ${meta.unit}` : "";
 
-    const card = document.createElement("div");
-    card.className = "miniCard";
+    const data = series.get(varKey) || [];
+    const last = data[data.length-1];
+    const lastVal = last?.y ?? null;
+    const st = statusFor(lastVal, ref);
+
+    const card=document.createElement('div');
+    card.className="varCard";
     card.innerHTML = `
-      <div class="miniTop">
+      <div class="varHead">
         <div>
-          <b>${v}</b><br/>
-          <span>${refs(ctx)[v]?.text || "—"}</span>
+          <div class="varName">${escapeHtml(varKey)}</div>
+          <div class="varRef">${formatRefLine(ref, meta, document.getElementById('sex').value)}</div>
         </div>
-        <div style="text-align:right">
-          <span class="badge">${series.length} pts</span>
-        </div>
+        <span class="status ${st.cls}">${st.label}</span>
       </div>
-      <canvas id="${id}" height="110"></canvas>
-      <div class="miniBottom">
-        <div>
-          <span>Último:</span>
-          <b>${last ? (last.value + (unit?(" "+unit):"")) : "—"}</b>
-          <span style="margin-left:8px">${last ? ("em "+fmtDateISO(last.dateISO)) : ""}</span>
-        </div>
-        <div class="${st ? st.cls : 'warn'}">${st ? st.label : "—"}</div>
+      <div style="height:150px;margin-top:10px">
+        <canvas id="c_${hashKey(varKey)}"></canvas>
+      </div>
+      <div class="varMeta">
+        <div class="small"><b>Último:</b> ${lastVal!=null ? lastVal + unit : "—"} <span class="muted">em ${last?.x ? isoToLabel(last.x) : "—"}</span></div>
       </div>
     `;
-    grid.appendChild(card);
+    elVars.appendChild(card);
 
-    // cria/atualiza chart mini
-    const labels = series.map(p=>p.dateISO);
-    const values = series.map(p=>p.value);
+    // datasets: valor + refMin + refMax (tracejadas)
+    const labels = data.map(p=>p.x);
+    const values = data.map(p=>p.y);
 
-    const r = refs(ctx)[v] || {};
-    const min = (typeof r.min === "number") ? r.min : null;
-    const max = (typeof r.max === "number") ? r.max : null;
-    const minLine = labels.map(()=>min);
-    const maxLine = labels.map(()=>max);
+    const refMin = (ref.min!=null) ? labels.map(()=>ref.min) : null;
+    const refMax = (ref.max!=null) ? labels.map(()=>ref.max) : null;
 
-    const c = document.getElementById(id).getContext("2d");
-    const old = miniCharts.get(v);
-    if (old) old.destroy();
+    const ctx = card.querySelector("canvas").getContext("2d");
+    const ds = [{
+      label: "Valor",
+      data: data,
+      tension: 0.25,
+      pointRadius: 3,
+      borderWidth: 2
+    }];
 
-    const datasets = [
-      { label: v, data: values, tension:.25, pointRadius:2 },
-    ];
-    if (min!=null) datasets.push({ label:"min", data:minLine, tension:0, pointRadius:0 });
-    if (max!=null) datasets.push({ label:"max", data:maxLine, tension:0, pointRadius:0 });
+    if (refMin){
+      ds.push({
+        label:"Ref. mínima",
+        data: labels.map((x,i)=>({x, y: ref.min})),
+        borderDash:[6,6],
+        pointRadius:0,
+        borderWidth:2
+      });
+    }
+    if (refMax){
+      ds.push({
+        label:"Ref. máxima",
+        data: labels.map((x,i)=>({x, y: ref.max})),
+        borderDash:[6,6],
+        pointRadius:0,
+        borderWidth:2
+      });
+    }
 
-    const ch = new Chart(c, {
+    const ch = new Chart(ctx, {
       type:"line",
-      data:{ labels, datasets },
+      data:{ datasets: ds },
       options:{
         responsive:true,
-        plugins:{ legend:{ display:false } },
+        maintainAspectRatio:false,
+        parsing:false,
+        plugins:{
+          legend:{ display:true, labels:{ boxWidth:10, boxHeight:10 } },
+          tooltip:{
+            callbacks:{
+              title:(items)=> items?.[0]?.raw?.x ? isoToLabel(items[0].raw.x) : "",
+              label:(item)=> `${item.dataset.label}: ${item.raw.y}`
+            }
+          }
+        },
         scales:{
-          x:{ display:false },
-          y:{ display:true, ticks:{ maxTicksLimit:4 } }
+          x:{
+            type:"time",
+            time:{ unit:"day" },
+            adapters: { date: {} },
+            ticks:{ maxTicksLimit:5 }
+          },
+          y:{
+            beginAtZero:false,
+            ticks:{ maxTicksLimit:5 }
+          }
         }
       }
     });
-    miniCharts.set(v, ch);
+    charts.set(varKey, ch);
+  });
 
-    // clicar no card -> setar variável no chart grande
-    card.style.cursor = "pointer";
-    card.addEventListener("click", ()=>{
-      $("varSelect").value = v;
-      makeBigChart(db, ctx);
-      window.scrollTo({top:0, behavior:"smooth"});
-    });
+  // se não tiver nada
+  if (!keys.length){
+    elVars.innerHTML = `<div class="hint">Ainda não há dados. Faça upload de um PDF válido ou adicione manualmente.</div>`;
   }
 }
 
-function renderHistory(db){
-  const box = $("hist");
-  if (!db.imports?.length){
-    box.textContent = "Sem histórico ainda.";
-    return;
-  }
-  box.innerHTML = db.imports.slice(0,25).map(e=>{
-    const when = new Date(e.ts).toLocaleString();
-    return `
-      <div class="historyItem">
-        <b>${e.nome}</b> (${e.sexo}, ${e.idade}a) — ${when}<br/>
-        <span style="color:#64748b">📅 ${e.dateISO} • 📄 ${e.file} • ${e.count} medidas</span>
-      </div>
-    `;
-  }).join("");
+function formatRefLine(ref, meta, sex){
+  const unit = meta.unit ? ` ${meta.unit}` : "";
+  const parts=[];
+  if (ref.min!=null) parts.push(`mín: ${ref.min}${unit}`);
+  if (ref.max!=null) parts.push(`máx: ${ref.max}${unit}`);
+  if (!parts.length) parts.push("referência: —");
+  if (ref.note) parts.push(`• ${ref.note}`);
+  return parts.join("  |  ");
 }
 
-function refreshAll(){
-  const db = loadDB();
-  const patient = db.patient;
-  const ctx = patient || {sexo:"M", idade:0};
-
-  const stats = computeStats(db);
-  $("k_vars").textContent = stats.varsCount;
-  $("k_points").textContent = stats.pointsCount;
-  $("k_dates").textContent = stats.datesCount;
-
-  setMeta(patient);
-  rebuildVarSelect(db);
-
-  if (Object.keys(db.series).length){
-    makeBigChart(db, ctx);
-  } else {
-    if (bigChart) { bigChart.destroy(); bigChart=null; }
-  }
-  renderMiniGrid(db, ctx);
-  renderHistory(db);
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+function hashKey(s){
+  let h=0;
+  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return h.toString(16);
 }
 
 /* =========================
-   Botões
+   ACTIONS
    ========================= */
-$("btnClear").addEventListener("click", ()=>{
-  if (!confirm("Apagar TODO o histórico local?")) return;
+document.getElementById('btnClear').addEventListener('click', ()=>{
+  if (!confirm("Zerar o histórico do dispositivo?")) return;
   localStorage.removeItem(LS_KEY);
-  for (const ch of miniCharts.values()) ch.destroy();
-  miniCharts.clear();
-  if (bigChart) { bigChart.destroy(); bigChart=null; }
-  setTopStatus("Histórico apagado", "warn");
-  setPdfInfo("PDF: nenhum", "warn");
-  $("raw").value = "";
-  $("errbox").value = "";
-  refreshAll();
+  rebuild();
 });
 
-$("btnExport").addEventListener("click", ()=>{
-  const db = localStorage.getItem(LS_KEY) || '{"patient":null,"series":{},"imports":[]}';
-  const blob = new Blob([db], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "exameview_timeseries.json";
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const data = loadHistory();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download="historico-exames.json";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
-  setTopStatus("Histórico exportado", "ok");
+  a.remove();
+  URL.revokeObjectURL(url);
 });
 
-$("varSelect").addEventListener("change", ()=>{
-  const db = loadDB();
-  const ctx = db.patient || {sexo:"M", idade:0};
-  if (Object.keys(db.series).length) makeBigChart(db, ctx);
+document.getElementById('btnManual').addEventListener('click', ()=>{
+  const name = document.getElementById('name').value.trim() || "Sem nome";
+  const age = Number(document.getElementById('age').value || 0);
+  const sex = document.getElementById('sex').value;
+
+  const varKey = document.getElementById('manualVar').value;
+  const dateISO = document.getElementById('manualDate').value;
+  const value = Number(document.getElementById('manualValue').value);
+
+  if (!dateISO || !Number.isFinite(value)){
+    alert("Preencha data e valor numérico.");
+    return;
+  }
+  const date = isoToLabel(dateISO);
+  const hist = loadHistory();
+  hist.push({
+    id: crypto.randomUUID(),
+    createdAt: nowIso(),
+    source: "Manual",
+    name, age, sex,
+    date,
+    values: { [varKey]: value }
+  });
+  saveHistory(hist);
+  okBox.style.display="block";
+  okBox.textContent = "Valor manual adicionado ao histórico.";
+  errBox.style.display="none";
+  rebuild();
 });
-$("scaleSelect").addEventListener("change", ()=>{
-  const db = loadDB();
-  const ctx = db.patient || {sexo:"M", idade:0};
-  if (Object.keys(db.series).length) makeBigChart(db, ctx);
-});
 
-$("btnImportar").addEventListener("click", async ()=>{
-  $("errbox").value = "";
-  $("raw").value = "";
-
-  const nome = ($("nome").value || "").trim() || "Sem nome";
-  const idade = Number($("idade").value || 0);
-  const sexo = $("sexo").value;
-  const file = $("pdf").files?.[0];
-  const fallbackDate = $("dataExame").value || null;
-
-  if (!file){ alert("Selecione um PDF."); return; }
-  if (file.size === 0){ alert("Esse arquivo está zerado (0 bytes). Baixe o PDF de verdade e selecione de Downloads."); return; }
-
-  setTopStatus("Lendo PDF…", "warn");
-  setPdfInfo(`PDF: ${file.name}`, "warn");
-
+document.getElementById('btnRead').addEventListener('click', async ()=>{
+  const file = document.getElementById('pdf').files?.[0];
+  if (!file){
+    alert("Escolha um PDF.");
+    return;
+  }
+  errBox.style.display="none";
+  okBox.style.display="none";
+  elRaw.value="Lendo PDF...";
   try{
-    const text = await extractTextFromPdf(file);
-    $("raw").value = text;
+    // extrai texto
+    const text = await readPdfText(file);
+    elRaw.value = text.slice(0, 20000); // debug (corta para não travar)
 
-    // data: tenta extrair do PDF, senão usa campo
-    const extracted = extractDateFromText(text);
-    const dateISO = extracted || fallbackDate;
-
-    if (!dateISO){
-      setTopStatus("Sem data detectada — selecione a data no campo e importe novamente.", "warn");
-      alert("Não achei data no PDF. Selecione a data do exame (campo) e importe de novo.");
-      return;
+    // data
+    const date = parseCollectionDate(text);
+    if (!date){
+      throw new Error("Não consegui identificar a data do exame (procurei Data e Hora de Coleta / Entrada / Impressão).");
     }
 
-    // monta contexto
-    const ctx = {nome, idade, sexo};
-    const measures = detectMeasures(text, ctx);
+    // valores
+    const valuesNow = parseExamValues(text);
 
-    // salva
-    const db = loadDB();
-    db.patient = {nome, idade, sexo};
+    // pontos extras: tabela de resultados anteriores de lipídios
+    const lipidPoints = parseLipidHistory(text);
 
-    // insere pontos
-    for (const m of measures){
-      upsertMeasure(db, m.name, { dateISO, value: m.value, file: file.name });
+    const name = document.getElementById('name').value.trim() || "Sem nome";
+    const age = Number(document.getElementById('age').value || 0);
+    const sex = document.getElementById('sex').value;
+
+    const hist = loadHistory();
+
+    // 1) adiciona o ponto principal (coleta atual)
+    if (Object.keys(valuesNow).length){
+      hist.push({
+        id: crypto.randomUUID(),
+        createdAt: nowIso(),
+        source: file.name || "PDF",
+        name, age, sex,
+        date,
+        values: valuesNow
+      });
     }
 
-    db.imports = db.imports || [];
-    db.imports.unshift({
-      ts: Date.now(),
-      nome, idade, sexo,
-      dateISO,
-      file: file.name,
-      count: measures.length
-    });
+    // 2) adiciona os pontos históricos (se existirem) — sem duplicar se já existir no mesmo dia + mesmas chaves
+    for (const p of lipidPoints){
+      const signature = JSON.stringify(p.values);
+      const exists = hist.some(h=> h.date===p.date && JSON.stringify(h.values)===signature && (h.source||"").includes("Tabela"));
+      if (!exists){
+        hist.push({
+          id: crypto.randomUUID(),
+          createdAt: nowIso(),
+          source: "Tabela (Resultados anteriores do PDF)",
+          name, age, sex,
+          date: p.date,
+          values: p.values
+        });
+      }
+    }
 
-    saveDB(db);
-
-    setTopStatus(`Importado — ${measures.length} medidas em ${dateISO}`, measures.length ? "ok" : "warn");
-    setPdfInfo(`PDF: ${file.name} • data ${dateISO}`, "ok");
-
-    refreshAll();
-
+    saveHistory(hist);
+    okBox.style.display="block";
+    okBox.textContent = `OK: adicionei ${Object.keys(valuesNow).length} medidas da coleta (${date})` +
+      (lipidPoints.length ? ` + ${lipidPoints.length} datas da tabela de resultados anteriores.` : ".");
+    rebuild();
   }catch(err){
-    console.error(err);
-    const msg = (err && err.message) ? err.message : String(err);
-    $("errbox").value = msg;
-    setTopStatus("Erro ao ler PDF", "bad");
-    setPdfInfo(`PDF: erro`, "bad");
-    alert("Erro ao ler PDF: " + msg);
+    errBox.style.display="block";
+    errBox.textContent = String(err?.message || err);
+    okBox.style.display="none";
+    alert("Não consegui ler o PDF. Veja o bloco “Erro técnico” e/ou o console.");
   }
 });
 
-// inicializa data fallback com hoje (ajuda no celular)
-(function init(){
-  const today = new Date();
-  const iso = today.toISOString().slice(0,10);
-  $("dataExame").value = iso;
-  refreshAll();
-})();
+// Chart.js time adapter (simples): usa Date nativo
+// (Chart.js 4 precisa de adapter; este fallback usa parsing básico ISO)
+Chart._adapters._date.override({
+  parse: (v)=> (typeof v === "string" ? Date.parse(v) : v),
+  format: (t)=> new Date(t).toISOString().slice(0,10),
+  add: (t, amount, unit)=> {
+    const d = new Date(t);
+    if (unit==="day") d.setDate(d.getDate()+amount);
+    else if (unit==="month") d.setMonth(d.getMonth()+amount);
+    else if (unit==="year") d.setFullYear(d.getFullYear()+amount);
+    return d.getTime();
+  },
+  diff: (max, min, unit)=> (max-min),
+  startOf: (t, unit)=> {
+    const d = new Date(t);
+    if (unit==="day"){ d.setHours(0,0,0,0); }
+    if (unit==="month"){ d.setDate(1); d.setHours(0,0,0,0); }
+    if (unit==="year"){ d.setMonth(0,1); d.setHours(0,0,0,0); }
+    return d.getTime();
+  },
+  endOf: (t, unit)=> {
+    const d = new Date(t);
+    if (unit==="day"){ d.setHours(23,59,59,999); }
+    if (unit==="month"){ d.setMonth(d.getMonth()+1,0); d.setHours(23,59,59,999); }
+    if (unit==="year"){ d.setMonth(11,31); d.setHours(23,59,59,999); }
+    return d.getTime();
+  }
+});
+
+// init
+rebuild();
 </script>
 </body>
 </html>
